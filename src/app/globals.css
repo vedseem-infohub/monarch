@@ -1,26 +1,149 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-monarch-maroon: #5A1725;
+  --color-monarch-maroon-dark: #3F101A;
+  --color-monarch-maroon-light: #7A2436;
+  --color-monarch-burgundy: #291116;
+  --color-monarch-burgundy-deep: #1A0A0E;
+  --color-monarch-gold: #C7A15B;
+  --color-monarch-gold-light: #DFBE7F;
+  --color-monarch-gold-dark: #9A7737;
+  --color-monarch-gold-muted: #8E703E;
+  --color-monarch-ivory: #F7F0E5;
+  --color-monarch-ivory-light: #FCF9F4;
+  --color-monarch-beige: #D9C8B0;
+  --color-monarch-beige-light: #E8DCCB;
+  --color-monarch-charcoal: #211D1A;
+  --color-monarch-charcoal-light: #36302B;
+
+  --font-serif: var(--font-cormorant), "Playfair Display", Georgia, serif;
+  --font-display: var(--font-playfair), "Cormorant Garamond", Georgia, serif;
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-nav: var(--font-poppins), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --background: #F7F0E5;
+  --foreground: #211D1A;
+  --royal-maroon: #5A1725;
+  --deep-burgundy: #291116;
+  --antique-gold: #C7A15B;
+  --warm-ivory: #F7F0E5;
+  --sand-beige: #D9C8B0;
+  --charcoal: #211D1A;
+}
+
+html {
+  scroll-behavior: smooth;
+  background-color: #F7F0E5;
+  color: #211D1A;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #F7F0E5;
+  color: #211D1A;
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow-x: hidden;
 }
+
+/* Custom Scrollbar for luxury feel */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: #291116;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #C7A15B;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #DFBE7F;
+}
+
+/* Shimmer and Gold Accents */
+.gold-shimmer {
+  background: linear-gradient(
+    135deg,
+    #9A7737 0%,
+    #DFBE7F 35%,
+    #C7A15B 60%,
+    #FDF5E6 80%,
+    #9A7737 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 6s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.gold-border-gradient {
+  border-image: linear-gradient(to right, #9A7737, #DFBE7F, #C7A15B, #DFBE7F, #9A7737) 1;
+}
+
+.gold-border {
+  border-color: rgba(199, 161, 91, 0.35);
+}
+
+.bg-burgundy-pattern {
+  background-color: #291116;
+  background-image: radial-gradient(rgba(199, 161, 91, 0.08) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+/* Arch Shape */
+.royal-arch {
+  border-top-left-radius: 9999px;
+  border-top-right-radius: 9999px;
+}
+
+/* Subtle fabric grain */
+.fabric-subtle-overlay {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+}
+
+/* Continuous Marquee Ticker */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 35s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Hide scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* 3D Cylinder / Perspective helpers */
+.perspective-1200 {
+  perspective: 1200px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
