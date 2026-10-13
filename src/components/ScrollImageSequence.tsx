@@ -14,7 +14,8 @@ const DELAY_66_INDICES = new Set([8, 93, 111, 140, 154]);
 const DEFAULT_FRAME_PATHS: string[] = Array.from({ length: 156 }, (_, i) => {
   const frameNum = i + 1;
   const padded = String(frameNum).padStart(3, '0');
-  return `/optimized/frame_${padded}.webp`;
+  const delay = DELAY_66_INDICES.has(frameNum) ? '0.066s' : '0.033s';
+  return `/optimized/frame_${padded}_delay-${delay}.jpg`;
 });
 
 export interface ScrollImageSequenceProps {
@@ -22,7 +23,6 @@ export interface ScrollImageSequenceProps {
   framePaths?: string[];
   /**
    * Height of the outer scroll container (e.g. '400vh', '600vh').
-   * This directly controls the duration and speed of the scroll animation.
    * Default: '400vh'
    */
   containerHeight?: string;
@@ -49,12 +49,18 @@ export default function ScrollImageSequence({
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Loaded images stored in a ref to avoid expensive React re-renders during 60/120fps scrolling
-  const imagesRef = useRef<HTMLImageElement[]>([]);
-  // Keep track of the last drawn frame index to prevent duplicate canvas repaints
+  // Loaded frames cache (ImageBitmap where supported for off-thread GPU decoding)
+  const framesCacheRef = useRef<(ImageBitmap | HTMLImageElement | null)[]>([]);
   const lastRenderedIndexRef = useRef<number>(-1);
-  // requestAnimationFrame ID ref to batch draw calls to the screen refresh rate
-  const rafIdRef = useRef<number | null>(null);
+
+  // LERP damping state
+  const targetFrameRef = useRef<number>(0);
+  const currentFrameRef = useRef<number>(0);
+  const isDampingActiveRef = useRef<boolean>(false);
+  const dampingRafIdRef = useRef<number | null>(null);
+
+  // Debounce resize timer
+  const resizeTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Component state
   const [loadingProgress, setLoadingProgress] = useState<number>(0);
@@ -63,25 +69,50 @@ export default function ScrollImageSequence({
   const [activeFrameIndex, setActiveFrameIndex] = useState<number>(0);
 
   /**
-   * Draws a specific image frame onto the canvas.
-   * Handles high DPI (Retina displays) and preserves aspect ratio via cover/contain.
+   * Finds nearest loaded frame
+   */
+  const getNearestLoadedFrame = useCallback(
+    (targetIndex: number): ImageBitmap | HTMLImageElement | null => {
+      const frames = framesCacheRef.current;
+      if (frames.length === 0) return null;
+
+      if (frames[targetIndex]) return frames[targetIndex];
+
+      for (let i = targetIndex - 1; i >= 0; i--) {
+        if (frames[i]) return frames[i];
+      }
+      for (let i = targetIndex + 1; i < frames.length; i++) {
+        if (frames[i]) return frames[i];
+      }
+      return null;
+    },
+    []
+  );
+
+  /**
+   * Draws a specific frame onto the canvas
    */
   const drawFrame = useCallback(
     (index: number) => {
       const canvas = canvasRef.current;
-      const images = imagesRef.current;
-      if (!canvas || images.length === 0) return;
+      if (!canvas) return;
 
-      const img = images[index];
-      if (!img || !img.complete || img.naturalWidth === 0) return;
+      const frame = getNearestLoadedFrame(index);
+      if (!frame) return;
 
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d', { alpha: false });
       if (!ctx) return;
+
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
 
       const canvasWidth = canvas.width;
       const canvasHeight = canvas.height;
-      const imgWidth = img.naturalWidth;
-      const imgHeight = img.naturalHeight;
+
+      const imgWidth = 'naturalWidth' in frame ? frame.naturalWidth : frame.width;
+      const imgHeight = 'naturalHeight' in frame ? frame.naturalHeight : frame.height;
+
+      if (imgWidth === 0 || imgHeight === 0) return;
 
       const imgAspect = imgWidth / imgHeight;
       const canvasAspect = canvasWidth / canvasHeight;
@@ -89,19 +120,15 @@ export default function ScrollImageSequence({
       let renderWidth = 0;
       let renderHeight = 0;
 
-      // Calculate dimensions while preserving aspect ratio
       if (fit === 'cover') {
         if (canvasAspect > imgAspect) {
-          // Canvas is wider than image
           renderWidth = canvasWidth;
           renderHeight = canvasWidth / imgAspect;
         } else {
-          // Canvas is taller than image
           renderHeight = canvasHeight;
           renderWidth = canvasHeight * imgAspect;
         }
       } else {
-        // 'contain'
         if (canvasAspect > imgAspect) {
           renderHeight = canvasHeight;
           renderWidth = canvasHeight * imgAspect;
@@ -111,37 +138,32 @@ export default function ScrollImageSequence({
         }
       }
 
-      // Center the image inside the canvas
       const offsetX = (canvasWidth - renderWidth) / 2;
       const offsetY = (canvasHeight - renderHeight) / 2;
 
-      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-      ctx.drawImage(img, offsetX, offsetY, renderWidth, renderHeight);
+      ctx.drawImage(frame, offsetX, offsetY, renderWidth, renderHeight);
     },
-    [fit]
+    [fit, getNearestLoadedFrame]
   );
 
   /**
-   * Updates canvas internal buffer resolution to match screen pixels and devicePixelRatio.
+   * Updates canvas internal buffer resolution to match screen pixels and devicePixelRatio
    */
   const resizeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Use window dimensions for full-screen display
-    const dpr = Math.min(window.devicePixelRatio || 1, 2); // Cap at 2 for optimal GPU performance
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const displayWidth = window.innerWidth;
     const displayHeight = window.innerHeight;
 
-    // Only update buffer if size actually changed
-    if (
-      canvas.width !== Math.round(displayWidth * dpr) ||
-      canvas.height !== Math.round(displayHeight * dpr)
-    ) {
-      canvas.width = Math.round(displayWidth * dpr);
-      canvas.height = Math.round(displayHeight * dpr);
+    const newW = Math.round(displayWidth * dpr);
+    const newH = Math.round(displayHeight * dpr);
 
-      // Force redraw current frame after resize
+    if (canvas.width !== newW || canvas.height !== newH) {
+      canvas.width = newW;
+      canvas.height = newH;
+
       if (lastRenderedIndexRef.current >= 0) {
         drawFrame(lastRenderedIndexRef.current);
       }
@@ -149,325 +171,254 @@ export default function ScrollImageSequence({
   }, [drawFrame]);
 
   /**
-   * Calculates the target frame index based on the container's scroll position.
-   *
-   * =========================================================================
-   * SCROLL-TO-FRAME MAPPING EXPLANATION & TUNING:
-   * -------------------------------------------------------------------------
-   * 1. rect.top is the distance from the top of the viewport to the container.
-   * 2. When container top reaches viewport top (rect.top <= 0), animation starts.
-   * 3. The container has height (e.g. 400vh). The canvas stays sticky inside it.
-   * 4. Total scrollable travel distance = container.offsetHeight - window.innerHeight.
-   * 5. Scrolled distance = -rect.top.
-   * 6. progress = clamp(scrolledDistance / totalScrollableDistance, 0, 1).
-   * 7. targetIndex = Math.floor(progress * totalFrames).
-   *
-   * HOW TO ADJUST ANIMATION SPEED:
-   * - To SLOW DOWN: Increase `containerHeight` prop (e.g. from '400vh' to '600vh').
-   *   More scroll distance means more wheel turns are needed to step through frames.
-   * - To SPEED UP: Decrease `containerHeight` prop (e.g. from '400vh' to '250vh').
-   * =========================================================================
+   * Debounced resize
+   */
+  const handleDebouncedResize = useCallback(() => {
+    if (resizeTimerRef.current) clearTimeout(resizeTimerRef.current);
+    resizeTimerRef.current = setTimeout(resizeCanvas, 150);
+  }, [resizeCanvas]);
+
+  /**
+   * LERP damping ticker
+   */
+  const tickDamping = useCallback(() => {
+    const target = targetFrameRef.current;
+    const current = currentFrameRef.current;
+    const total = framePaths.length;
+    const diff = target - current;
+
+    if (Math.abs(diff) > 0.002) {
+      currentFrameRef.current += diff * 0.16;
+      const rounded = Math.min(total - 1, Math.max(0, Math.round(currentFrameRef.current)));
+
+      if (rounded !== lastRenderedIndexRef.current) {
+        lastRenderedIndexRef.current = rounded;
+        drawFrame(rounded);
+        setActiveFrameIndex(rounded);
+      }
+
+      isDampingActiveRef.current = true;
+      dampingRafIdRef.current = requestAnimationFrame(tickDamping);
+    } else {
+      currentFrameRef.current = target;
+      const finalIdx = Math.min(total - 1, Math.max(0, Math.round(target)));
+      if (finalIdx !== lastRenderedIndexRef.current) {
+        lastRenderedIndexRef.current = finalIdx;
+        drawFrame(finalIdx);
+        setActiveFrameIndex(finalIdx);
+      }
+      isDampingActiveRef.current = false;
+      dampingRafIdRef.current = null;
+    }
+  }, [drawFrame, framePaths.length]);
+
+  const triggerDamping = useCallback(() => {
+    if (!isDampingActiveRef.current) {
+      isDampingActiveRef.current = true;
+      dampingRafIdRef.current = requestAnimationFrame(tickDamping);
+    }
+  }, [tickDamping]);
+
+  /**
+   * Map scroll position to target frame
    */
   const updateFrameFromScroll = useCallback(() => {
     if (isReducedMotion) return;
 
     const container = containerRef.current;
-    const totalFrames = imagesRef.current.length;
+    const totalFrames = framePaths.length;
     if (!container || totalFrames === 0) return;
 
     const rect = container.getBoundingClientRect();
     const windowHeight = window.innerHeight;
-
-    // Total scroll travel available while canvas is pinned
     const scrollableDistance = rect.height - windowHeight;
-
     if (scrollableDistance <= 0) return;
 
-    // Distance the user has scrolled into this container
     const scrolledDistance = -rect.top;
-
-    // Normalized progress strictly clamped between 0.0 and 1.0
     const rawProgress = scrolledDistance / scrollableDistance;
     const progress = Math.min(1, Math.max(0, rawProgress));
 
-    // Map [0, 1] progress to integer frame index [0, totalFrames - 1]
-    const targetIndex = Math.min(
-      totalFrames - 1,
-      Math.max(0, Math.floor(progress * totalFrames))
-    );
-
-    // ONLY REPAINT WHEN THE FRAME INDEX ACTUALLY CHANGES
-    if (targetIndex !== lastRenderedIndexRef.current) {
-      lastRenderedIndexRef.current = targetIndex;
-      drawFrame(targetIndex);
-      setActiveFrameIndex(targetIndex);
-    }
-  }, [isReducedMotion, drawFrame]);
+    targetFrameRef.current = progress * (totalFrames - 1);
+    triggerDamping();
+  }, [isReducedMotion, framePaths.length, triggerDamping]);
 
   /**
-   * Scroll event handler: Never redraws directly!
-   * Debounces / batches calls using requestAnimationFrame to match display refresh rate.
-   */
-  const handleScroll = useCallback(() => {
-    if (rafIdRef.current !== null) return; // rAF already scheduled
-
-    rafIdRef.current = requestAnimationFrame(() => {
-      rafIdRef.current = null;
-      updateFrameFromScroll();
-    });
-  }, [updateFrameFromScroll]);
-
-  /**
-   * PRELOADING LIFECYCLE:
-   * - Checks prefers-reduced-motion: loads ONLY 1 static frame if active.
-   * - Mobile optimization: if viewport < 768px, loads every second frame (50% memory/bandwidth).
-   * - Preloads all target frames into HTMLImageElement instances.
+   * Progressive Staged Preloader with ImageBitmap support
    */
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // Check for prefers-reduced-motion
-    const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const prefersReduced = reducedMotionQuery.matches;
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     setIsReducedMotion(prefersReduced);
 
-    // Mobile check: viewport under 768px loads every 2nd frame
-    const isMobile = window.innerWidth < 768;
+    const total = framePaths.length;
+    framesCacheRef.current = new Array(total).fill(null);
 
-    let targetUrls: string[];
+    let isCancelled = false;
 
-    if (prefersReduced) {
-      // Reduced motion: Load ONLY the first frame
-      targetUrls = [framePaths[0]];
-    } else if (isMobile) {
-      // Mobile: Load every second frame (halves bandwidth & RAM usage)
-      targetUrls = framePaths.filter((_, idx) => idx % 2 === 0);
-    } else {
-      // Desktop: Load all frames
-      targetUrls = framePaths;
-    }
-
-    const totalToLoad = targetUrls.length;
-    let loadedCount = 0;
-    const loadedImages: HTMLImageElement[] = new Array(totalToLoad);
-
-    // Preload all frames asynchronously
-    targetUrls.forEach((url, index) => {
-      const img = new Image();
-      img.src = url;
-
-      const onImageLoaded = () => {
-        loadedImages[index] = img;
-        loadedCount += 1;
-        setLoadingProgress(Math.round((loadedCount / totalToLoad) * 100));
-
-        if (loadedCount === totalToLoad) {
-          imagesRef.current = loadedImages;
-          setIsLoaded(true);
+    const loadSingleFrame = async (url: string, index: number) => {
+      try {
+        if ('createImageBitmap' in window && typeof fetch !== 'undefined') {
+          const res = await fetch(url);
+          const blob = await res.blob();
+          const bitmap = await createImageBitmap(blob);
+          if (isCancelled) {
+            bitmap.close();
+            return null;
+          }
+          framesCacheRef.current[index] = bitmap;
+          return bitmap;
+        } else {
+          return new Promise((resolve) => {
+            const img = new Image();
+            img.src = url;
+            img.onload = () => {
+              if (isCancelled) return resolve(null);
+              framesCacheRef.current[index] = img;
+              resolve(img);
+            };
+            img.onerror = () => resolve(null);
+          });
         }
-      };
+      } catch {
+        return null;
+      }
+    };
 
-      img.onload = onImageLoaded;
-      img.onerror = () => {
-        // Fallback gracefully if any single image encounters a network hitch
-        console.warn(`[ScrollImageSequence] Failed to load frame: ${url}`);
-        onImageLoaded();
-      };
+    // Load first frame immediately
+    loadSingleFrame(framePaths[0], 0).then((first) => {
+      if (isCancelled || !first) return;
+      setIsLoaded(true);
+      lastRenderedIndexRef.current = 0;
+      resizeCanvas();
+      drawFrame(0);
+
+      if (prefersReduced || total <= 1) return;
+
+      // Initial 10-frame priority burst
+      const initialBatchSize = Math.min(10, total);
+      const initialPromises: Promise<unknown>[] = [];
+      for (let i = 1; i < initialBatchSize; i++) {
+        initialPromises.push(loadSingleFrame(framePaths[i], i));
+      }
+
+      Promise.all(initialPromises).then(() => {
+        if (isCancelled || initialBatchSize >= total) return;
+
+        // Background stream remaining frames on idle
+        const startBackground = () => {
+          if (isCancelled) return;
+          const CONCURRENCY = 3;
+          let currentIdx = initialBatchSize;
+          let loaded = initialBatchSize;
+
+          const loadNext = () => {
+            if (isCancelled || currentIdx >= total) return;
+            const idx = currentIdx++;
+            loadSingleFrame(framePaths[idx], idx).then(() => {
+              if (isCancelled) return;
+              loaded++;
+              setLoadingProgress(Math.round((loaded / total) * 100));
+              loadNext();
+            });
+          };
+
+          for (let c = 0; c < CONCURRENCY; c++) loadNext();
+        };
+
+        if ('requestIdleCallback' in window) {
+          (window as Window & { requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => number }).requestIdleCallback(
+            startBackground,
+            { timeout: 700 }
+          );
+        } else {
+          setTimeout(startBackground, 300);
+        }
+      });
     });
 
     return () => {
-      // Clean up references
-      imagesRef.current = [];
+      isCancelled = true;
+      framesCacheRef.current.forEach((item) => {
+        if (item && 'close' in item) {
+          try {
+            item.close();
+          } catch {
+            // ignore
+          }
+        }
+      });
+      framesCacheRef.current = [];
     };
-  }, [framePaths]);
+  }, [framePaths, drawFrame, resizeCanvas]);
 
   /**
-   * Once images are loaded, initialize canvas dimensions and render the initial frame.
+   * Listeners
    */
   useEffect(() => {
-    if (!isLoaded || imagesRef.current.length === 0) return;
+    if (!isLoaded) return;
 
     resizeCanvas();
+    updateFrameFromScroll();
 
-    // Draw the initial frame (frame 0, or current scroll frame)
-    if (isReducedMotion) {
-      lastRenderedIndexRef.current = 0;
-      drawFrame(0);
-    } else {
-      updateFrameFromScroll();
-    }
-
-    // Attach listeners
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', resizeCanvas, { passive: true });
+    window.addEventListener('scroll', updateFrameFromScroll, { passive: true });
+    window.addEventListener('resize', handleDebouncedResize, { passive: true });
 
     return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', resizeCanvas);
-      if (rafIdRef.current !== null) {
-        cancelAnimationFrame(rafIdRef.current);
-        rafIdRef.current = null;
-      }
+      window.removeEventListener('scroll', updateFrameFromScroll);
+      window.removeEventListener('resize', handleDebouncedResize);
+      if (resizeTimerRef.current) clearTimeout(resizeTimerRef.current);
+      if (dampingRafIdRef.current) cancelAnimationFrame(dampingRafIdRef.current);
     };
-  }, [isLoaded, isReducedMotion, handleScroll, resizeCanvas, drawFrame, updateFrameFromScroll]);
-
-  // Contextual captions that fade in at specific scroll milestones
-  const progressRatio = imagesRef.current.length > 0 
-    ? activeFrameIndex / (imagesRef.current.length - 1) 
-    : 0;
+  }, [isLoaded, handleDebouncedResize, resizeCanvas, updateFrameFromScroll]);
 
   return (
     <div
       ref={containerRef}
-      className="relative w-full bg-[#1A0A0E] text-monarch-ivory"
+      className="relative w-full bg-[#1A0A0E]"
       style={{ height: isReducedMotion ? '100vh' : containerHeight }}
     >
-      {/* Sticky full-screen viewport container */}
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
-        {/* HTML5 Canvas where frames are rendered */}
+      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center will-change-transform">
         <canvas
           ref={canvasRef}
-          className="w-full h-full block object-center"
-          aria-label="Interactive scroll-driven luxury showroom walkthrough"
+          className="w-full h-full block object-center will-change-transform"
+          aria-label="Interactive Luxury Frame Sequence"
         />
 
-        {/* Loading State Overlay */}
+        {/* Ambient Loader placeholder */}
         {!isLoaded && (
-          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[#1A0A0E] px-6 text-center transition-opacity duration-700">
-            {/* Monarch Brand Motif */}
-            <div className="w-12 h-12 mb-6 rounded-full border border-monarch-gold/40 flex items-center justify-center">
-              <div className="w-3 h-3 bg-monarch-gold rounded-full animate-ping" />
+          <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-[#1A0A0E] text-white">
+            <div className="w-12 h-12 mb-4 rounded-full border border-monarch-gold/40 flex items-center justify-center relative">
+              <div className="w-3.5 h-3.5 bg-monarch-gold rounded-full animate-ping" />
             </div>
-
-            <p className="font-nav text-xs uppercase tracking-[0.3em] text-monarch-gold mb-2">
+            <p className="font-nav text-xs uppercase tracking-[0.3em] text-monarch-gold">
               {loadingTitle}
             </p>
-            <h3 className="font-serif text-2xl sm:text-3xl text-monarch-ivory mb-6 font-light">
-              Crafting The Experience
-            </h3>
-
-            {/* Progress Bar */}
-            <div className="w-64 max-w-full h-1 bg-monarch-maroon-dark rounded-full overflow-hidden mb-3 border border-monarch-gold/20">
-              <div
-                className="h-full bg-gradient-to-r from-monarch-gold-dark via-monarch-gold to-monarch-gold-light transition-all duration-200 ease-out"
-                style={{ width: `${loadingProgress}%` }}
-              />
-            </div>
-
-            <div className="flex items-center gap-2 font-mono text-xs text-monarch-beige/70">
-              <span>{loadingProgress}%</span>
-              <span>·</span>
-              <span>
-                {Math.round((loadingProgress / 100) * framePaths.length)} / {framePaths.length} frames
-              </span>
-            </div>
           </div>
         )}
 
-        {/* Ambient Vignette & Luxury Gradient Overlays */}
-        {isLoaded && (
-          <>
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#1A0A0E]/80 via-transparent to-[#1A0A0E]/50" />
-            <div className="pointer-events-none absolute inset-0 bg-radial-gradient" />
-          </>
-        )}
-
-        {/* Apple-Style Text Overlays that smoothly transition as the user scrolls */}
-        {isLoaded && showCaptions && !isReducedMotion && (
-          <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-6 sm:p-12 lg:p-16">
-            {/* Top Bar Indicator */}
-            <div className="flex items-center justify-between">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/40 backdrop-blur-md border border-monarch-gold/30 text-[11px] font-nav uppercase tracking-[0.2em] text-monarch-gold-light">
-                <span className="w-1.5 h-1.5 rounded-full bg-monarch-gold animate-pulse" />
-                <span>Monarch Flagship Haute Couture</span>
-              </div>
-
-              {/* Progress counter pill */}
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-black/40 backdrop-blur-md border border-monarch-gold/20 text-[11px] font-mono text-monarch-beige/80">
-                <span>SCROLL TO EXPLORE</span>
-                <span className="text-monarch-gold font-semibold">
-                  {Math.round(progressRatio * 100)}%
-                </span>
-              </div>
-            </div>
-
-            {/* Dynamic Captions Based on Sequence Phase */}
-            <div className="max-w-2xl">
-              {/* Phase 1: 0% - 30% */}
-              <div
-                className={`transition-all duration-700 transform ${
-                  progressRatio >= 0 && progressRatio < 0.35
-                    ? 'opacity-100 translate-y-0'
-                    : 'opacity-0 translate-y-4 pointer-events-none absolute'
-                }`}
-              >
-                <span className="block font-nav text-xs tracking-[0.3em] uppercase text-monarch-gold mb-2">
-                  Chapter I · The Threshold
-                </span>
-                <h2 className="font-serif text-3xl sm:text-5xl font-light text-monarch-ivory tracking-tight mb-3">
-                  Step Inside The Sanctuary
-                </h2>
-                <p className="text-sm sm:text-base text-monarch-beige/90 font-sans max-w-lg leading-relaxed">
-                  Welcome to the flagship bridal salon. Where heritage weaving traditions meet royal bespoke couture.
-                </p>
-              </div>
-
-              {/* Phase 2: 35% - 70% */}
-              <div
-                className={`transition-all duration-700 transform ${
-                  progressRatio >= 0.35 && progressRatio < 0.75
-                    ? 'opacity-100 translate-y-0'
-                    : 'opacity-0 translate-y-4 pointer-events-none absolute'
-                }`}
-              >
-                <span className="block font-nav text-xs tracking-[0.3em] uppercase text-monarch-gold mb-2">
-                  Chapter II · The Vault
-                </span>
-                <h2 className="font-serif text-3xl sm:text-5xl font-light text-monarch-ivory tracking-tight mb-3">
-                  Woven In Gold & Silk
-                </h2>
-                <p className="text-sm sm:text-base text-monarch-beige/90 font-sans max-w-lg leading-relaxed">
-                  Real zari brocades and hand-loomed mulberry silks, tailored over hundreds of hours by master karigars.
-                </p>
-              </div>
-
-              {/* Phase 3: 75% - 100% */}
-              <div
-                className={`transition-all duration-700 transform ${
-                  progressRatio >= 0.75
-                    ? 'opacity-100 translate-y-0'
-                    : 'opacity-0 translate-y-4 pointer-events-none absolute'
-                }`}
-              >
-                <span className="block font-nav text-xs tracking-[0.3em] uppercase text-monarch-gold mb-2">
-                  Chapter III · The Climax
-                </span>
-                <h2 className="font-serif text-3xl sm:text-5xl font-light text-monarch-ivory tracking-tight mb-3">
-                  The Royal Collection
-                </h2>
-                <p className="text-sm sm:text-base text-monarch-beige/90 font-sans max-w-lg leading-relaxed">
-                  Every thread tells an eternal saga of Indian royalty, grace, and unmatched artisanal grandeur.
-                </p>
-              </div>
-            </div>
-
-            {/* Bottom Scroll Prompt */}
-            <div className="flex items-center justify-between text-xs text-monarch-beige/60 pt-4">
-              <span className="font-nav uppercase tracking-widest text-[10px]">
-                {activeFrameIndex + 1} / {imagesRef.current.length} FRAMES
-              </span>
-              <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-monarch-gold/60" />
-                <span className="tracking-wider">SCROLL DOWN TO ADVANCE</span>
-              </div>
-            </div>
+        {/* Subtle Background Progress */}
+        {loadingProgress > 0 && loadingProgress < 100 && (
+          <div className="pointer-events-none absolute top-0 left-0 right-0 h-[2px] z-30 bg-black/30">
+            <div
+              className="h-full bg-monarch-gold transition-all duration-300"
+              style={{ width: `${loadingProgress}%` }}
+            />
           </div>
         )}
 
-        {/* Reduced motion static notice */}
-        {isReducedMotion && (
-          <div className="absolute bottom-8 left-8 z-20 px-4 py-2 rounded-full bg-black/60 backdrop-blur-md border border-monarch-gold/30 text-xs text-monarch-gold-light">
-            Static frame displayed (prefers-reduced-motion active)
+        {/* Cinematic Vignette */}
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_35%,rgba(16,4,8,0.7)_80%,rgba(10,2,5,0.92)_100%)] z-10" />
+
+        {/* Contextual HUD */}
+        {showCaptions && !isReducedMotion && isLoaded && (
+          <div className="pointer-events-none absolute bottom-8 left-8 right-8 z-20 flex items-center justify-between text-xs text-monarch-beige/70">
+            <span className="font-mono text-[10px] tracking-wider text-monarch-gold/90">
+              FRAME {activeFrameIndex + 1} / {framePaths.length}
+            </span>
+            <span className="font-nav text-[9px] uppercase tracking-[0.25em] text-monarch-gold/80">
+              MONARCH ATELIER CINEMATIC SEQUENCE
+            </span>
           </div>
         )}
       </div>

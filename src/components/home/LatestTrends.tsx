@@ -55,6 +55,12 @@ export const LatestTrends: React.FC = () => {
   const activeStory = TREND_STORIES[activeStoryIdx];
 
   useEffect(() => {
+    // Preload trend chapter images for instant interactive switching
+    TREND_STORIES.forEach((story) => {
+      const img = new Image();
+      img.src = story.image;
+    });
+
     const ctx = gsap.context(() => {
       if (contentRef.current) {
         gsap.from(contentRef.current.querySelectorAll('.trends-reveal'), {
@@ -135,7 +141,7 @@ export const LatestTrends: React.FC = () => {
                 src={activeStory.image}
                 alt={activeStory.title}
                 className="w-full h-full object-cover transition-all duration-1000 ease-out group-hover:scale-105"
-                loading="lazy"
+                decoding="async"
               />
 
               {/* Scrim Overlay */}

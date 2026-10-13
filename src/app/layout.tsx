@@ -6,6 +6,7 @@ import { WishlistProvider } from '@/context/WishlistContext';
 // import { AnnouncementBar } from '@/components/layout/AnnouncementBar';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { SmoothScrollProvider } from '@/components/common/SmoothScrollProvider';
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -60,6 +61,10 @@ export default function RootLayout({
       lang="en"
       className={`${cormorant.variable} ${playfair.variable} ${inter.variable} ${poppins.variable} antialiased`}
     >
+      <head>
+        <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
+      </head>
       <body
         suppressHydrationWarning
         className="min-h-screen flex flex-col bg-monarch-ivory text-monarch-charcoal selection:bg-monarch-maroon selection:text-monarch-gold-light"
@@ -68,7 +73,9 @@ export default function RootLayout({
           <WishlistProvider>
             {/* <AnnouncementBar /> */}
             <Header />
-            <main className="flex-1">{children}</main>
+            <SmoothScrollProvider>
+              <main className="flex-1">{children}</main>
+            </SmoothScrollProvider>
             <Footer />
           </WishlistProvider>
         </CartProvider>

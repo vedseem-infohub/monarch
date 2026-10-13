@@ -119,12 +119,12 @@ export const NewArrivals: React.FC = () => {
           ref={trackRef}
           className="flex gap-5 sm:gap-6 overflow-x-auto no-scrollbar scroll-smooth pb-4 px-1"
         >
-          {newArrivalProducts.map((product) => (
+          {newArrivalProducts.map((product, idx) => (
             <div
               key={product.id}
               className="product-rail-card shrink-0 w-[260px] sm:w-[290px] lg:w-[310px]"
             >
-              <ProductCard product={product} />
+              <ProductCard product={product} priority={idx < 3} />
             </div>
           ))}
         </div>

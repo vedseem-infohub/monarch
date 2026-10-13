@@ -4,124 +4,124 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Sparkles, ChevronDown } from 'lucide-react';
 
-/**
- * List of frame indices with 0.066s delay in their filename.
- * All other frames in /public have delay-0.033s.jpg.
- */
-const DELAY_66_INDICES = new Set([8, 93, 111, 140, 154]);
-
-function getFrameUrl(frameNum: number): string {
-  const padded = String(frameNum).padStart(3, '0');
-  return `/optimized/frame_${padded}.webp`;
-}
-
-function getFallbackJpgUrl(frameNum: number): string {
-  const padded = String(frameNum).padStart(3, '0');
-  const delay = DELAY_66_INDICES.has(frameNum) ? '0.066s' : '0.033s';
-  return `/frame_${padded}_delay-${delay}.jpg`;
-}
+const TOTAL_FRAMES = 79;
 
 /**
- * Build sampled frames list:
- * - Desktop: step 3 (53 frames @ ~20KB each = ~1.05 MB total payload)
- * - Mobile: step 4 (40 frames @ ~20KB each = ~800 KB total payload)
- * Extremely fast loading, zero network lag.
+ * Array of paths to the 79 optimized webp frames
  */
-function buildSampledFrameUrls(isMobile: boolean, prefersReducedMotion: boolean): string[] {
-  if (prefersReducedMotion) {
-    return [getFrameUrl(1)];
-  }
-
-  const step = isMobile ? 4 : 3;
-  const urls: string[] = [];
-
-  for (let i = 1; i <= 156; i += step) {
-    urls.push(getFrameUrl(i));
-  }
-
-  // Ensure last frame 156 is always present
-  if (urls[urls.length - 1] !== getFrameUrl(156)) {
-    urls.push(getFrameUrl(156));
-  }
-
-  return urls;
-}
+const FRAME_PATHS: string[] = Array.from({ length: TOTAL_FRAMES }, (_, i) => {
+  const padded = String(i + 1).padStart(3, '0');
+  return `/hero-frames/frame_${padded}.webp`;
+});
 
 export const HeroSection: React.FC = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLElement>(null);
+  const stickyStageRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const textContainerRef = useRef<HTMLDivElement>(null);
 
-  // Loaded images kept in ref to prevent expensive React re-renders during scrolling
-  const imagesRef = useRef<(HTMLImageElement | null)[]>([]);
-  // Only repaint when frame index actually changes
+  // Loaded frames cache (ImageBitmap where supported or HTMLImageElement)
+  const framesCacheRef = useRef<(ImageBitmap | HTMLImageElement | null)[]>([]);
   const lastRenderedIndexRef = useRef<number>(-1);
-  // requestAnimationFrame handle for batching render calls
+
+  // HUD DOM refs for direct, zero-react-overhead updates during scroll
+  const percentTextRef = useRef<HTMLSpanElement>(null);
+  const progressBarRef = useRef<HTMLDivElement>(null);
+  const frameCounterRef = useRef<HTMLSpanElement>(null);
+  const activeChapterLabelRef = useRef<HTMLSpanElement>(null);
+
+  // LERP damping state
+  const targetFrameRef = useRef<number>(0);
+  const currentFrameRef = useRef<number>(0);
   const rafIdRef = useRef<number | null>(null);
 
-  // Direct DOM refs for live counters to avoid React state re-rendering on every scroll event
-  const walkthroughPercentRef = useRef<HTMLSpanElement>(null);
-  const frameCounterRef = useRef<HTMLSpanElement>(null);
-  const backgroundProgressRef = useRef<HTMLDivElement>(null);
-  const backgroundIndicatorRef = useRef<HTMLDivElement>(null);
+  // Mouse micro-parallax state (Desktop only)
+  const mouseTargetRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const mouseCurrentRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const mouseRafIdRef = useRef<number | null>(null);
 
-  // Discrete phase state (0: Hero, 1: Chapter I, 2: Chapter II, 3: Chapter III)
-  // Only triggers 4 React state updates across the entire 400vh scroll!
+  // Discrete phase state for 4 chapters:
+  // 0: Prologue (0% - 22%)
+  // 1: Chapter I (22% - 52%)
+  // 2: Chapter II (52% - 78%)
+  // 3: Chapter III (78% - 100%)
   const [activePhase, setActivePhase] = useState<number>(0);
   const currentPhaseRef = useRef<number>(0);
 
-  // UI state
-  const [isFirstFrameLoaded, setIsFirstFrameLoaded] = useState<boolean>(false);
+  // Component state
+  const [isFirstFrameReady, setIsFirstFrameReady] = useState<boolean>(false);
   const [isReducedMotion, setIsReducedMotion] = useState<boolean>(false);
+  const [isMobileDevice, setIsMobileDevice] = useState<boolean>(false);
 
-  /**
-   * Finds the closest already-loaded frame to avoid any render stuttering
-   */
-  const getNearestLoadedImage = useCallback((targetIndex: number): HTMLImageElement | null => {
-    const images = imagesRef.current;
-    if (images.length === 0) return null;
+  // Detect environment & motion preferences
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
 
-    if (images[targetIndex] && images[targetIndex]!.complete) {
-      return images[targetIndex];
-    }
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setIsReducedMotion(motionQuery.matches);
 
-    // Look backward for nearest loaded frame
-    for (let i = targetIndex - 1; i >= 0; i--) {
-      if (images[i] && images[i]!.complete) {
-        return images[i];
-      }
-    }
+    const updateMobile = () => {
+      setIsMobileDevice(window.innerWidth < 768);
+    };
+    updateMobile();
 
-    // Look forward if no prior frame is loaded
-    for (let i = targetIndex + 1; i < images.length; i++) {
-      if (images[i] && images[i]!.complete) {
-        return images[i];
-      }
-    }
+    const handleMotionChange = (e: MediaQueryListEvent) => {
+      setIsReducedMotion(e.matches);
+    };
 
-    return null;
+    motionQuery.addEventListener('change', handleMotionChange);
+    window.addEventListener('resize', updateMobile, { passive: true });
+
+    return () => {
+      motionQuery.removeEventListener('change', handleMotionChange);
+      window.removeEventListener('resize', updateMobile);
+    };
   }, []);
 
   /**
-   * Draws a specific frame to the canvas preserving aspect ratio (centered cover)
+   * Finds the nearest loaded frame to guarantee zero flicker if scrolling ahead of preload
+   */
+  const getNearestLoadedFrame = useCallback(
+    (targetIndex: number): ImageBitmap | HTMLImageElement | null => {
+      const frames = framesCacheRef.current;
+      if (frames.length === 0) return null;
+
+      if (frames[targetIndex]) return frames[targetIndex];
+
+      for (let i = targetIndex - 1; i >= 0; i--) {
+        if (frames[i]) return frames[i];
+      }
+      for (let i = targetIndex + 1; i < frames.length; i++) {
+        if (frames[i]) return frames[i];
+      }
+      return null;
+    },
+    []
+  );
+
+  /**
+   * Draws a specific frame to the canvas preserving cover aspect ratio
    */
   const drawFrame = useCallback(
     (index: number) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
 
-      const img = getNearestLoadedImage(index);
-      if (!img || !img.complete || img.naturalWidth === 0) return;
+      const frame = getNearestLoadedFrame(index);
+      if (!frame) return;
 
       const ctx = canvas.getContext('2d', { alpha: false });
       if (!ctx) return;
 
       ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'medium'; // Fast and crisp on high-DPI displays
+      ctx.imageSmoothingQuality = 'medium';
 
       const canvasWidth = canvas.width;
       const canvasHeight = canvas.height;
-      const imgWidth = img.naturalWidth;
-      const imgHeight = img.naturalHeight;
+      const imgWidth = 'naturalWidth' in frame ? frame.naturalWidth : frame.width;
+      const imgHeight = 'naturalHeight' in frame ? frame.naturalHeight : frame.height;
+
+      if (imgWidth === 0 || imgHeight === 0) return;
 
       const imgAspect = imgWidth / imgHeight;
       const canvasAspect = canvasWidth / canvasHeight;
@@ -129,7 +129,7 @@ export const HeroSection: React.FC = () => {
       let renderWidth = 0;
       let renderHeight = 0;
 
-      // Fullscreen 'cover' algorithm: fills canvas completely without distortion
+      // Fullscreen cover algorithm
       if (canvasAspect > imgAspect) {
         renderWidth = canvasWidth;
         renderHeight = canvasWidth / imgAspect;
@@ -138,230 +138,284 @@ export const HeroSection: React.FC = () => {
         renderWidth = canvasHeight * imgAspect;
       }
 
-      // Center image inside canvas
       const offsetX = (canvasWidth - renderWidth) / 2;
       const offsetY = (canvasHeight - renderHeight) / 2;
 
-      ctx.drawImage(img, offsetX, offsetY, renderWidth, renderHeight);
+      ctx.drawImage(frame, offsetX, offsetY, renderWidth, renderHeight);
+      lastRenderedIndexRef.current = index;
     },
-    [getNearestLoadedImage]
+    [getNearestLoadedFrame]
   );
 
   /**
-   * Updates canvas internal buffer resolution to match screen pixels and devicePixelRatio.
+   * Resizes canvas to match device pixel ratio for crystal clear rendering
    */
   const resizeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || typeof window === 'undefined') return;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2); // Cap at 2 for GPU efficiency
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const displayWidth = window.innerWidth;
     const displayHeight = window.innerHeight;
 
-    const newWidth = Math.round(displayWidth * dpr);
-    const newHeight = Math.round(displayHeight * dpr);
+    const newW = Math.round(displayWidth * dpr);
+    const newH = Math.round(displayHeight * dpr);
 
-    if (canvas.width !== newWidth || canvas.height !== newHeight) {
-      canvas.width = newWidth;
-      canvas.height = newHeight;
+    if (canvas.width !== newW || canvas.height !== newH) {
+      canvas.width = newW;
+      canvas.height = newH;
+    }
 
-      if (lastRenderedIndexRef.current >= 0) {
-        drawFrame(lastRenderedIndexRef.current);
-      }
+    if (lastRenderedIndexRef.current >= 0) {
+      drawFrame(lastRenderedIndexRef.current);
     }
   }, [drawFrame]);
 
   /**
-   * High-performance scroll mapping:
-   * - Computes progress and target frame index.
-   * - Updates live counters via DOM refs (ZERO React re-renders!).
-   * - Only updates React state when changing between the 4 major chapters.
-   */
-  const updateFrameFromScroll = useCallback(() => {
-    if (isReducedMotion) return;
-
-    const container = containerRef.current;
-    const totalFrames = imagesRef.current.length;
-    if (!container || totalFrames === 0) return;
-
-    const rect = container.getBoundingClientRect();
-    const windowHeight = window.innerHeight;
-
-    // Total scroll travel available while canvas is pinned
-    const scrollableDistance = rect.height - windowHeight;
-    if (scrollableDistance <= 0) return;
-
-    // Distance the user has scrolled into this hero section
-    const scrolledDistance = -rect.top;
-
-    // Normalized progress clamped between 0.0 and 1.0
-    const rawProgress = scrolledDistance / scrollableDistance;
-    const progress = Math.min(1, Math.max(0, rawProgress));
-
-    // Determine discrete chapter phase
-    let phase = 0;
-    if (progress >= 0.78) {
-      phase = 3;
-    } else if (progress >= 0.52) {
-      phase = 2;
-    } else if (progress >= 0.22) {
-      phase = 1;
-    } else {
-      phase = 0;
-    }
-
-    // Only trigger React state update when chapter changes
-    if (phase !== currentPhaseRef.current) {
-      currentPhaseRef.current = phase;
-      setActivePhase(phase);
-    }
-
-    // Update real-time DOM elements directly without triggering React re-renders
-    if (walkthroughPercentRef.current) {
-      walkthroughPercentRef.current.textContent = `${Math.round(progress * 100)}%`;
-    }
-
-    // Map [0, 1] progress to integer frame index [0, totalFrames - 1]
-    const targetIndex = Math.min(
-      totalFrames - 1,
-      Math.max(0, Math.floor(progress * totalFrames))
-    );
-
-    if (frameCounterRef.current) {
-      frameCounterRef.current.textContent = `${targetIndex + 1} / ${totalFrames} FRAMES`;
-    }
-
-    // ONLY REPAINT WHEN THE FRAME INDEX ACTUALLY CHANGES
-    if (targetIndex !== lastRenderedIndexRef.current) {
-      lastRenderedIndexRef.current = targetIndex;
-      drawFrame(targetIndex);
-    }
-  }, [isReducedMotion, drawFrame]);
-
-  /**
-   * Scroll event handler: debounced via requestAnimationFrame
-   */
-  const handleScroll = useCallback(() => {
-    if (rafIdRef.current !== null) return;
-
-    rafIdRef.current = requestAnimationFrame(() => {
-      rafIdRef.current = null;
-      updateFrameFromScroll();
-    });
-  }, [updateFrameFromScroll]);
-
-  /**
-   * PROGRESSIVE STAGED PRELOADER:
-   * 1. Loads Frame 0 immediately -> Hero is rendered and interactive in < 150ms!
-   * 2. Background queue streams remaining sampled frames (4 concurrent at a time)
-   *    so the network socket pool is never clogged.
+   * Preload 79 frames with off-thread ImageBitmap decoding and immediate first frame
    */
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    setIsReducedMotion(prefersReduced);
-
-    const isMobile = window.innerWidth < 768;
-    const targetUrls = buildSampledFrameUrls(isMobile, prefersReduced);
-    const totalFrames = targetUrls.length;
-
-    imagesRef.current = new Array(totalFrames).fill(null);
-
     let isCancelled = false;
+    framesCacheRef.current = new Array(TOTAL_FRAMES).fill(null);
 
-    // STEP 1: Load First Frame Immediately
-    const firstImg = new Image();
-    firstImg.src = targetUrls[0];
-    firstImg.onload = () => {
-      if (isCancelled) return;
-      imagesRef.current[0] = firstImg;
-      setIsFirstFrameLoaded(true);
+    const loadSingleFrame = async (
+      index: number,
+      priority: 'high' | 'auto' = 'auto'
+    ): Promise<void> => {
+      if (isCancelled || framesCacheRef.current[index]) return;
 
-      // Render first frame immediately
-      lastRenderedIndexRef.current = 0;
-      resizeCanvas();
-      drawFrame(0);
+      const url = FRAME_PATHS[index];
 
-      // If reduced motion, stop here (1 frame only)
-      if (prefersReduced || totalFrames <= 1) return;
+      // Try off-thread ImageBitmap decoding if available for 0 jank
+      if ('createImageBitmap' in window) {
+        try {
+          const res = await fetch(url, { priority });
+          if (!res.ok) throw new Error('Fetch failed');
+          const blob = await res.blob();
+          const bitmap = await createImageBitmap(blob);
+          if (!isCancelled) {
+            framesCacheRef.current[index] = bitmap;
+            if (index === 0) {
+              setIsFirstFrameReady(true);
+              resizeCanvas();
+              drawFrame(0);
+            }
+          }
+          return;
+        } catch {
+          // Fall back to standard Image decoding
+        }
+      }
 
-      // STEP 2: Concurrency-controlled background loader (10 concurrent at a time)
-      // With ~20KB WebP files, 10 concurrent streams loads the whole sequence in < 1 second!
-      const CONCURRENCY = 10;
-      let currentIndex = 1;
-      let loadedTotal = 1;
-
-      const loadNext = () => {
-        if (isCancelled || currentIndex >= totalFrames) return;
-
-        const idx = currentIndex++;
+      return new Promise<void>((resolve) => {
         const img = new Image();
-        img.src = targetUrls[idx];
-
-        const onFinish = () => {
-          if (isCancelled) return;
-          imagesRef.current[idx] = img;
-          loadedTotal++;
-
-          // Update subtle background indicator in DOM
-          const pct = Math.round((loadedTotal / totalFrames) * 100);
-          if (backgroundProgressRef.current) {
-            backgroundProgressRef.current.style.width = `${pct}%`;
+        img.src = url;
+        img.onload = () => {
+          if (!isCancelled) {
+            framesCacheRef.current[index] = img;
+            if (index === 0) {
+              setIsFirstFrameReady(true);
+              resizeCanvas();
+              drawFrame(0);
+            }
           }
-          if (pct >= 100 && backgroundIndicatorRef.current) {
-            backgroundIndicatorRef.current.style.opacity = '0';
-          }
-
-          loadNext();
+          resolve();
         };
+        img.onerror = () => resolve();
+      });
+    };
 
-        img.onload = onFinish;
-        img.onerror = () => {
-          // If webp fails for any reason, fallback to original jpg
-          const fallback = new Image();
-          const frameNum = idx * 3 + 1; // estimate original frame number
-          fallback.src = getFallbackJpgUrl(Math.min(156, frameNum));
-          fallback.onload = () => {
-            img.src = fallback.src;
-            onFinish();
-          };
-          fallback.onerror = onFinish;
-        };
+    // 1. Instantly load first frame
+    loadSingleFrame(0, 'high').then(() => {
+      if (isCancelled) return;
+
+      // 2. Preload remaining frames in concurrent batches of 8
+      let nextIndex = 1;
+      const concurrency = 8;
+
+      const worker = async () => {
+        while (nextIndex < TOTAL_FRAMES && !isCancelled) {
+          const idx = nextIndex++;
+          await loadSingleFrame(idx, 'auto');
+        }
       };
 
-      for (let c = 0; c < CONCURRENCY; c++) {
-        loadNext();
+      for (let i = 0; i < concurrency; i++) {
+        worker();
       }
-    };
+    });
 
     return () => {
       isCancelled = true;
-      imagesRef.current = [];
     };
   }, [resizeCanvas, drawFrame]);
 
   /**
-   * Listeners and initial paint once first frame is ready
+   * Window resize handler
    */
   useEffect(() => {
-    if (!isFirstFrameLoaded) return;
+    if (typeof window === 'undefined') return;
 
     resizeCanvas();
-    updateFrameFromScroll();
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', resizeCanvas, { passive: true });
 
     return () => {
-      window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', resizeCanvas);
-      if (rafIdRef.current !== null) {
-        cancelAnimationFrame(rafIdRef.current);
-        rafIdRef.current = null;
+    };
+  }, [resizeCanvas]);
+
+  /**
+   * Silky LERP Animation Loop:
+   * Smoothly interpolates towards targetFrame and paints only when frame changes
+   */
+  useEffect(() => {
+    if (typeof window === 'undefined' || isReducedMotion) return;
+
+    const tick = () => {
+      const target = targetFrameRef.current;
+      const current = currentFrameRef.current;
+      const diff = target - current;
+
+      if (Math.abs(diff) > 0.01) {
+        // 0.2 factor gives silky deceleration perfectly matched to Lenis smooth scroll
+        currentFrameRef.current += diff * 0.2;
+      } else {
+        currentFrameRef.current = target;
+      }
+
+      const clampedIndex = Math.max(
+        0,
+        Math.min(TOTAL_FRAMES - 1, Math.round(currentFrameRef.current))
+      );
+
+      if (clampedIndex !== lastRenderedIndexRef.current) {
+        drawFrame(clampedIndex);
+      }
+
+      rafIdRef.current = requestAnimationFrame(tick);
+    };
+
+    rafIdRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+    };
+  }, [isReducedMotion, drawFrame]);
+
+  /**
+   * Scroll listener synchronized with Lenis and window scroll
+   */
+  useEffect(() => {
+    if (typeof window === 'undefined' || isReducedMotion) return;
+
+    const handleScroll = () => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const rect = container.getBoundingClientRect();
+      const maxScroll = container.offsetHeight - window.innerHeight;
+      if (maxScroll <= 0) return;
+
+      const currentScroll = -rect.top;
+      const progress = Math.max(0, Math.min(1, currentScroll / maxScroll));
+
+      // 1. Update Target Frame Index (0 to 78)
+      targetFrameRef.current = progress * (TOTAL_FRAMES - 1);
+
+      // 2. Direct DOM Updates for Zero-Lag HUD
+      const pct = Math.round(progress * 100);
+      if (percentTextRef.current) {
+        percentTextRef.current.textContent = `${pct}%`;
+      }
+      if (progressBarRef.current) {
+        progressBarRef.current.style.width = `${pct}%`;
+      }
+
+      // Display 1-based frame counter (1 / 79 FRAMES)
+      const displayFrame = Math.min(TOTAL_FRAMES, Math.max(1, Math.round(progress * (TOTAL_FRAMES - 1)) + 1));
+      if (frameCounterRef.current) {
+        frameCounterRef.current.textContent = `${displayFrame} / ${TOTAL_FRAMES} FRAMES`;
+      }
+
+      // Active Chapter Label
+      if (activeChapterLabelRef.current) {
+        if (progress < 0.22) {
+          activeChapterLabelRef.current.textContent = 'PROLOGUE';
+        } else if (progress < 0.52) {
+          activeChapterLabelRef.current.textContent = 'CHAPTER I';
+        } else if (progress < 0.78) {
+          activeChapterLabelRef.current.textContent = 'CHAPTER II';
+        } else {
+          activeChapterLabelRef.current.textContent = 'CHAPTER III';
+        }
+      }
+
+      // 3. Discrete Phase Updates for Chapter Narrative
+      let nextPhase = 0;
+      if (progress >= 0.78) {
+        nextPhase = 3;
+      } else if (progress >= 0.52) {
+        nextPhase = 2;
+      } else if (progress >= 0.22) {
+        nextPhase = 1;
+      }
+
+      if (currentPhaseRef.current !== nextPhase) {
+        currentPhaseRef.current = nextPhase;
+        setActivePhase(nextPhase);
       }
     };
-  }, [isFirstFrameLoaded, handleScroll, resizeCanvas, updateFrameFromScroll]);
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [isReducedMotion]);
+
+  /**
+   * Cursor Micro-Parallax on Editorial Content (Desktop only)
+   */
+  useEffect(() => {
+    if (typeof window === 'undefined' || isReducedMotion || isMobileDevice) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const nx = (e.clientX / window.innerWidth - 0.5) * 16;
+      const ny = (e.clientY / window.innerHeight - 0.5) * 12;
+      mouseTargetRef.current = { x: nx, y: ny };
+
+      if (!mouseRafIdRef.current) {
+        const tick = () => {
+          const target = mouseTargetRef.current;
+          const current = mouseCurrentRef.current;
+
+          current.x += (target.x - current.x) * 0.08;
+          current.y += (target.y - current.y) * 0.08;
+
+          if (textContainerRef.current) {
+            textContainerRef.current.style.transform = `translate3d(${current.x.toFixed(2)}px, ${current.y.toFixed(2)}px, 0)`;
+          }
+
+          if (Math.abs(target.x - current.x) > 0.05 || Math.abs(target.y - current.y) > 0.05) {
+            mouseRafIdRef.current = requestAnimationFrame(tick);
+          } else {
+            mouseRafIdRef.current = null;
+          }
+        };
+        mouseRafIdRef.current = requestAnimationFrame(tick);
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (mouseRafIdRef.current) cancelAnimationFrame(mouseRafIdRef.current);
+    };
+  }, [isReducedMotion, isMobileDevice]);
 
   return (
     <section
@@ -369,18 +423,23 @@ export const HeroSection: React.FC = () => {
       className="relative w-full bg-[#1A0A0E] text-monarch-ivory"
       style={{ height: isReducedMotion ? '100vh' : '400vh' }}
     >
-      {/* Sticky full-screen hero viewport with hardware acceleration */}
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center will-change-transform">
-        {/* Render canvas where frames are drawn via 2D context */}
+      {/* 100vh Sticky Viewport Stage with Hardware Acceleration */}
+      <div
+        ref={stickyStageRef}
+        className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center will-change-transform"
+      >
+        {/* =========================================================================
+            LAYER 0: HIGH-PERFORMANCE 2D CANVAS SCROLL IMAGE SEQUENCE (79 FRAMES)
+            ========================================================================= */}
         <canvas
           ref={canvasRef}
-          className="w-full h-full block object-center"
+          className="w-full h-full block object-center will-change-transform"
           aria-label="Monarch royal flagship boutique walkthrough animation"
         />
 
-        {/* Lightweight Initial Ambient Placeholder (fades away in ~100ms) */}
-        {!isFirstFrameLoaded && (
-          <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-[#1A0A0E] text-center">
+        {/* Ambient Loader / First Frame Placeholder */}
+        {!isFirstFrameReady && (
+          <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-[#1A0A0E] text-center transition-opacity duration-700">
             <div className="w-12 h-12 mb-4 rounded-full border border-monarch-gold/40 flex items-center justify-center relative">
               <div className="w-3.5 h-3.5 bg-monarch-gold rounded-full animate-ping" />
             </div>
@@ -390,45 +449,70 @@ export const HeroSection: React.FC = () => {
           </div>
         )}
 
-        {/* Subtle Background Preload Progress Bar (non-blocking) */}
-        <div
-          ref={backgroundIndicatorRef}
-          className="pointer-events-none absolute top-0 left-0 right-0 h-[2px] z-30 transition-opacity duration-1000 bg-black/20"
-        >
-          <div
-            ref={backgroundProgressRef}
-            className="h-full bg-gradient-to-r from-monarch-gold-dark to-monarch-gold transition-all duration-300"
-            style={{ width: '5%' }}
-          />
-        </div>
-
-        {/* Cinematic Vignette & Royal Lighting Overlays */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#1A0A0E]/85 via-transparent to-[#1A0A0E]/60" />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#1A0A0E]/60 via-transparent to-[#1A0A0E]/60" />
+        {/* =========================================================================
+            LAYER 1: TOP GOLD PROGRESS BAR (Identical to monarch-beta-two.vercel.app)
+            ========================================================================= */}
+        {!isReducedMotion && (
+          <div className="pointer-events-none absolute top-0 left-0 right-0 h-[2px] z-30 transition-opacity duration-1000 bg-black/20">
+            <div
+              ref={progressBarRef}
+              className="h-full bg-gradient-to-r from-monarch-gold-dark to-monarch-gold transition-all duration-300"
+              style={{ width: '0%' }}
+            />
+          </div>
+        )}
 
         {/* =========================================================================
-            DYNAMIC HERO EDITORIAL OVERLAYS
-            -------------------------------------------------------------------------
-            State updates only on major chapter transitions (Phase 0, 1, 2, 3)
-           ========================================================================= */}
-        <div className="pointer-events-none absolute inset-0 z-20 flex flex-col justify-between p-6 sm:p-12 lg:p-16">
-          {/* Top Navigation Cue / Brand Tag */}
+            LAYER 2: CINEMATIC VIGNETTE & DIRECTIONAL SCRIMS
+            ========================================================================= */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#1A0A0E]/85 via-transparent to-[#1A0A0E]/60 z-10" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#1A0A0E]/60 via-transparent to-[#1A0A0E]/60 z-10" />
+
+        {/* Peripheral radial shading for royal boutique atmosphere */}
+        <div
+          className="pointer-events-none absolute inset-0 z-11 opacity-70"
+          style={{
+            background:
+              'radial-gradient(circle at center, transparent 38%, rgba(26, 10, 14, 0.6) 80%, rgba(20, 6, 10, 0.95) 100%)',
+          }}
+        />
+
+        {/* =========================================================================
+            LAYER 3: HUD & EDITORIAL OVERLAYS (Identical to monarch-beta-two.vercel.app)
+            ========================================================================= */}
+        <div className="pointer-events-none absolute inset-0 z-20 flex flex-col justify-between pt-24 sm:pt-26 lg:pt-28 px-6 sm:px-12 lg:px-16 pb-6 sm:pb-8 lg:pb-10">
+          {/* Top Row: Pill Badge and Walkthrough HUD */}
           <div className="flex items-center justify-between pointer-events-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-monarch-gold/30 text-xs font-nav uppercase tracking-[0.2em] text-monarch-gold-light">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-monarch-gold/30 text-xs font-nav uppercase tracking-[0.2em] text-monarch-gold-light shadow-md">
               <Sparkles className="w-3.5 h-3.5 text-monarch-gold animate-pulse" />
               <span>Royal Haute Couture · Festive 2026</span>
             </div>
 
             {!isReducedMotion && (
-              <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-monarch-gold/20 text-xs font-mono text-monarch-beige/80">
-                <span className="text-[10px] uppercase tracking-wider text-monarch-gold">Walkthrough</span>
-                <span ref={walkthroughPercentRef}>0%</span>
+              <div className="flex items-center gap-2">
+                {/* Active Chapter Label */}
+                <div className="hidden md:inline-flex items-center px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-monarch-gold/20 text-[10px] font-mono text-monarch-gold tracking-widest uppercase">
+                  <span ref={activeChapterLabelRef}>PROLOGUE</span>
+                </div>
+
+                {/* Walkthrough Counter */}
+                <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-monarch-gold/20 text-xs font-mono text-monarch-beige/80">
+                  <span className="text-[10px] uppercase tracking-wider text-monarch-gold">
+                    Walkthrough
+                  </span>
+                  <span ref={percentTextRef} className="font-medium text-monarch-gold-light">
+                    0%
+                  </span>
+                </div>
               </div>
             )}
           </div>
 
-          {/* Central Content Container */}
-          <div className="max-w-3xl my-auto">
+          {/* Central Editorial Narrative Area with Desktop Micro-Parallax */}
+          <div
+            ref={textContainerRef}
+            className="max-w-3xl my-auto relative min-h-[320px] flex items-center will-change-transform"
+          >
             {/* PHASE 0: Initial Hero Presentation (0% - 22% Scroll) */}
             <div
               className={`transition-all duration-700 transform ${
@@ -451,7 +535,9 @@ export const HeroSection: React.FC = () => {
                 </h1>
 
                 <p className="text-sm sm:text-base text-monarch-beige/90 max-w-xl font-sans leading-relaxed">
-                  Step inside the flagship bridal sanctum. Where centuries of hand-spun raw mulberry silks, authentic Kashi zari brocades, and imperial Awadhi tailoring meet digital couture.
+                  Step inside the flagship bridal sanctum. Where centuries of hand-spun raw mulberry
+                  silks, authentic Kashi zari brocades, and imperial Awadhi tailoring meet digital
+                  couture.
                 </p>
 
                 {/* Primary Call to Action Buttons */}
@@ -490,7 +576,8 @@ export const HeroSection: React.FC = () => {
                   Step Into The Atelier
                 </h2>
                 <p className="text-sm sm:text-base text-monarch-beige/90 max-w-lg leading-relaxed">
-                  The grand doors open to reveal an exclusive archive of royal Indian occasionwear, curating generational bridal couture for the discerning connoisseur.
+                  The grand doors open to reveal an exclusive archive of royal Indian occasionwear,
+                  curating generational bridal couture for the discerning connoisseur.
                 </p>
               </div>
             )}
@@ -511,7 +598,8 @@ export const HeroSection: React.FC = () => {
                   Woven In Pure Zari &amp; Silk
                 </h2>
                 <p className="text-sm sm:text-base text-monarch-beige/90 max-w-lg leading-relaxed">
-                  Certified 24-karat gold wefts interlaced across hand-loomed mulberry silks. Over 400 continuous artisan hours dedicated to every single masterwork.
+                  Certified 24-karat gold wefts interlaced across hand-loomed mulberry silks. Over 400
+                  continuous artisan hours dedicated to every single masterwork.
                 </p>
               </div>
             )}
@@ -532,7 +620,8 @@ export const HeroSection: React.FC = () => {
                   The Archival Ensembles
                 </h2>
                 <p className="text-sm sm:text-base text-monarch-beige/90 max-w-lg leading-relaxed mb-5">
-                  From bespoke crimson velvet bridal lehengas to hand-embroidered raw silk sherwanis, discover the crown jewels of Indian ceremonial couture.
+                  From bespoke crimson velvet bridal lehengas to hand-embroidered raw silk sherwanis,
+                  discover the crown jewels of Indian ceremonial couture.
                 </p>
 
                 <div className="flex flex-wrap gap-4">
@@ -555,13 +644,13 @@ export const HeroSection: React.FC = () => {
             )}
           </div>
 
-          {/* Bottom Footer Cue */}
+          {/* Bottom Footer HUD Cue (Identical to monarch-beta-two.vercel.app) */}
           <div className="flex items-center justify-between text-xs text-monarch-beige/70 pt-4 pointer-events-auto">
             <span
               ref={frameCounterRef}
               className="font-nav uppercase tracking-widest text-[10px] text-monarch-gold/80"
             >
-              1 / {isReducedMotion ? 1 : 79} FRAMES
+              1 / {TOTAL_FRAMES} FRAMES
             </span>
 
             {!isReducedMotion && (
@@ -573,7 +662,7 @@ export const HeroSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Accessibility badge when reduced motion is on */}
+        {/* Accessibility badge for Reduced Motion Mode */}
         {isReducedMotion && (
           <div className="absolute bottom-8 left-8 z-30 px-4 py-2 rounded-full bg-black/60 backdrop-blur-md border border-monarch-gold/30 text-xs text-monarch-gold-light">
             Static view (prefers-reduced-motion active)
@@ -583,3 +672,5 @@ export const HeroSection: React.FC = () => {
     </section>
   );
 };
+
+export default HeroSection;

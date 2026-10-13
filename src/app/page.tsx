@@ -1,5 +1,6 @@
 import React from 'react';
 import { HeroSection } from '@/components/home/HeroSection';
+import { SectionImagePreloader } from '@/components/home/shared/SectionImagePreloader';
 import { WovenToBeRemembered } from '@/components/home/WovenToBeRemembered';
 import { NewArrivals } from '@/components/home/NewArrivals';
 import { BestSellers } from '@/components/home/BestSellers';
@@ -15,6 +16,9 @@ import { TestimonialCarousel } from '@/components/home/TestimonialCarousel';
 export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen bg-[#F7F0E5]">
+      {/* Background section image preloader for instant load on scroll */}
+      <SectionImagePreloader />
+
       {/* 0. Flagship Hero Canvas Image Sequence Walkthrough (Preserved 400vh) */}
       <HeroSection />
 

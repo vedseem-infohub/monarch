@@ -11,9 +11,10 @@ import { ProductQuickView } from './ProductQuickView';
 
 interface ProductCardProps {
   product: Product;
+  priority?: boolean;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, priority = false }) => {
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { addToCart } = useCart();
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
@@ -27,6 +28,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const secondaryImg = product.images[1] || primaryImg;
   const currentImg = isHovered ? secondaryImg : primaryImg;
 
+  // Prefetch secondary hover image during idle time
+  React.useEffect(() => {
+    if (secondaryImg && secondaryImg !== primaryImg) {
+      const img = new Image();
+      img.src = secondaryImg;
+    }
+  }, [secondaryImg, primaryImg]);
+
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+    if (secondaryImg && secondaryImg !== primaryImg) {
+      const img = new Image();
+      img.src = secondaryImg;
+    }
+  };
+
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -39,7 +56,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     <>
       <div
         className="group relative flex flex-col bg-white rounded-xl overflow-hidden border border-monarch-beige/40 hover:border-monarch-gold transition-all duration-500 shadow-sm hover:shadow-xl"
-        onMouseEnter={() => setIsHovered(true)}
+        onMouseEnter={handleMouseEnter}
         onMouseLeave={() => setIsHovered(false)}
       >
         {/* Product Image Frame */}
@@ -53,7 +70,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             src={currentImg}
             alt={product.name}
             className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-105"
-            loading="lazy"
+            loading={priority ? 'eager' : 'lazy'}
             decoding="async"
           />
 

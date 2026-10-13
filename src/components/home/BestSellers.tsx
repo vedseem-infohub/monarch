@@ -140,7 +140,7 @@ export const BestSellers: React.FC = () => {
                   #{index + 1} Best Seller
                 </span>
               </div>
-              <ProductCard product={product} />
+              <ProductCard product={product} priority={index < 3} />
             </div>
           ))}
         </div>

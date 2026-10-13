@@ -91,6 +91,12 @@ export const ChangeYourLook: React.FC = () => {
   };
 
   useEffect(() => {
+    // Preload lookbook style images so tab switching is instantaneous
+    LOOKBOOK_STYLES.forEach((look) => {
+      const img = new Image();
+      img.src = look.modelImage;
+    });
+
     const ctx = gsap.context(() => {
       if (studioRef.current) {
         gsap.from(studioRef.current.querySelectorAll('.studio-reveal'), {
@@ -204,7 +210,7 @@ export const ChangeYourLook: React.FC = () => {
               src={currentLook.modelImage}
               alt={currentLook.lookTitle}
               className="w-full h-full object-cover animate-fade-in transition-all duration-700"
-              loading="lazy"
+              decoding="async"
             />
 
             {/* Floating Lookbook Pill */}

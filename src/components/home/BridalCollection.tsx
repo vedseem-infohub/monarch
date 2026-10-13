@@ -86,7 +86,8 @@ export const BridalCollection: React.FC = () => {
               src="https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=70&w=700&auto=format&fit=crop"
               alt="Monarch Royal Bridal Couture"
               className="w-full h-full object-cover transition-transform duration-1000 ease-out"
-              loading="lazy"
+              loading="eager"
+              decoding="async"
             />
 
             {/* Gradient Scrim & Vignette */}
@@ -135,7 +136,7 @@ export const BridalCollection: React.FC = () => {
 
             {/* Curated Bridal Cards Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
-              {bridalItems.map((item) => {
+              {bridalItems.map((item, idx) => {
                 const inWishlist = isInWishlist(item.id);
 
                 return (
@@ -152,7 +153,8 @@ export const BridalCollection: React.FC = () => {
                         src={item.images[0]}
                         alt={item.name}
                         className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-108"
-                        loading="lazy"
+                        loading={idx < 2 ? 'eager' : 'lazy'}
+                        decoding="async"
                       />
 
                       {/* Wishlist Button */}

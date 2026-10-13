@@ -115,6 +115,7 @@ export const TrendOfTheDay: React.FC = () => {
                     alt={item.product.name}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     loading="lazy"
+                    decoding="async"
                   />
                   <span className="absolute top-1 left-1 text-[8px] font-nav uppercase tracking-wider bg-monarch-maroon text-white px-1.5 py-0.5 rounded">
                     HOT

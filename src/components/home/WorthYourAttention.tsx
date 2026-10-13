@@ -95,6 +95,12 @@ export const WorthYourAttention: React.FC = () => {
   const [activeAccordion, setActiveAccordion] = useState(1); // default expand the 2nd one
 
   useEffect(() => {
+    // Preload accordion imagery so panel transitions are instantaneous
+    ACCORDION_DISCOVERIES.forEach((panel) => {
+      const img = new Image();
+      img.src = panel.image;
+    });
+
     const ctx = gsap.context(() => {
       if (editsRef.current) {
         gsap.from(editsRef.current.querySelectorAll('.edit-card'), {
@@ -221,7 +227,8 @@ export const WorthYourAttention: React.FC = () => {
                   src={panel.image}
                   alt={panel.title}
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 ease-out"
-                  loading="lazy"
+                  loading={index <= 1 ? 'eager' : 'lazy'}
+                  decoding="async"
                 />
 
                 {/* Scrim Overlay */}
