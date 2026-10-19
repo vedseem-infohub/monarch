@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { motion, Variants } from 'framer-motion';
+import { motion, Variants, Transition } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
 import { TrendDeckProduct } from '@/data/latestTrends';
 
@@ -14,54 +14,40 @@ interface TrendDeckCardProps {
   onSwipePrev: () => void;
 }
 
+const SYNCED_TRANSITION: Transition = {
+  duration: 0.46,
+  ease: [0.16, 1, 0.3, 1],
+};
+
 const cardVariants: Variants = {
   enter: (dir: number) => ({
-    // IN animation: sweeps in underneath the active card
-    zIndex: 10,
-    x: dir >= 0 ? 80 : -80,
-    y: 10,
-    rotate: dir >= 0 ? 6 : -6,
-    scale: 0.94,
+    // Synchronized IN animation: sweeps in from the opposite side in perfect tandem with the OUT card
+    zIndex: 20,
+    x: dir >= 0 ? 200 : -200,
+    y: 8,
+    rotate: dir >= 0 ? 8 : -8,
+    scale: 0.95,
     opacity: 0,
-    transition: {
-      zIndex: { duration: 0 },
-      x: { type: 'spring' as const, stiffness: 280, damping: 26, mass: 0.8 },
-      y: { type: 'spring' as const, stiffness: 280, damping: 26, mass: 0.8 },
-      rotate: { type: 'spring' as const, stiffness: 280, damping: 26, mass: 0.8 },
-      scale: { duration: 0.38, ease: [0.16, 1, 0.3, 1] },
-      opacity: { duration: 0.32, ease: 'easeOut' },
-    },
+    transition: SYNCED_TRANSITION,
   }),
   center: {
     zIndex: 20,
     x: 0,
     y: 0,
     rotate: 0,
-    opacity: 1,
     scale: 1,
-    transition: {
-      type: 'spring' as const,
-      stiffness: 280,
-      damping: 26,
-      mass: 0.8,
-    },
+    opacity: 1,
+    transition: SYNCED_TRANSITION,
   },
   exit: (dir: number) => ({
-    // OUT animation: stays strictly on top (zIndex: 50), flicks smoothly and fades away
-    zIndex: 50,
-    x: dir >= 0 ? -180 : 180,
-    y: -14,
-    rotate: dir >= 0 ? -10 : 10,
-    scale: 0.96,
+    // Synchronized OUT animation: glides away in tandem with identical velocity and duration
+    zIndex: 10,
+    x: dir >= 0 ? -200 : 200,
+    y: -8,
+    rotate: dir >= 0 ? -8 : 8,
+    scale: 0.95,
     opacity: 0,
-    transition: {
-      zIndex: { duration: 0 },
-      x: { duration: 0.38, ease: [0.22, 1, 0.36, 1] },
-      y: { duration: 0.38, ease: [0.22, 1, 0.36, 1] },
-      rotate: { duration: 0.38, ease: [0.22, 1, 0.36, 1] },
-      scale: { duration: 0.34, ease: 'easeOut' },
-      opacity: { duration: 0.34, ease: [0.4, 0, 0.7, 0] },
-    },
+    transition: SYNCED_TRANSITION,
   }),
 };
 
