@@ -20,22 +20,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, priority = fa
   const { openQuickView } = useQuickView();
 
   const [selectedColorIdx, setSelectedColorIdx] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
   const [isQuickAdded, setIsQuickAdded] = useState(false);
 
   const inWishlist = isInWishlist(product.id);
 
   // Active primary image and secondary hover crossfade image
   const primaryImg = product.images[selectedColorIdx] || product.images[0];
-  const secondaryImg = product.images[1] || primaryImg;
+  // Determine an alternate image that is genuinely different from primaryImg for instant hover
+  const hoverImg = product.images.find((img) => img !== primaryImg) || (product.images.length > 1 ? product.images[1] : null);
 
-  // Prefetch secondary hover image during idle time
+  // Prefetch alternate hover image during idle time
   React.useEffect(() => {
-    if (secondaryImg && secondaryImg !== primaryImg) {
+    if (hoverImg && hoverImg !== primaryImg) {
       const img = new Image();
-      img.src = secondaryImg;
+      img.src = hoverImg;
     }
-  }, [secondaryImg, primaryImg]);
+  }, [hoverImg, primaryImg]);
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -54,11 +54,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, priority = fa
   };
 
   return (
-    <div
-      className="group relative flex flex-col w-full select-none transition-all duration-500"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <div className="group relative flex flex-col w-full select-none transition-all duration-500 p-1">
       {/* =========================================================================
           1. EDITORIAL IMAGE CANVAS (Tall 3:4 Portrait, Full Model Visibility)
       ========================================================================= */}
@@ -70,21 +66,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, priority = fa
             src={primaryImg}
             alt={product.name}
             className={`w-full h-full object-cover object-top transition-all duration-700 ease-out group-hover:scale-105 ${
-              isHovered && secondaryImg !== primaryImg ? 'opacity-0' : 'opacity-100'
+              hoverImg ? 'opacity-100 group-hover:opacity-0' : 'opacity-100'
             }`}
             loading={priority ? 'eager' : 'lazy'}
             decoding="async"
           />
 
           {/* Secondary Editorial Alternate Angle Crossfade */}
-          {secondaryImg && secondaryImg !== primaryImg && (
+          {hoverImg && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={secondaryImg}
+              src={hoverImg}
               alt={`${product.name} drape view`}
-              className={`absolute inset-0 w-full h-full object-cover object-top transition-all duration-700 ease-out group-hover:scale-105 ${
-                isHovered ? 'opacity-100' : 'opacity-0'
-              }`}
+              className="absolute inset-0 w-full h-full object-cover object-top transition-all duration-700 ease-out group-hover:scale-105 opacity-0 group-hover:opacity-100"
               loading="lazy"
               decoding="async"
             />
@@ -190,21 +184,33 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, priority = fa
             )}
           </div>
 
-          {/* Color Swatches */}
-          <div className="flex items-center gap-1.5">
-            {product.colors.slice(0, 3).map((color, idx) => (
-              <button
-                key={color.name}
-                onClick={() => setSelectedColorIdx(color.imageIndex ?? idx)}
-                className={`w-3.5 h-3.5 rounded-full border transition-all ${
-                  selectedColorIdx === (color.imageIndex ?? idx)
-                    ? 'ring-2 ring-monarch-gold ring-offset-2 ring-offset-white scale-115 border-white shadow-sm'
-                    : 'border-black/20 hover:scale-110 opacity-80 hover:opacity-100'
-                }`}
-                style={{ backgroundColor: color.hex }}
-                title={color.name}
-              />
-            ))}
+          {/* Color Swatches (Hover or Click to Preview Shade) */}
+          <div className="flex items-center gap-1.5 py-1 px-1">
+            {product.colors.slice(0, 3).map((color, idx) => {
+              const targetIdx = color.imageIndex ?? idx;
+              return (
+                <button
+                  key={color.name}
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setSelectedColorIdx(targetIdx);
+                  }}
+                  onMouseEnter={() => setSelectedColorIdx(targetIdx)}
+                  onMouseOver={() => setSelectedColorIdx(targetIdx)}
+                  onPointerEnter={() => setSelectedColorIdx(targetIdx)}
+                  className={`w-3.5 h-3.5 rounded-full border transition-all cursor-pointer ${
+                    selectedColorIdx === targetIdx
+                      ? 'ring-2 ring-monarch-gold ring-offset-2 ring-offset-[#FAF7F2] scale-115 border-white shadow-sm'
+                      : 'border-black/20 hover:scale-110 opacity-80 hover:opacity-100'
+                  }`}
+                  style={{ backgroundColor: color.hex }}
+                  title={color.name}
+                  aria-label={`Preview ${color.name} shade`}
+                />
+              );
+            })}
             {product.colors.length > 3 && (
               <span className="text-[10px] text-monarch-charcoal/50 font-nav font-medium ml-0.5">
                 +{product.colors.length - 3}

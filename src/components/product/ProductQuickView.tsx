@@ -236,7 +236,7 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
 
           {/* Thumbnails Directly Under Big Photo (Hover or Click Instantly Changes Photo) */}
           {product.images.length > 1 && (
-            <div className="mt-4 py-3 px-3 flex items-center justify-center gap-3 overflow-x-auto no-scrollbar">
+            <div className="mt-4 py-3.5 px-4 flex items-center justify-start sm:justify-center gap-3.5 overflow-x-auto no-scrollbar">
               {product.images.map((img, idx) => (
                 <button
                   key={idx}
@@ -247,8 +247,8 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
                   onPointerEnter={() => handleThumbnailHover(idx)}
                   className={`relative shrink-0 w-12 h-16 sm:w-14 sm:h-18 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
                     activeImageIndex === idx
-                      ? 'border-monarch-maroon ring-2 ring-monarch-gold scale-105 shadow-md'
-                      : 'border-monarch-gold/30 opacity-75 hover:opacity-100 hover:border-monarch-gold hover:scale-105'
+                      ? 'border-monarch-maroon ring-2 ring-monarch-gold ring-offset-2 ring-offset-[#FAF7F2] scale-105 shadow-md'
+                      : 'border-monarch-gold/35 opacity-75 hover:opacity-100 hover:border-monarch-gold hover:scale-105'
                   }`}
                   aria-label={`Switch to photo ${idx + 1}`}
                 >
@@ -316,7 +316,7 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
             </span>
           </div>
 
-          <div className="flex items-center gap-3 py-2 px-1 overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-3 py-3 px-2.5 overflow-x-auto no-scrollbar">
             {product.colors.map((color, idx) => (
               <button
                 key={color.name}

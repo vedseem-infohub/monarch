@@ -126,10 +126,10 @@ export const BestSellers: React.FC = () => {
           </div>
         </div>
 
-        {/* Carousel Track with Bestseller Ranking Indicator */}
+        {/* Carousel Track with Bestseller Ranking Indicator & Generous Padding */}
         <div
           ref={trackRef}
-          className="flex gap-5 sm:gap-6 overflow-x-auto no-scrollbar scroll-smooth pb-4 px-1"
+          className="flex gap-5 sm:gap-6 overflow-x-auto no-scrollbar scroll-smooth py-5 px-3 sm:px-4"
         >
           {bestSellerProducts.map((product, index) => {
             // Unify ranking badge directly into the Product model to prevent duplicate badges

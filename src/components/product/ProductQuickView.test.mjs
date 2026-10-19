@@ -90,4 +90,23 @@ test('ProductQuickView Side Drawer & Motion Architecture Verification', async (t
     // Clean seamless layout: no divide-y hr dividing the gallery
     assert.ok(!content.includes('divide-y divide-monarch-gold/20'), 'Must remove divide-y hr border under gallery');
   });
+
+  await t.test('ProductQuickView and ProductCard implement hover image changes and increased padding', () => {
+    const quickViewContent = fs.readFileSync(QUICKVIEW_FILE, 'utf8');
+    const productCardContent = fs.readFileSync(PRODUCTCARD_FILE, 'utf8');
+
+    // QuickView hover image change handlers
+    assert.match(quickViewContent, /handleThumbnailHover/, 'QuickView must support thumbnail hover handler');
+    assert.match(quickViewContent, /handleColorHover/, 'QuickView must support color swatch hover handler');
+    assert.match(quickViewContent, /onMouseEnter=\{\(\) => handleThumbnailHover/, 'Thumbnails must change big photo on mouse enter');
+
+    // QuickView padding & ring-offset preventing border hiding
+    assert.match(quickViewContent, /ring-offset-2 ring-offset-\[#FAF7F2\]/, 'Active thumbnail and swatch must have ring offset so border is never hidden');
+    assert.match(quickViewContent, /py-3\.5 px-4/, 'Thumbnails container must have generous padding to prevent border clipping');
+
+    // ProductCard hover image and swatches
+    assert.match(productCardContent, /hoverImg/, 'ProductCard must calculate alternate hover image');
+    assert.match(productCardContent, /opacity-0 group-hover:opacity-100/, 'ProductCard must crossfade to alternate image on hover');
+    assert.match(productCardContent, /onMouseEnter=\{\(\) => setSelectedColorIdx/, 'ProductCard color swatches must update preview image on hover');
+  });
 });

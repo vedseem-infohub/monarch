@@ -76,24 +76,25 @@ export const BridalCollection: React.FC = () => {
   return (
     <section
       ref={sectionRef}
-      className="relative w-full bg-[#240E13] text-monarch-ivory overflow-hidden"
+      className="relative w-full bg-[#291116] text-monarch-ivory overflow-hidden"
     >
       {/* 
         TOP CURVED DIVIDER (3 LAYERS):
         Layer 1: Light ivory (#FAF5EE from BestSellers above)
-        Layer 2: Curved light brown layer (#8C6036) with gold accent line
-        Layer 3: Curved dark brown layer (#240E13 - 3rd layer) merging into the section
+        Layer 2: Curved light brown layer (#8C6036) with 1px-2px gold hairline
+        Layer 3: Curved dark brown layer (#291116 - 3rd layer) merging into the section
       */}
       <CurvedDivider
         direction="toDark"
         lightColor="#FAF5EE"
         lightBrownColor="#8C6036"
-        darkBrownColor="#240E13"
+        darkBrownColor="#291116"
+        strokeWidth={1.5}
       />
 
       {/* Ambient subtle light brown and dark brown radial glows */}
       <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-[#8C6036]/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-10 w-[500px] h-[500px] bg-[#16070A]/80 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-10 w-[500px] h-[500px] bg-[#1A0A0E]/80 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute inset-0 pointer-events-none opacity-[0.035] bg-[radial-gradient(#C7A15B_1px,transparent_1px)] [background-size:24px_24px]" />
 
       <div className="relative z-10 max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
@@ -103,7 +104,7 @@ export const BridalCollection: React.FC = () => {
             <div
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
-              className="relative w-full h-full min-h-[480px] sm:min-h-[560px] lg:min-h-[620px] rounded-2xl overflow-hidden border border-monarch-gold/40 shadow-2xl bg-black flex flex-col justify-between p-6 sm:p-8 group"
+              className="relative w-full h-full min-h-[480px] sm:min-h-[560px] lg:min-h-[620px] rounded-2xl overflow-hidden border border-monarch-gold/40 shadow-2xl bg-[#1A0A0E] flex flex-col justify-between p-6 sm:p-8 group"
             >
               {/* Background Model Image with smooth crossfade */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -191,8 +192,8 @@ export const BridalCollection: React.FC = () => {
               className="relative w-full overflow-hidden select-none py-2"
             >
               {/* Subtle edge fade scrims in dark brown */}
-              <div className="pointer-events-none absolute inset-y-0 left-0 w-6 sm:w-10 bg-gradient-to-r from-[#240E13] to-transparent z-10" />
-              <div className="pointer-events-none absolute inset-y-0 right-0 w-6 sm:w-10 bg-gradient-to-l from-[#240E13] to-transparent z-10" />
+              <div className="pointer-events-none absolute inset-y-0 left-0 w-6 sm:w-10 bg-gradient-to-r from-[#291116] to-transparent z-10" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 w-6 sm:w-10 bg-gradient-to-l from-[#291116] to-transparent z-10" />
 
               <div
                 className="flex gap-4 w-max animate-marquee hover:[animation-play-state:paused] py-2"
@@ -237,15 +238,16 @@ export const BridalCollection: React.FC = () => {
 
       {/* 
         BOTTOM CURVED DIVIDER (3 LAYERS):
-        Layer 3: Curved dark brown layer (#240E13)
-        Layer 2: Curved light brown layer (#8C6036) with gold accent line
+        Layer 3: Curved dark brown layer (#291116)
+        Layer 2: Curved light brown layer (#8C6036) with 1px-2px gold hairline
         Layer 1: Light ivory background (#FAF7F2 for TrendOfTheDay below)
       */}
       <CurvedDivider
         direction="toLight"
         lightColor="#FAF7F2"
         lightBrownColor="#8C6036"
-        darkBrownColor="#240E13"
+        darkBrownColor="#291116"
+        strokeWidth={1.5}
       />
     </section>
   );

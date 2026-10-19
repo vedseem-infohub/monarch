@@ -123,10 +123,10 @@ export const NewArrivals: React.FC = () => {
           </div>
         </div>
 
-        {/* Horizontal Carousel Track */}
+        {/* Horizontal Carousel Track with Generous Padding to Prevent Border & Shadow Clipping */}
         <div
           ref={trackRef}
-          className="flex gap-5 sm:gap-6 overflow-x-auto no-scrollbar scroll-smooth pb-4 px-1"
+          className="flex gap-5 sm:gap-6 overflow-x-auto no-scrollbar scroll-smooth py-5 px-3 sm:px-4"
         >
           {newArrivalProducts.map((product, idx) => (
             <div
