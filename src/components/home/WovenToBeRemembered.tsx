@@ -221,8 +221,8 @@ export const WovenToBeRemembered: React.FC = () => {
         };
 
         let travel = getTravelDistance();
-        // Further increased scroll pin height (5200px+) for an ultra-spacious, luxurious traversal
-        const pinScrollDistance = Math.max(5200, Math.round(travel * 3.8));
+        // Greatly increased scroll pin height (7500px+) for an ultra-spacious, luxurious traversal
+        const pinScrollDistance = Math.max(7500, Math.round(travel * 5.2));
 
         // Precompute card static center offsets in memory to eliminate all DOM reads during scroll
         let cardCenters = cards.map((c) => c.offsetLeft + c.offsetWidth / 2);
@@ -272,12 +272,12 @@ export const WovenToBeRemembered: React.FC = () => {
         }
 
         // Main scrubbed pinned timeline
-        // scrub: 0.2 provides crisp, responsive 1:1 coupling with Lenis smooth scroll without sluggish double-lag
+        // start: 'top 20px' pins the section at top 20px
         const scrubTl = gsap.timeline({
           scrollTrigger: {
             trigger: pinWrapper,
             pin: pinWrapper,
-            start: 'top top',
+            start: 'top 20px',
             end: () => `+=${pinScrollDistance}`,
             scrub: 0.2,
             anticipatePin: 1,
@@ -355,7 +355,7 @@ export const WovenToBeRemembered: React.FC = () => {
       {/* Pinned Viewport Container for Scroll Animation */}
       <div
         ref={pinWrapperRef}
-        className="w-full flex flex-col justify-between min-h-screen pt-12 lg:pt-14 pb-4 relative overflow-hidden bg-[#FAF6F0]"
+        className="w-full flex flex-col justify-between min-h-screen pt-16 lg:pt-20 pb-4 relative overflow-hidden bg-[#FAF6F0]"
       >
         {/* 1. Top Luxury Ticker Marquee Ribbon */}
         <div className="w-full bg-[#3F101A] text-monarch-gold-light py-1.5 overflow-hidden border-y border-monarch-gold/30 shrink-0">
