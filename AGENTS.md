@@ -51,6 +51,23 @@ Every agent working on this repository MUST execute this 4-step checklist:
 
 ---
 
+### 7. MANDATORY RULE: UNIFIED PRODUCT ARCHITECTURE (AGENT MUST NEVER FORGET)
+**CRITICAL**: Every wearable garment, saree, lehenga, or ensemble across EVERY section is a genuine `Product`!
+
+Agents must adhere strictly to these 5 backend developer principles:
+1. **Single Source of Truth**: NEVER create ad-hoc, random interfaces (like `ArchedCampaignItem`, `LookStyleItem`, `BridalEnsemble`) with divergent property names (`rawPrice` vs `price`, `title` vs `name`, `saree` vs `fabric`). Every product model across all files MUST implement `Product` from `@/types`.
+2. **Prices are Always Numbers**: The database stores price as an integer / decimal (e.g. `price: 18400`). NEVER store formatted strings like `"₹ 18,400"` as the primary price field. Use `formatINR(product.price)` from `@/utils/formatters` for display.
+3. **Area-Specific Reflections live in `sectionMetadata`**: Different sections present products differently. These area reflections belong in `product.sectionMetadata`:
+   - **Autumn–Winter 2026**: `campaignTag`, `campaignTitle`, `campaignSubtitle`, `curatedSaree`
+   - **Change Your Look**: `lookbookName`, `audioTrack: { title, artist }`, `features: string[]`
+   - **Bridal & Signatures**: `craftTechnique`, `heritageTag`
+   - **Seasonal Drops**: `seasonTag`
+   - **Trends**: `trendVelocity`, `badge`
+4. **Direct Cart & Wishlist Interaction**: Because every item is a full `Product`, always pass the product directly to `addToCart(product, color, size, qty)` and `toggleWishlist(product.id)`. NEVER construct fake "synthetic" product objects.
+5. **Backwards Compatibility**: When augmenting data files, provide convenience aliases (`title = name`, `formattedPrice = formatINR(price)`) so existing components never break.
+
+---
+
 ## Backend Database Architecture & Section-Wise Data Guide
 
 This guide defines how the production database is structured and how data is provisioned section-by-section to the frontend.
@@ -64,7 +81,7 @@ This guide defines how the production database is structured and how data is pro
 ### 2. Core Relational Database Schemas (Prisma / SQL)
 
 ```prisma
-// Core Product Catalog
+// Core Product Catalog (Single Canonical Table for all ensembles)
 model Product {
   id                 String           @id @default(cuid())
   slug               String           @unique
@@ -91,7 +108,8 @@ model Product {
   createdAt          DateTime         @default(now())
   updatedAt          DateTime         @updatedAt
 
-  // Section Relations
+  // Section Area Relations / Metadata
+  sectionMetadata    Json?            // Stores campaignTag, audioTrack, craftTechnique, features
   seasonalSpecial    SeasonalItem?
   trendItem          TrendItem?
   lookbookItem       LookbookItem?
@@ -132,20 +150,7 @@ model CampaignSection {
   ctaText      String         // "EXPLORE 2026 FORECAST"
   ctaHref      String
   isActive     Boolean        @default(true)
-  cards        CampaignCard[]
-}
-
-model CampaignCard {
-  id         String          @id @default(cuid())
-  campaignId String
-  campaign   CampaignSection @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  title      String
-  subtitle   String
-  saree      String
-  tag        String
-  image      String
-  href       String
-  orderIndex Int             @default(0)
+  products     Product[]      // Curated campaign products
 }
 
 // Interactive Studio: Change Your Look
@@ -153,34 +158,31 @@ model LookbookStudio {
   id         String         @id // e.g. "studio-2026"
   title      String         // "Change look"
   isActive   Boolean        @default(true)
-  looks      LookbookItem[]
-}
-
-model LookbookItem {
-  id          String         @id @default(cuid())
-  studioId    String
-  studio      LookbookStudio @relation(fields: [studioId], references: [id], onDelete: Cascade)
-  productId   String?        @unique
-  product     Product?       @relation(fields: [productId], references: [id])
-  name        String         // "IVORY ORGANZA BLOOM"
-  subtitle    String
-  price       Decimal        @db.Decimal(10, 2)
-  modelImage  String
-  thumbnail   String
-  colorName   String
-  sizes       String[]       // ["34", "36", "38", "40", "42"]
-  audioTitle  String         // "RAGA BHAIRAVI"
-  audioArtist String         // "Sitar & Tanpura by Kashi Guild"
-  audioSrc    String?
-  features    String[]
-  colors      Json           // [{ id, name, hex, image }]
-  orderIndex  Int            @default(0)
+  looks      Product[]      // Curated studio products with audio & color variants
 }
 ```
 
 ---
 
-### 3. Section-Wise Data Provisioning Map
+### 3. MANDATORY INVENTORY: WHICH DATA TABLES & FILES CONTAIN PRODUCT
+
+**AGENT MUST NEVER FORGET THIS TABLE**:
+
+| # | Section Name | Frontend Data File | DB Table / Model | Model Type | Area Reflection (`sectionMetadata`) |
+| :- | :--- | :--- | :--- | :--- | :--- |
+| **1** | **Master Catalog** | `src/data/products.ts` | `products` | `Product[]` | Base catalog specs: fabric, embroidery, 3D, ratings. |
+| **2** | **Woven to Be Remembered** | `src/data/bridal.ts` | `products` (signatures) | `Product[]` | `craftTechnique`, `heritageTag`, panoramic imagery along top-circle arc. |
+| **3** | **The Bridal Collection** | `src/data/bridal.ts` | `products` (bridal) | `Product[]` | `craftTechnique`, royal trousseau details, large hero card auto-cycle. |
+| **4** | **Autumn–Winter 2026** | `src/data/autumnWinter.ts` | `products` via `campaigns` | `Product[]` | `campaignTag`, `campaignTitle`, `campaignSubtitle`, `curatedSaree` in cathedral arches. |
+| **5** | **Change Your Look** | `src/data/changeLook.ts` | `products` via `lookbook` | `Product[]` | `lookbookName`, `audioTrack: { title, artist }`, `features`, multi-color swatches. |
+| **6** | **Trend of the Day** | `src/data/trends.ts` | `products` (trending) | `Product[]` | `badge`, right-to-left gliding marquee track. |
+| **7** | **Seasonal Special** | `src/data/seasonal.ts` | `products` (seasonal) | `Product[]` | `seasonTag`, left-to-right reverse marquee track. |
+| **8** | **New Arrivals / Best Sellers** | `src/data/products.ts` | `products` (sorted) | `Product[]` | `badge: 'New Arrival' \| 'Bestseller'`. |
+| **9** | **Worth Your Attention / Latest Trends**| `src/data/products.ts` & `trends.ts` | `products` (featured) | `Product[]` | Curated luxury spotlight picks. |
+
+---
+
+### 4. Section-Wise Data Provisioning Map
 
 Every homepage section connects to a dedicated data model and API endpoint:
 
@@ -191,11 +193,11 @@ Every homepage section connects to a dedicated data model and API endpoint:
 | **2** | **Woven to Be Remembered** | `WovenToBeRemembered.tsx` | `bridal.ts` | `GET /api/v1/collections/signatures` | `Product[]`: 6 signature ensembles displayed along the 85px top-circle arc track. |
 | **3** | **New Arrivals** | `NewArrivals.tsx` | `products.ts` | `GET /api/v1/products?sort=newest` | `Product[]`: latest released sarees and lehengas. |
 | **4** | **Best Sellers** | `BestSellers.tsx` | `products.ts` | `GET /api/v1/products?sort=bestsellers` | `Product[]`: highest sales velocity products. |
-| **5** | **The Bridal Collection** | `BridalCollection.tsx` | `bridal.ts` | `GET /api/v1/collections/bridal` | `BridalEnsemble[]`: bespoke red/crimson/gold heritage pieces. |
-| **6** | **Trend of the Day** | `TrendOfTheDay.tsx` | `trends.ts` | `GET /api/v1/trends/daily` | `TrendItem[]`: right-to-left marquee track with hover pause. |
-| **7** | **Seasonal Special** | `SeasonalSpecial.tsx` | `seasonal.ts` | `GET /api/v1/collections/seasonal` | `SeasonalItem[]`: left-to-right reverse marquee with season tags. |
-| **8** | **Autumn–Winter 2026** | `AutumnWinter2026.tsx` | `autumnWinter.ts` | `GET /api/v1/campaigns/autumn-winter-2026` | `CampaignSection`: 3 cathedral arched cards (`Awadhi Darbar`, `Courtyard Baithak`, `Kashi Imperial`). |
-| **9** | **Change Your Look** | `ChangeYourLook.tsx` | `changeLook.ts` | `GET /api/v1/studio/looks` | `LookbookItem[]`: interactive center model, sizes, color chips, and audio pill. |
+| **5** | **The Bridal Collection** | `BridalCollection.tsx` | `bridal.ts` | `GET /api/v1/collections/bridal` | `BridalProduct[]`: bespoke red/crimson/gold heritage pieces. |
+| **6** | **Trend of the Day** | `TrendOfTheDay.tsx` | `trends.ts` | `GET /api/v1/trends/daily` | `Product[]`: right-to-left marquee track with hover pause. |
+| **7** | **Seasonal Special** | `SeasonalSpecial.tsx` | `seasonal.ts` | `GET /api/v1/collections/seasonal` | `Product[]`: left-to-right reverse marquee with season tags. |
+| **8** | **Autumn–Winter 2026** | `AutumnWinter2026.tsx` | `autumnWinter.ts` | `GET /api/v1/campaigns/autumn-winter-2026` | `AutumnWinterData`: 3 cathedral arched cards (`Awadhi Darbar`, `Courtyard Baithak`, `Kashi Imperial`). |
+| **9** | **Change Your Look** | `ChangeYourLook.tsx` | `changeLook.ts` | `GET /api/v1/studio/looks` | `LookStyleProduct[]`: interactive center model, sizes, color chips, and audio pill. |
 | **10**| **Worth Your Attention** | `WorthYourAttention.tsx` | `products.ts` | `GET /api/v1/products/featured` | `Product[]`: editorial highlighted luxury picks. |
 | **11**| **Latest Trends** | `LatestTrends.tsx` | `trends.ts` | `GET /api/v1/trends/latest` | `Product[]`: high-engagement trending pieces. |
 | **12**| **Craftsmanship Sanctum** | `CraftsmanshipSection.tsx`| `craftsmanship.ts` | `GET /api/v1/craftsmanship` | `CraftPillar[]`: Kashi pitlooms, Awadhi zardozi, Tilla embroidery, bespoke canvas. |
@@ -203,14 +205,14 @@ Every homepage section connects to a dedicated data model and API endpoint:
 
 ---
 
-### 4. Implementation Pattern for Backend Data Fetching
+### 5. Implementation Pattern for Backend Data Fetching
 
 When integrating real backend APIs, use Next.js React Server Components with graceful fallback to local reference data:
 
 ```tsx
 // src/app/page.tsx
 import { AUTUMN_WINTER_DATA, AutumnWinterData } from '@/data/autumnWinter';
-import { CHANGE_LOOK_STYLES, LookStyleItem } from '@/data/changeLook';
+import { CHANGE_LOOK_PRODUCTS, LookStyleProduct } from '@/data/changeLook';
 
 async function getAutumnWinterData(): Promise<AutumnWinterData> {
   try {

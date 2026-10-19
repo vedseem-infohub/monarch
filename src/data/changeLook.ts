@@ -1,113 +1,251 @@
-export interface LookColorOption {
+import { Product } from '@/types';
+import { formatINR } from '@/utils/formatters';
+
+/**
+ * ============================================================================
+ * BACKEND API INTEGRATION GUIDE: INTERACTIVE STUDIO (CHANGE YOUR LOOK)
+ * ============================================================================
+ * Endpoint: GET /api/v1/studio/looks
+ * Description: Fetches interactive center model looks with color swatches & audio.
+ *
+ * Expected Database Relations:
+ *   LookbookStudio (id: "studio-2026")
+ *     └── 3 x Product (with colors, sizes, and sectionMetadata: audioTrack, features)
+ * ============================================================================
+ */
+
+export interface LookColor {
   id: string;
   name: string;
   hex: string;
   image: string;
 }
 
-export interface LookStyleItem {
-  id: string;
-  name: string;
-  price: string;
+export type LookStyleProduct = Product & {
   rawPrice: number;
-  rating: string;
-  reviewCount: number;
-  categoryTag: string;
   subtitle: string;
-  description: string;
   modelImage: string;
   thumbnail: string;
   colorName: string;
-  colorHex: string;
-  sizes: string[];
-  colors: LookColorOption[];
-  features: string[];
   audioTrack: {
     title: string;
     artist: string;
+    src?: string;
   };
-}
+  features: string[];
+  reviewCount: number;
+  categoryTag: string;
+  formattedPrice: string;
+  colors: LookColor[];
+};
 
-export const CHANGE_LOOK_STYLES: LookStyleItem[] = [
+export type LookStyleItem = LookStyleProduct;
+
+export const CHANGE_LOOK_PRODUCTS: LookStyleProduct[] = [
   {
-    id: 'look-ivory-organza',
+    id: 'prod-look-001',
     name: 'IVORY ORGANZA BLOOM',
-    price: '₹ 18,400',
+    slug: 'ivory-organza-bloom',
+    tagline: 'Organza Tissue Handloom Saree',
+    description:
+      'Gossamer sheer silk woven with delicate gold foil motifs, featherlight border piping, and a fluid contemporary drape designed for daytime festivities and wedding ceremonies.',
+    category: 'designer-sarees',
+    categoryName: 'Couture Organza',
+    gender: 'women',
+    price: 18400,
+    originalPrice: 22900,
+    images: ['/images/panoramic/ensemble_utsav.jpg'],
+    colors: [
+      { id: 'ivory', name: 'Ivory Cream', hex: '#F4EFE6', image: '/images/panoramic/ensemble_utsav.jpg' },
+      { id: 'blush', name: 'Gulabi Rose', hex: '#E5A5B2', image: '/images/panoramic/ensemble_vara.jpg' },
+      { id: 'crimson', name: 'Darbar Crimson', hex: '#7A162B', image: '/images/panoramic/ensemble_kalyani.jpg' },
+    ],
+    sizes: ['34', '36', '38', '40', '42'],
+    fabric: 'Pure Organza Silk Tissue',
+    embroidery: 'Handloom Pitloom Zari',
+    occasion: ['Wedding Reception', 'Cocktail Soiree', 'Mehendi'],
+    craftsmanshipStory: 'Handwoven in Kashi with fine gossamer gold zari that floats like liquid air.',
+    careInstructions: ['Dry Clean Only', 'Store in Mulmul Muslin Bag'],
+    deliveryDays: 3,
+    has3D: false,
+    inStock: true,
+    rating: 4.9,
+    reviewsCount: 48,
+    featured: true,
+    badge: 'New Drop 2026',
+
+    // Section Area Reflection
+    sectionMetadata: {
+      lookbookName: 'IVORY ORGANZA BLOOM',
+      thumbnail: '/images/panoramic/ensemble_utsav.jpg',
+      audioTrack: {
+        title: 'RAGA BHAIRAVI',
+        artist: 'Sitar & Tanpura by Kashi Guild',
+      },
+      features: [
+        'Pure Mulberry Silk Base',
+        'Certified Silk Mark Guild',
+        'Complimentary Unstitched Blouse Piece',
+        'Hand-rolled and Picoted Edges',
+      ],
+    },
+
+    // Standardized Convenience Aliases
     rawPrice: 18400,
-    rating: '4.9',
-    reviewCount: 128,
-    categoryTag: 'NEW ARRIVAL • COUTURE',
-    subtitle: 'Pure Sheer Tissue Organza Saree',
-    description:
-      'Handcrafted with gossamer silk organza, delicate gold mukaish sprinkling, and scalloped hand-cut resham floral borders. Designed for modern royal evenings and intimate soirees.',
-    modelImage: '/images/moods/pure_organza.jpg',
-    thumbnail: '/images/moods/pure_organza.jpg',
-    colorName: 'Ivory',
-    colorHex: '#EFE9DF',
-    sizes: ['34', '36', '38', '40', '42'],
-    colors: [
-      { id: 'ivory', name: 'Ivory', hex: '#EFE9DF', image: '/images/moods/pure_organza.jpg' },
-      { id: 'rose', name: 'Blush Rose', hex: '#E2A9A9', image: '/images/moods/chanderi_heritage.jpg' },
-      { id: 'crimson', name: 'Ruby Crimson', hex: '#8F1D2C', image: '/images/moods/kanjivaram_silk.jpg' },
-    ],
-    features: ['100% Silk Mark Certified', 'Handloom Pitloom Weave', 'Bespoke Blouse Tailoring', 'Insured Worldwide Express'],
+    formattedPrice: formatINR(18400),
+    subtitle: 'Organza Tissue Handloom Saree',
+    modelImage: '/images/panoramic/ensemble_utsav.jpg',
+    thumbnail: '/images/panoramic/ensemble_utsav.jpg',
+    colorName: 'Ivory Cream',
     audioTrack: {
-      title: 'Courtyard Raag Yaman',
-      artist: 'Sitar & Tanpura Echoes',
+      title: 'RAGA BHAIRAVI',
+      artist: 'Sitar & Tanpura by Kashi Guild',
     },
+    features: [
+      'Pure Mulberry Silk Base',
+      'Certified Silk Mark Guild',
+      'Complimentary Unstitched Blouse Piece',
+      'Hand-rolled and Picoted Edges',
+    ],
+    reviewCount: 48,
+    categoryTag: 'Couture Organza',
   },
   {
-    id: 'look-rose-chanderi',
+    id: 'prod-look-002',
     name: 'GULABI ROSE CHANDERI',
-    price: '₹ 21,500',
-    rawPrice: 21500,
-    rating: '4.8',
-    reviewCount: 96,
-    categoryTag: 'FESTIVE HEIRLOOM',
-    subtitle: 'Gossamer Gold Weft Chanderi Silk',
+    slug: 'gulabi-rose-chanderi',
+    tagline: 'Pure Chanderi Silk Zari Drape',
     description:
-      'Gossamer handloom Chanderi tissue in romantic blush pink, woven with certified gold electroplated zari and finished with delicate gota-patti scalloping.',
-    modelImage: '/images/moods/chanderi_heritage.jpg',
-    thumbnail: '/images/moods/chanderi_heritage.jpg',
-    colorName: 'Blush Rose',
-    colorHex: '#E2A9A9',
-    sizes: ['34', '36', '38', '40', '42'],
+      'Woven from pure Chanderi silk with authentic silver-gilt zari booti motifs. Shimmering mukaish details evoke the moonlit garden verandas of Central Indian royal courts.',
+    category: 'designer-sarees',
+    categoryName: 'Chanderi Heritage',
+    gender: 'women',
+    price: 16900,
+    originalPrice: 20500,
+    images: ['/images/panoramic/ensemble_vara.jpg'],
     colors: [
-      { id: 'ivory', name: 'Ivory', hex: '#EFE9DF', image: '/images/moods/pure_organza.jpg' },
-      { id: 'rose', name: 'Blush Rose', hex: '#E2A9A9', image: '/images/moods/chanderi_heritage.jpg' },
-      { id: 'crimson', name: 'Ruby Crimson', hex: '#8F1D2C', image: '/images/moods/kanjivaram_silk.jpg' },
+      { id: 'rose', name: 'Gulabi Rose', hex: '#E5A5B2', image: '/images/panoramic/ensemble_vara.jpg' },
+      { id: 'mint', name: 'Pista Mint', hex: '#B8D4C0', image: '/images/panoramic/ensemble_utsav.jpg' },
+      { id: 'ivory', name: 'Ivory Cream', hex: '#F4EFE6', image: '/images/panoramic/ensemble_kalyani.jpg' },
     ],
-    features: ['Authentic Chanderi GI Tag', 'Tested Silver Zari', 'Custom Fit Blouse Option', 'Doorstep Authenticity Guarantee'],
-    audioTrack: {
-      title: 'Noor-E-Awadh',
-      artist: 'Classical Santoor Serenade',
+    sizes: ['34', '36', '38', '40', '42'],
+    fabric: 'Pure Chanderi Silk',
+    embroidery: 'Silver-Gilt Zari Booti & Mukaish',
+    occasion: ['Haldi', 'Sangeet', 'Festive Celebration'],
+    craftsmanshipStory: 'Chanderi pitlooms weave warp and weft with heirloom gossamer lightness.',
+    careInstructions: ['Dry Clean Only', 'Store in Dark Cotton Wrap'],
+    deliveryDays: 3,
+    has3D: false,
+    inStock: true,
+    rating: 4.8,
+    reviewsCount: 32,
+    featured: true,
+    badge: 'Festive Classic',
+
+    // Section Area Reflection
+    sectionMetadata: {
+      lookbookName: 'GULABI ROSE CHANDERI',
+      thumbnail: '/images/panoramic/ensemble_vara.jpg',
+      audioTrack: {
+        title: 'RAGA YAMAN',
+        artist: 'Bansuri Flute by Awadh Ensemble',
+      },
+      features: [
+        'Pure Hand-Spun Chanderi Silk',
+        'Hallmarked Metallic Zari',
+        'Includes Designer Running Blouse',
+        'Authentic GI Tag Certified',
+      ],
     },
+
+    // Standardized Convenience Aliases
+    rawPrice: 16900,
+    formattedPrice: formatINR(16900),
+    subtitle: 'Pure Chanderi Silk Zari Drape',
+    modelImage: '/images/panoramic/ensemble_vara.jpg',
+    thumbnail: '/images/panoramic/ensemble_vara.jpg',
+    colorName: 'Gulabi Rose',
+    audioTrack: {
+      title: 'RAGA YAMAN',
+      artist: 'Bansuri Flute by Awadh Ensemble',
+    },
+    features: [
+      'Pure Hand-Spun Chanderi Silk',
+      'Hallmarked Metallic Zari',
+      'Includes Designer Running Blouse',
+      'Authentic GI Tag Certified',
+    ],
+    reviewCount: 32,
+    categoryTag: 'Chanderi Heritage',
   },
   {
-    id: 'look-crimson-kanjivaram',
+    id: 'prod-look-003',
     name: 'RUKMINI CRIMSON KANJIVARAM',
-    price: '₹ 28,000',
-    rawPrice: 28000,
-    rating: '5.0',
-    reviewCount: 144,
-    categoryTag: 'BRIDAL MAJESTY',
-    subtitle: 'Ancestral Temple Kadwa Silk',
+    slug: 'rukmini-crimson-kanjivaram',
+    tagline: 'Korvai Temple Weave Pure Silk',
     description:
-      'Imperial crimson Kanjivaram silk saree with authentic ancestral pitloom temple borders, korvai interlocking weave, and dense 24K gold-dipped zari pallu.',
-    modelImage: '/images/moods/kanjivaram_silk.jpg',
-    thumbnail: '/images/moods/kanjivaram_silk.jpg',
-    colorName: 'Ruby Crimson',
-    colorHex: '#8F1D2C',
-    sizes: ['34', '36', '38', '40', '42'],
+      'Heirloom Kanchipuram silk woven with three-shuttle Korvai interlocking temple spires. Solid 24K electroplated zari borders and a commanding heavy gold pallu.',
+    category: 'designer-sarees',
+    categoryName: 'Royal Kanjivaram',
+    gender: 'women',
+    price: 24800,
+    originalPrice: 28900,
+    images: ['/images/panoramic/ensemble_kalyani.jpg'],
     colors: [
-      { id: 'ivory', name: 'Ivory', hex: '#EFE9DF', image: '/images/moods/pure_organza.jpg' },
-      { id: 'rose', name: 'Blush Rose', hex: '#E2A9A9', image: '/images/moods/chanderi_heritage.jpg' },
-      { id: 'crimson', name: 'Ruby Crimson', hex: '#8F1D2C', image: '/images/moods/kanjivaram_silk.jpg' },
+      { id: 'crimson', name: 'Rukmini Crimson', hex: '#6E1326', image: '/images/panoramic/ensemble_kalyani.jpg' },
+      { id: 'emerald', name: 'Temple Emerald', hex: '#1C3A27', image: '/images/panoramic/ensemble_utsav.jpg' },
+      { id: 'gold', name: 'Swarna Gold', hex: '#D4AF37', image: '/images/panoramic/ensemble_vara.jpg' },
     ],
-    features: ['Certified Pure Silk Guild', '24K Gold Electroplated Zari', 'Ancestral Korvai Weaving', 'Signature Red Bridal Keepsake'],
-    audioTrack: {
-      title: 'Kashi Mangalam',
-      artist: 'Shehnai & Temple Bell Hymns',
+    sizes: ['34', '36', '38', '40', '42'],
+    fabric: 'Pure Mulberry Kanjivaram Silk',
+    embroidery: 'Korvai Interlocking Temple Borders',
+    occasion: ['Pheras', 'Wedding Ceremony', 'Grand Reception'],
+    craftsmanshipStory: 'Two master weavers coordinate three shuttles simultaneously for Korvai edges.',
+    careInstructions: ['Dry Clean Only', 'Roll with Zari on Inside'],
+    deliveryDays: 4,
+    has3D: false,
+    inStock: true,
+    rating: 5.0,
+    reviewsCount: 56,
+    featured: true,
+    badge: 'Imperial Heirloom',
+
+    // Section Area Reflection
+    sectionMetadata: {
+      lookbookName: 'RUKMINI CRIMSON KANJIVARAM',
+      thumbnail: '/images/panoramic/ensemble_kalyani.jpg',
+      audioTrack: {
+        title: 'RAGA HAMSADHWANI',
+        artist: 'Nadaswaram & Thavil by Tanjore Guild',
+      },
+      features: [
+        'Authentic Korvai 3-Shuttle Weft',
+        'Certified Silk Mark Guarantee',
+        'Solid 24K Gold Electroplated Zari',
+        'Heavy Auspicious Temple Pallu',
+      ],
     },
+
+    // Standardized Convenience Aliases
+    rawPrice: 24800,
+    formattedPrice: formatINR(24800),
+    subtitle: 'Korvai Temple Weave Pure Silk',
+    modelImage: '/images/panoramic/ensemble_kalyani.jpg',
+    thumbnail: '/images/panoramic/ensemble_kalyani.jpg',
+    colorName: 'Rukmini Crimson',
+    audioTrack: {
+      title: 'RAGA HAMSADHWANI',
+      artist: 'Nadaswaram & Thavil by Tanjore Guild',
+    },
+    features: [
+      'Authentic Korvai 3-Shuttle Weft',
+      'Certified Silk Mark Guarantee',
+      'Solid 24K Gold Electroplated Zari',
+      'Heavy Auspicious Temple Pallu',
+    ],
+    reviewCount: 56,
+    categoryTag: 'Royal Kanjivaram',
   },
 ];
+
+export const CHANGE_LOOK_STYLES = CHANGE_LOOK_PRODUCTS;

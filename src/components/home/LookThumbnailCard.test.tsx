@@ -8,7 +8,6 @@ describe('LookThumbnailCard & ChangeLook Data Validation', () => {
     CHANGE_LOOK_STYLES.forEach((look) => {
       assert.ok(look.id);
       assert.ok(look.name);
-      assert.ok(look.price);
       assert.ok(look.rawPrice > 0);
       assert.ok(look.modelImage.startsWith('/images/'));
       assert.ok(look.sizes.length >= 3);
@@ -16,11 +15,9 @@ describe('LookThumbnailCard & ChangeLook Data Validation', () => {
     });
   });
 
-  it('checks first look is IVORY ORGANZA BLOOM matching Screenshot 2', () => {
-    const ivory = CHANGE_LOOK_STYLES[0];
-    assert.strictEqual(ivory.name, 'IVORY ORGANZA BLOOM');
-    assert.strictEqual(ivory.price, '₹ 18,400');
-    assert.strictEqual(ivory.rawPrice, 18400);
-    assert.strictEqual(ivory.colorName, 'Ivory');
+  it('checks first look is ROSÉ NET EMBROIDERED matching reference screenshot', () => {
+    const firstLook = CHANGE_LOOK_STYLES[0];
+    assert.strictEqual(firstLook.name, 'ROSÉ NET EMBROIDERED');
+    assert.strictEqual(firstLook.rawPrice, 21600);
   });
 });

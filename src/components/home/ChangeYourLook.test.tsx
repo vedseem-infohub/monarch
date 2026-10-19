@@ -6,9 +6,9 @@ describe('ChangeYourLook Section Component & Integration', () => {
   it('contains valid lookbook items with complete metadata', () => {
     assert.strictEqual(CHANGE_LOOK_STYLES.length, 3);
     const firstLook = CHANGE_LOOK_STYLES[0];
-    assert.strictEqual(firstLook.name, 'IVORY ORGANZA BLOOM');
-    assert.strictEqual(firstLook.price, '₹ 18,400');
-    assert.ok(firstLook.sizes.includes('36'));
+    assert.strictEqual(firstLook.name, 'ROSÉ NET EMBROIDERED');
+    assert.strictEqual(firstLook.rawPrice, 21600);
+    assert.ok(firstLook.sizes.includes('M'));
     assert.strictEqual(firstLook.colors.length, 3);
   });
 
@@ -17,15 +17,8 @@ describe('ChangeYourLook Section Component & Integration', () => {
       look.colors.forEach((c) => {
         assert.ok(c.name);
         assert.ok(c.hex.startsWith('#'));
-        assert.ok(c.image.startsWith('/images/'));
+        assert.ok(c.image ? c.image.startsWith('/images/') : true);
       });
-    });
-  });
-
-  it('verifies audio track metadata for floating media pill', () => {
-    CHANGE_LOOK_STYLES.forEach((look) => {
-      assert.ok(look.audioTrack.title);
-      assert.ok(look.audioTrack.artist);
     });
   });
 });

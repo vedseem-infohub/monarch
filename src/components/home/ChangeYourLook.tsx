@@ -4,17 +4,18 @@ import React, { useState, useRef } from 'react';
 import { CHANGE_LOOK_STYLES, LookStyleItem } from '@/data/changeLook';
 import { LookThumbnailCard } from './LookThumbnailCard';
 import { useCart } from '@/context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
 import { Product } from '@/types';
 import {
   ChevronLeft,
   ChevronRight,
-  Play,
-  Pause,
   Check,
   ArrowRight,
-  ShieldCheck,
   Sparkles,
-  ShoppingBag,
+  Heart,
+  Share2,
+  ShieldCheck,
+  Award,
 } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -24,24 +25,57 @@ if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
 }
 
+/*
+ * ============================================================================
+ * COMPONENT: ChangeYourLook (Interactive Studio)
+ * ============================================================================
+ * Features:
+ * - Left column: "Change look" cursive annotation + vertical look thumbnails.
+ * - Center: Full-height couture model with fast, silky-smooth left-to-right swift transition.
+ * - Right: Complete product studio with rating, title, price, blouse sizes, color chips,
+ *          quantity, and signature maroon ADD TO CART pill button with circular arrow.
+ * - NO audio/music player as requested.
+ *
+ * BACKEND API INTEGRATION INSTRUCTIONS:
+ * When backend endpoint GET /api/v1/studio/looks is ready:
+ * 1. Replace CHANGE_LOOK_STYLES with data fetched from the API.
+ * 2. Example fetch hook:
+ *
+ *    // const [looks, setLooks] = useState<LookStyleItem[]>(CHANGE_LOOK_STYLES);
+ *    // useEffect(() => {
+ *    //   async function fetchStudioLooks() {
+ *    //     try {
+ *    //       const res = await fetch('/api/v1/studio/looks');
+ *    //       const json = await res.json();
+ *    //       if (json?.data) setLooks(json.data);
+ *    //     } catch (err) {
+ *    //       console.error('Failed to load studio looks:', err);
+ *    //     }
+ *    //   }
+ *    //   fetchStudioLooks();
+ *    // }, []);
+ * ============================================================================
+ */
+
 export const ChangeYourLook: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const modelImgRef = useRef<HTMLImageElement>(null);
 
   const [activeLookIndex, setActiveLookIndex] = useState(0);
-  const [selectedColorIdx, setSelectedColorIdx] = useState(0);
-  const [selectedSize, setSelectedSize] = useState('36');
+  const [selectedColorIdx, setSelectedColorIdx] = useState(1); // default rose color
+  const [selectedSize, setSelectedSize] = useState('M');
   const [quantity, setQuantity] = useState(1);
-  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [addedNotice, setAddedNotice] = useState(false);
 
   const { addToCart } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
 
   const currentLook: LookStyleItem = CHANGE_LOOK_STYLES[activeLookIndex] || CHANGE_LOOK_STYLES[0];
   const activeColor = currentLook.colors[selectedColorIdx] || currentLook.colors[0];
   const displayImage = activeColor.image || currentLook.modelImage;
+  const inWishlist = isInWishlist(currentLook.id);
 
-  // Cycle looks via left / right arrows
+  // Cycle looks via left / right chevron buttons
   const handlePrevLook = () => {
     setActiveLookIndex((prev) => (prev === 0 ? CHANGE_LOOK_STYLES.length - 1 : prev - 1));
     setSelectedColorIdx(0);
@@ -52,16 +86,24 @@ export const ChangeYourLook: React.FC = () => {
     setSelectedColorIdx(0);
   };
 
-  // Crossfade model image on look/color change
+  // Fast, silky-smooth left-to-right image swift animation + text glide
   useGSAP(
     () => {
+      // 1. Center image swifts left-to-right quickly and crisply
       if (modelImgRef.current) {
         gsap.fromTo(
           modelImgRef.current,
-          { opacity: 0.4, scale: 1.04 },
-          { opacity: 1, scale: 1, duration: 0.55, ease: 'power2.out' }
+          { x: -38, opacity: 0.25, scale: 0.98 },
+          { x: 0, opacity: 1, scale: 1, duration: 0.36, ease: 'power3.out' }
         );
       }
+
+      // 2. Text details on the right smoothly glide and fade in
+      gsap.fromTo(
+        '.look-text-reveal',
+        { y: 12, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.34, stagger: 0.04, ease: 'power2.out' }
+      );
     },
     { dependencies: [activeLookIndex, selectedColorIdx], scope: sectionRef }
   );
@@ -78,7 +120,7 @@ export const ChangeYourLook: React.FC = () => {
       categoryName: 'Couture Organza',
       gender: 'women',
       price: currentLook.rawPrice,
-      originalPrice: currentLook.rawPrice + 4500,
+      originalPrice: currentLook.rawPrice + 4300,
       images: [displayImage],
       colors: currentLook.colors.map((c) => ({
         name: c.name,
@@ -99,29 +141,29 @@ export const ChangeYourLook: React.FC = () => {
 
     addToCart(syntheticProduct, activeColor.name, selectedSize, quantity);
     setAddedNotice(true);
-    setTimeout(() => setAddedNotice(false), 2600);
+    setTimeout(() => setAddedNotice(false), 2400);
   };
 
   return (
     <section
       id="change-your-look"
       ref={sectionRef}
-      className="py-16 sm:py-24 bg-[#FAF7F2] text-monarch-charcoal relative overflow-hidden border-t border-monarch-gold/20"
+      className="py-12 sm:py-20 bg-[#FAF7F2] text-monarch-charcoal relative overflow-hidden border-t border-monarch-gold/20"
     >
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
           {/* ======================================================== */}
-          {/* COLUMN 1: LEFT THUMBNAILS & "Change look" SCRIPT (Col 2) */}
+          {/* COLUMN 1: LEFT THUMBNAILS & "Change look" ANNOTATION     */}
           {/* ======================================================== */}
-          <div className="lg:col-span-2 flex flex-col items-start space-y-4">
-            {/* Handwritten "Change look" script + decorative curved arrow */}
-            <div className="relative pl-1 pb-1">
-              <span className="font-serif italic text-2xl sm:text-3xl text-monarch-charcoal tracking-wide font-normal select-none">
+          <div className="lg:col-span-2 flex flex-col items-start space-y-3">
+            {/* Handwritten "Change look" script + decorative curved arrow (Matches screenshot) */}
+            <div className="relative pl-1 select-none">
+              <span className="font-serif italic text-2xl sm:text-3xl text-monarch-charcoal tracking-wide font-normal">
                 Change look
               </span>
-              {/* Whimsical curved arrow sketch pointing down */}
+              {/* Whimsical curved arrow sketch pointing down to looks */}
               <svg
-                className="w-10 h-7 text-monarch-charcoal/70 ml-6 -mt-1"
+                className="w-9 h-6 text-monarch-charcoal/70 ml-6 -mt-1"
                 viewBox="0 0 45 28"
                 fill="none"
                 stroke="currentColor"
@@ -134,7 +176,7 @@ export const ChangeYourLook: React.FC = () => {
             </div>
 
             {/* Vertical thumbnails list */}
-            <div className="flex lg:flex-col gap-3.5 sm:gap-4 overflow-x-auto no-scrollbar w-full py-1">
+            <div className="flex lg:flex-col gap-3 sm:gap-3.5 overflow-x-auto no-scrollbar w-full py-1">
               {CHANGE_LOOK_STYLES.map((look, idx) => (
                 <LookThumbnailCard
                   key={look.id}
@@ -151,141 +193,107 @@ export const ChangeYourLook: React.FC = () => {
           </div>
 
           {/* ======================================================== */}
-          {/* COLUMN 2: CENTER FASHION MODEL SPOTLIGHT (Col 5)         */}
+          {/* COLUMN 2: CENTER FASHION MODEL SPOTLIGHT                 */}
           {/* ======================================================== */}
-          <div
-            style={{ aspectRatio: '3 / 4.4' }}
-            className="lg:col-span-5 relative w-full h-[520px] sm:h-[580px] lg:h-[640px] min-h-[480px] rounded-3xl overflow-hidden bg-monarch-ivory border border-monarch-gold/30 shadow-2xl flex items-center justify-center"
-          >
-            {/* Main Couture Model Saree Image */}
+          <div className="lg:col-span-5 relative w-full h-[520px] sm:h-[600px] lg:h-[660px] rounded-3xl overflow-hidden bg-white border border-gray-200/80 shadow-2xl flex items-center justify-center">
+            {/* Main Model Couture Saree Image with Swift Animation */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               ref={modelImgRef}
               src={displayImage}
               alt={currentLook.name}
-              className="w-full h-full object-cover select-none"
+              className="w-full h-full object-cover select-none will-change-transform"
               decoding="async"
             />
 
             {/* Subtle Vignette Gradient Scrim */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/15 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10 pointer-events-none" />
 
-            {/* Previous Look Chevron Arrow */}
+            {/* Previous Look Chevron Arrow (Left) */}
             <button
               onClick={handlePrevLook}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/70 hover:bg-white text-monarch-charcoal shadow-md flex items-center justify-center backdrop-blur-sm transition-all hover:scale-110 active:scale-95 z-10"
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-monarch-charcoal shadow-md flex items-center justify-center backdrop-blur-sm transition-all hover:scale-110 active:scale-95 z-10 cursor-pointer"
               aria-label="Previous look"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
 
-            {/* Next Look Chevron Arrow */}
+            {/* Next Look Chevron Arrow (Right) */}
             <button
               onClick={handleNextLook}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/70 hover:bg-white text-monarch-charcoal shadow-md flex items-center justify-center backdrop-blur-sm transition-all hover:scale-110 active:scale-95 z-10"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-monarch-charcoal shadow-md flex items-center justify-center backdrop-blur-sm transition-all hover:scale-110 active:scale-95 z-10 cursor-pointer"
               aria-label="Next look"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
 
-            {/* Bottom-Left Script Text: "New Drop 2026" */}
+            {/* Bottom-Left Script Text: "New Drop 2026" (Matches screenshot) */}
             <div className="absolute bottom-6 left-6 z-10 select-none pointer-events-none">
-              <span className="font-serif italic text-white/90 text-lg sm:text-xl drop-shadow-md">
+              <span className="font-serif italic text-white/95 text-xl sm:text-2xl drop-shadow-md">
                 New Drop 2026
               </span>
-            </div>
-
-            {/* Floating Audio Player Pill at Bottom Center: Matching Screenshot 2 */}
-            <div className="absolute bottom-5 inset-x-8 sm:inset-x-12 z-10 flex items-center justify-between gap-3 px-3.5 py-2 rounded-full bg-black/65 backdrop-blur-md border border-white/25 text-white shadow-xl">
-              <button
-                type="button"
-                onClick={() => setIsPlayingAudio(!isPlayingAudio)}
-                className="w-7 h-7 rounded-full bg-monarch-maroon hover:bg-monarch-maroon-dark text-white flex items-center justify-center transition-transform hover:scale-110 shrink-0 shadow-sm"
-                aria-label={isPlayingAudio ? 'Pause music' : 'Play royal music'}
-              >
-                {isPlayingAudio ? (
-                  <Pause className="w-3.5 h-3.5 fill-white text-white" />
-                ) : (
-                  <Play className="w-3.5 h-3.5 fill-white text-white ml-0.5" />
-                )}
-              </button>
-
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-mono uppercase tracking-wider text-monarch-gold-light truncate">
-                  {currentLook.audioTrack.title}
-                </p>
-                <p className="text-[9px] text-white/60 font-sans truncate">
-                  {currentLook.audioTrack.artist}
-                </p>
-              </div>
-
-              {/* Soundwaves indicator */}
-              <div className="flex items-center gap-0.5 shrink-0 px-1">
-                <span className={`w-0.5 rounded-full bg-monarch-gold ${isPlayingAudio ? 'h-3 animate-pulse' : 'h-1.5'}`} />
-                <span className={`w-0.5 rounded-full bg-monarch-gold ${isPlayingAudio ? 'h-4 animate-pulse delay-75' : 'h-2'}`} />
-                <span className={`w-0.5 rounded-full bg-monarch-gold ${isPlayingAudio ? 'h-2.5 animate-pulse delay-150' : 'h-1'}`} />
-              </div>
             </div>
           </div>
 
           {/* ======================================================== */}
-          {/* COLUMN 3: RIGHT PRODUCT DETAILS & ADD TO CART (Col 5)    */}
+          {/* COLUMN 3: RIGHT PRODUCT DETAILS & ADD TO CART            */}
           {/* ======================================================== */}
-          <div className="lg:col-span-5 flex flex-col justify-center space-y-5 lg:pl-4">
-            {/* Rating & Category Line */}
-            <div className="flex items-center justify-between gap-3 text-xs">
+          <div className="lg:col-span-5 flex flex-col justify-center space-y-5 lg:pl-3">
+            {/* Category / Breadcrumb & Rating */}
+            <div className="look-text-reveal flex items-center justify-between gap-3 text-xs">
+              <span className="text-[10px] font-nav uppercase tracking-[0.22em] font-semibold text-gray-500">
+                ROYAL COUTURE ARCHIVE
+              </span>
+
               <div className="flex items-center gap-1.5 text-monarch-gold">
                 <span className="tracking-widest text-sm">★★★★★</span>
                 <span className="font-semibold text-monarch-charcoal text-[11px]">
                   {currentLook.rating}
                 </span>
-                <span className="text-monarch-charcoal/50 text-[10px]">
-                  ({currentLook.reviewCount})
+                <span className="text-gray-400 text-[10px]">
+                  ({currentLook.reviewCount} Reviews)
                 </span>
               </div>
-
-              <span className="text-[10px] font-nav uppercase tracking-[0.2em] font-semibold text-monarch-maroon bg-monarch-maroon/10 px-2.5 py-0.5 rounded-full border border-monarch-maroon/20">
-                {currentLook.categoryTag}
-              </span>
             </div>
 
-            {/* Display Title & Price */}
-            <div>
-              <h2 className="font-serif text-2xl sm:text-3xl lg:text-[38px] font-normal tracking-tight text-monarch-charcoal leading-tight">
+            {/* Display Title & Price (Matches Screenshot) */}
+            <div className="look-text-reveal space-y-1.5">
+              <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] font-normal tracking-tight text-[#1E1714] leading-tight">
                 {currentLook.name}
               </h2>
-              <div className="flex items-baseline gap-3 mt-1.5">
-                <span className="font-serif text-2xl sm:text-3xl font-bold text-monarch-gold-dark">
-                  {currentLook.price}
+              <div className="flex items-baseline gap-2.5">
+                <span className="font-serif text-2xl sm:text-3xl font-bold text-[#1E1714]">
+                  {currentLook.formattedPrice}
                 </span>
-                <span className="text-xs text-monarch-charcoal/60 font-sans">
+                <span className="text-xs text-gray-400 font-sans">
                   (MRP incl. of all taxes)
                 </span>
               </div>
             </div>
 
-            {/* Editorial Description */}
-            <p className="text-xs sm:text-sm text-monarch-charcoal/75 font-sans leading-relaxed">
-              {currentLook.description}
-            </p>
-
-            {/* Key Features Badges */}
-            <div className="grid grid-cols-2 gap-2 pt-1 border-t border-monarch-gold/15">
-              {currentLook.features.map((feat) => (
-                <div key={feat} className="flex items-center gap-1.5 text-[11px] text-monarch-charcoal/80 font-sans">
-                  <Check className="w-3.5 h-3.5 text-monarch-gold shrink-0" />
-                  <span className="truncate">{feat}</span>
-                </div>
-              ))}
+            {/* Editorial Features Line */}
+            <div className="look-text-reveal flex items-center gap-4 text-xs text-gray-600 pt-1 border-t border-gray-200/80">
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-monarch-gold-dark" />
+                <span>Pure Silk Mark</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Award className="w-3.5 h-3.5 text-monarch-gold-dark" />
+                <span>Handloom Kashi Zari</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-monarch-gold-dark" />
+                <span>Custom Stitched Blouse</span>
+              </div>
             </div>
 
-            {/* Blouse Size Selector: Matching Screenshot 2 */}
-            <div className="pt-2 border-t border-monarch-gold/15">
+            {/* Select Blouse Size (Matches Screenshot) */}
+            <div className="look-text-reveal pt-1 border-t border-gray-200/80">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-nav uppercase tracking-wider text-monarch-charcoal/70 font-semibold">
+                <span className="text-[11px] font-nav uppercase tracking-wider text-gray-700 font-semibold">
                   SELECT BLOUSE SIZE:
                 </span>
-                <span className="text-[10px] text-monarch-maroon hover:underline cursor-pointer">
+                <span className="text-[11px] text-monarch-maroon hover:underline cursor-pointer">
                   Size Guide
                 </span>
               </div>
@@ -295,10 +303,10 @@ export const ChangeYourLook: React.FC = () => {
                     key={size}
                     type="button"
                     onClick={() => setSelectedSize(size)}
-                    className={`w-10 h-10 rounded-lg text-xs font-mono font-medium transition-all ${
+                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                       selectedSize === size
-                        ? 'bg-monarch-charcoal text-white shadow-md ring-2 ring-monarch-gold'
-                        : 'bg-white hover:bg-monarch-beige/40 text-monarch-charcoal border border-monarch-beige'
+                        ? 'bg-black text-white shadow-md ring-1 ring-black'
+                        : 'bg-white hover:bg-gray-100 text-gray-800 border border-gray-200'
                     }`}
                   >
                     {size}
@@ -307,88 +315,117 @@ export const ChangeYourLook: React.FC = () => {
               </div>
             </div>
 
-            {/* Color Swatch Selector: Matching Screenshot 2 */}
-            <div className="pt-1">
+            {/* Select Colour Swatches (Matches Screenshot) */}
+            <div className="look-text-reveal pt-1">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-[11px] font-nav uppercase tracking-wider text-monarch-charcoal/70 font-semibold">
+                <span className="text-[11px] font-nav uppercase tracking-wider text-gray-700 font-semibold">
                   SELECT COLOUR:
                 </span>
-                <span className="text-xs font-serif font-medium text-monarch-charcoal">
+                <span className="text-xs font-serif font-medium text-monarch-charcoal uppercase tracking-wider">
                   {activeColor.name}
                 </span>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5">
                 {currentLook.colors.map((color, idx) => (
                   <button
                     key={color.id}
                     type="button"
                     onClick={() => setSelectedColorIdx(idx)}
-                    className={`group relative flex items-center gap-2 p-1.5 rounded-xl border transition-all ${
+                    className={`w-9 h-9 rounded-lg border transition-all cursor-pointer flex items-center justify-center ${
                       selectedColorIdx === idx
-                        ? 'border-monarch-maroon bg-white shadow-sm ring-2 ring-monarch-gold/50'
-                        : 'border-transparent hover:bg-white/60'
+                        ? 'ring-2 ring-black border-white shadow-sm scale-105'
+                        : 'border-gray-300 hover:scale-102'
                     }`}
-                  >
-                    <span
-                      className="w-7 h-7 rounded-lg border border-black/20 shadow-xs"
-                      style={{ backgroundColor: color.hex }}
-                    />
-                    <span className="text-[11px] font-sans text-monarch-charcoal pr-1 hidden sm:inline">
-                      {color.name}
-                    </span>
-                  </button>
+                    style={{ backgroundColor: color.hex }}
+                    title={color.name}
+                    aria-label={`Select ${color.name}`}
+                  />
                 ))}
               </div>
             </div>
 
-            {/* Quantity & Signature Curved Maroon "ADD TO CART" Pill Button: Matching Screenshot 2 */}
-            <div className="flex items-center gap-3 pt-3">
+            {/* Quantity + Signature Curved Maroon "ADD TO CART" Pill Button (Exact Screenshot Match) */}
+            <div className="look-text-reveal flex items-center gap-3 pt-3">
               {/* Quantity Counter */}
-              <div className="flex items-center rounded-full bg-white border border-monarch-beige px-3 py-2 shadow-xs">
+              <div className="flex items-center rounded-full bg-white border border-gray-200 px-3 py-2 shadow-xs">
                 <button
                   type="button"
                   onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                  className="w-6 h-6 rounded-full hover:bg-monarch-beige/40 text-monarch-charcoal flex items-center justify-center font-bold text-sm"
+                  className="w-6 h-6 rounded-full hover:bg-gray-100 text-gray-800 flex items-center justify-center font-bold text-sm cursor-pointer"
                   aria-label="Decrease quantity"
                 >
                   -
                 </button>
-                <span className="font-mono text-xs font-semibold px-3 min-w-[24px] text-center">
+                <span className="font-mono text-xs font-semibold px-2.5 min-w-[20px] text-center">
                   {quantity}
                 </span>
                 <button
                   type="button"
                   onClick={() => setQuantity((prev) => prev + 1)}
-                  className="w-6 h-6 rounded-full hover:bg-monarch-beige/40 text-monarch-charcoal flex items-center justify-center font-bold text-sm"
+                  className="w-6 h-6 rounded-full hover:bg-gray-100 text-gray-800 flex items-center justify-center font-bold text-sm cursor-pointer"
                   aria-label="Increase quantity"
                 >
                   +
                 </button>
               </div>
 
-              {/* Signature Maroon Pill ADD TO CART Button with Round Arrow Icon */}
+              {/* Signature Maroon Pill ADD TO CART Button with Round White Arrow Button */}
               <button
                 type="button"
                 onClick={handleAddToCart}
-                className="flex-1 relative flex items-center justify-between pl-7 pr-3 py-3 rounded-full bg-gradient-to-r from-[#7D1128] via-[#8C162E] to-[#A31D36] text-white shadow-xl hover:shadow-[0_15px_35px_rgba(125,17,40,0.4)] transition-all duration-300 hover:brightness-110 active:scale-[0.99] group overflow-hidden"
+                className="flex-1 relative flex items-center justify-between pl-7 pr-2.5 py-3 rounded-full bg-gradient-to-r from-[#701024] via-[#7F152C] to-[#921932] text-white shadow-xl hover:shadow-[0_15px_35px_rgba(112,16,36,0.35)] transition-all duration-300 hover:brightness-110 active:scale-[0.99] group overflow-hidden cursor-pointer"
               >
-                <span className="font-nav text-xs uppercase tracking-[0.22em] font-semibold">
+                <span className="font-nav text-xs uppercase tracking-[0.22em] font-semibold text-white">
                   ADD TO CART
                 </span>
 
-                <span className="w-8 h-8 rounded-full bg-white text-monarch-maroon flex items-center justify-center shadow-md transition-transform duration-300 group-hover:translate-x-1 group-hover:scale-105">
-                  <ArrowRight className="w-4 h-4 text-monarch-maroon" />
+                <span className="w-8 h-8 rounded-full bg-white text-[#701024] flex items-center justify-center shadow-md transition-transform duration-300 group-hover:translate-x-1 group-hover:scale-105 shrink-0 ml-3">
+                  <ArrowRight className="w-4 h-4 text-[#701024]" />
                 </span>
+              </button>
+
+              {/* Wishlist Button */}
+              <button
+                type="button"
+                onClick={() => toggleWishlist(currentLook.id)}
+                className={`p-3 rounded-full border transition-all cursor-pointer ${
+                  inWishlist
+                    ? 'bg-monarch-maroon text-monarch-gold border-monarch-gold'
+                    : 'bg-white text-gray-700 hover:text-monarch-maroon border-gray-200 hover:border-gray-400'
+                }`}
+                title="Wishlist"
+                aria-label="Toggle Wishlist"
+              >
+                <Heart className={`w-4 h-4 ${inWishlist ? 'fill-monarch-gold text-monarch-gold' : ''}`} />
+              </button>
+
+              {/* Share Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof navigator !== 'undefined' && navigator.share) {
+                    navigator.share({
+                      title: currentLook.name,
+                      text: currentLook.description,
+                      url: window.location.href,
+                    }).catch(() => {});
+                  }
+                }}
+                className="p-3 rounded-full bg-white text-gray-700 hover:text-monarch-maroon border border-gray-200 hover:border-gray-400 transition-all cursor-pointer"
+                title="Share Ensemble"
+                aria-label="Share"
+              >
+                <Share2 className="w-4 h-4" />
               </button>
             </div>
 
             {/* Added to Cart Feedback Toast */}
             {addedNotice && (
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-monarch-gold/20 border border-monarch-gold/50 text-monarch-charcoal text-xs animate-fade-in">
-                <Sparkles className="w-4 h-4 text-monarch-gold-dark shrink-0" />
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs animate-fade-in">
+                <Check className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>
-                  <strong>{currentLook.name}</strong> ({activeColor.name}, Size {selectedSize}) added to your royal vault.
+                  <strong>{currentLook.name}</strong> ({activeColor.name}, Size {selectedSize}) added to your bag.
                 </span>
               </div>
             )}
