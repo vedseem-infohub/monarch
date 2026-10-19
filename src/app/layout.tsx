@@ -65,7 +65,7 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
-        <link rel="preload" href="/images/saree-pattern.jpg" as="image" />
+        <link rel="preload" href="/images/saree-pattern.jpg" as="image" fetchPriority="high" />
       </head>
       <body
         suppressHydrationWarning

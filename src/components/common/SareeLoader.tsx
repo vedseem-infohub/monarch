@@ -61,29 +61,9 @@ export const SareeLoader: React.FC<SareeLoaderProps> = ({ onComplete }) => {
       });
       timelineRef.current = tl;
 
-      // Initial state: Pure silk curtain covers 100% of viewport edge-to-edge
-      gsap.set(curtain, {
-        xPercent: 0,
-        y: 0,
-        skewX: 0,
-        force3D: true,
-        transformOrigin: '0% 50%',
-        willChange: 'transform',
-      });
-
-      if (pleats) {
-        gsap.set(pleats, {
-          scaleX: 1,
-          opacity: 0.25,
-          force3D: true,
-          transformOrigin: '0% 50%',
-          willChange: 'transform, opacity',
-        });
-      }
-
       // 0.0s - 1.1s: FLUID ORGANIC SILK CURTAIN PULL (RIGHT TO LEFT)
-      // Driven strictly via GPU compositor transforms (translate3d & skewX)
-      // Starts promptly with zero dead delay and sweeps off through the LEFT SIDE ONLY
+      // Initial styles are baked directly into the JSX inline styles so there is ZERO hydration jump.
+      // Starts smoothly and sweeps off through the LEFT SIDE ONLY (y = 0 locked).
 
       // 1. Main Curtain Sweep: Pulls from Right to Left, exiting cleanly at -105% on left
       tl.to(
@@ -147,32 +127,40 @@ export const SareeLoader: React.FC<SareeLoaderProps> = ({ onComplete }) => {
     >
       {/* ============================================================ */}
       {/* CURTAIN PANEL: Covers 100% of viewport edge-to-edge          */}
+      {/* Initial transform is baked into inline style: 0 SSR flash    */}
       {/* Pulls open from Right to Left, exits cleanly on LEFT SIDE ONLY */}
-      {/* Zero top/bottom/side gaps; 100% GPU Hardware Accelerated     */}
       {/* ============================================================ */}
       <div
         ref={curtainPanelRef}
         className="absolute inset-0 w-full h-full pointer-events-auto transform-gpu select-none"
         style={{
+          transform: 'translate3d(0, 0, 0)',
+          transformOrigin: '0% 50%',
+          willChange: 'transform',
           boxShadow: '18px 0 35px rgba(0, 0, 0, 0.75), 6px 0 14px rgba(41, 17, 22, 0.5)',
         }}
       >
-        {/* Authentic Banarasi Silk Saree Fabric Sheet */}
+        {/* Authentic Banarasi Silk Saree Fabric Sheet with Instant Brocade Texture */}
         <div
           className="absolute inset-0 w-full h-full pointer-events-none"
           style={{
-            backgroundImage: "url('/images/saree-pattern.jpg')",
-            backgroundSize: 'cover',
-            backgroundPosition: 'left center',
+            backgroundImage:
+              "url('/images/saree-pattern.jpg'), radial-gradient(circle at 50% 50%, rgba(223,190,127,0.22) 1.5px, transparent 2px), radial-gradient(circle at 0% 0%, rgba(223,190,127,0.18) 1.5px, transparent 2px)",
+            backgroundSize: 'cover, 28px 28px, 28px 28px',
+            backgroundPosition: 'left center, 0 0, 14px 14px',
             backgroundColor: '#5A1725',
           }}
         />
 
-        {/* Vertical Accordion Silk Pleats (Deepens naturally as drawn) */}
+        {/* Vertical Accordion Silk Pleats (SSR inline opacity 0.25: ZERO pop/snap on hydration) */}
         <div
           ref={pleatsRef}
           className="absolute inset-0 w-full h-full pointer-events-none transform-gpu"
           style={{
+            opacity: 0.25,
+            transform: 'scaleX(1)',
+            transformOrigin: '0% 50%',
+            willChange: 'transform, opacity',
             backgroundImage:
               'repeating-linear-gradient(90deg, rgba(20, 6, 10, 0.5) 0%, rgba(45, 14, 22, 0.05) 12%, rgba(255, 235, 175, 0.22) 25%, rgba(45, 14, 22, 0.05) 38%, rgba(20, 6, 10, 0.5) 50%)',
             backgroundSize: '80px 100%',
