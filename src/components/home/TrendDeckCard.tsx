@@ -16,19 +16,20 @@ interface TrendDeckCardProps {
 
 const cardVariants: Variants = {
   enter: (dir: number) => ({
-    // Dynamic IN animation: sweeps in smoothly after OUT card has faded away
-    x: dir >= 0 ? 160 : -160,
+    // IN animation: sweeps in underneath the active card
+    zIndex: 10,
+    x: dir >= 0 ? 80 : -80,
     y: 10,
-    rotate: dir >= 0 ? 8 : -8,
+    rotate: dir >= 0 ? 6 : -6,
     scale: 0.94,
     opacity: 0,
-    zIndex: 20,
     transition: {
+      zIndex: { duration: 0 },
       x: { type: 'spring' as const, stiffness: 280, damping: 26, mass: 0.8 },
       y: { type: 'spring' as const, stiffness: 280, damping: 26, mass: 0.8 },
       rotate: { type: 'spring' as const, stiffness: 280, damping: 26, mass: 0.8 },
-      scale: { duration: 0.34, ease: [0.16, 1, 0.3, 1] },
-      opacity: { duration: 0.28, ease: 'easeOut' },
+      scale: { duration: 0.38, ease: [0.16, 1, 0.3, 1] },
+      opacity: { duration: 0.32, ease: 'easeOut' },
     },
   }),
   center: {
@@ -46,19 +47,20 @@ const cardVariants: Variants = {
     },
   },
   exit: (dir: number) => ({
-    // OUT animation: compact deal flick that finishes fading away first ("faded then gone")
-    zIndex: 20,
+    // OUT animation: stays strictly on top (zIndex: 50), flicks smoothly and fades away
+    zIndex: 50,
     x: dir >= 0 ? -180 : 180,
     y: -14,
     rotate: dir >= 0 ? -10 : 10,
     scale: 0.96,
     opacity: 0,
     transition: {
-      x: { duration: 0.34, ease: [0.22, 1, 0.36, 1] },
-      y: { duration: 0.34, ease: [0.22, 1, 0.36, 1] },
-      rotate: { duration: 0.34, ease: [0.22, 1, 0.36, 1] },
-      scale: { duration: 0.32, ease: 'easeOut' },
-      opacity: { duration: 0.32, ease: [0.4, 0, 0.7, 0] },
+      zIndex: { duration: 0 },
+      x: { duration: 0.38, ease: [0.22, 1, 0.36, 1] },
+      y: { duration: 0.38, ease: [0.22, 1, 0.36, 1] },
+      rotate: { duration: 0.38, ease: [0.22, 1, 0.36, 1] },
+      scale: { duration: 0.34, ease: 'easeOut' },
+      opacity: { duration: 0.34, ease: [0.4, 0, 0.7, 0] },
     },
   }),
 };
@@ -97,7 +99,7 @@ export const TrendDeckCard: React.FC<TrendDeckCardProps> = ({
       whileDrag={{ scale: 0.98 }}
       onDragEnd={handleDragEnd}
       onClick={onSwipeNext}
-      className="absolute inset-0 select-none rounded-3xl overflow-hidden shadow-2xl bg-black cursor-grab active:cursor-grabbing hover:shadow-black/35 z-20"
+      className="absolute inset-0 select-none rounded-3xl overflow-hidden shadow-2xl bg-black cursor-grab active:cursor-grabbing hover:shadow-black/35"
     >
       {/* High-Resolution Editorial Image */}
       {/* eslint-disable-next-line @next/next/no-img-element */}

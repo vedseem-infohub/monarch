@@ -159,8 +159,8 @@ export const LatestTrends: React.FC = () => {
                 <div className="absolute inset-0 bg-black/25" />
               </div>
 
-              {/* Top Active Card with AnimatePresence: mode="wait" ensures OUT card finishes fading before IN card enters */}
-              <AnimatePresence initial={false} custom={direction} mode="wait">
+              {/* Top Active Card with AnimatePresence: popLayout ensures continuous smooth motion with zero pause/break */}
+              <AnimatePresence initial={false} custom={direction} mode="popLayout">
                 <TrendDeckCard
                   key={page}
                   product={currentProduct}
