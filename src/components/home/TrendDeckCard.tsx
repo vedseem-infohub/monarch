@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { motion, useMotionValue, useTransform } from 'framer-motion';
+import { motion, useMotionValue, useTransform, Variants } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
 import { TrendDeckProduct } from '@/data/latestTrends';
 
@@ -14,26 +14,50 @@ interface TrendDeckCardProps {
   onSwipePrev: () => void;
 }
 
-const cardVariants = {
+const cardVariants: Variants = {
   enter: (dir: number) => ({
-    x: dir >= 0 ? 340 : -340,
+    x: dir >= 0 ? 460 : -460,
+    y: 12,
     rotate: dir >= 0 ? 16 : -16,
     opacity: 0,
-    scale: 0.92,
+    scale: 0.93,
+    transition: {
+      x: { type: 'spring' as const, stiffness: 280, damping: 26 },
+      y: { type: 'spring' as const, stiffness: 280, damping: 26 },
+      rotate: { type: 'spring' as const, stiffness: 280, damping: 26 },
+      scale: { duration: 0.4, ease: [0.16, 1, 0.3, 1] },
+      opacity: { duration: 0.35, ease: 'easeOut' },
+    },
   }),
   center: {
     zIndex: 20,
     x: 0,
+    y: 0,
     rotate: 0,
     opacity: 1,
     scale: 1,
+    transition: {
+      x: { type: 'spring' as const, stiffness: 280, damping: 26 },
+      y: { type: 'spring' as const, stiffness: 280, damping: 26 },
+      rotate: { type: 'spring' as const, stiffness: 280, damping: 26 },
+      scale: { duration: 0.4, ease: [0.16, 1, 0.3, 1] },
+      opacity: { duration: 0.35 },
+    },
   },
   exit: (dir: number) => ({
-    zIndex: 25,
-    x: dir >= 0 ? -340 : 340,
-    rotate: dir >= 0 ? -16 : 16,
+    zIndex: 30, // Remains above incoming card during sweep
+    x: dir >= 0 ? -520 : 520, // Full clean clearance
+    y: -30, // Tactile upward wrist deal flick
+    rotate: dir >= 0 ? -22 : 22, // Natural playing card spin
     opacity: 0,
-    scale: 0.9,
+    scale: 0.95,
+    transition: {
+      x: { duration: 0.48, ease: [0.32, 0.72, 0, 1] },
+      y: { duration: 0.48, ease: [0.32, 0.72, 0, 1] },
+      rotate: { duration: 0.48, ease: [0.32, 0.72, 0, 1] },
+      scale: { duration: 0.44, ease: 'easeOut' },
+      opacity: { duration: 0.48, ease: [0.55, 0, 1, 0.45] }, // Sustains opacity throughout flick
+    },
   }),
 };
 
@@ -46,14 +70,14 @@ export const TrendDeckCard: React.FC<TrendDeckCardProps> = ({
 }) => {
   // Motion value for responsive interactive dragging
   const x = useMotionValue(0);
-  const dragRotate = useTransform(x, [-200, 200], [-14, 14]);
+  const dragRotate = useTransform(x, [-250, 250], [-18, 18]);
 
   const handleDragEnd = (
     _event: MouseEvent | TouchEvent | PointerEvent,
     info: { offset: { x: number; y: number }; velocity: { x: number; y: number } }
   ) => {
     const swipeThreshold = 50;
-    const velocityThreshold = 220;
+    const velocityThreshold = 200;
 
     if (info.offset.x < -swipeThreshold || info.velocity.x < -velocityThreshold) {
       onSwipeNext();
@@ -72,12 +96,6 @@ export const TrendDeckCard: React.FC<TrendDeckCardProps> = ({
       style={{
         x,
         rotate: dragRotate,
-      }}
-      transition={{
-        x: { type: 'spring', stiffness: 260, damping: 25 },
-        opacity: { duration: 0.38, ease: 'easeInOut' },
-        rotate: { type: 'spring', stiffness: 260, damping: 25 },
-        scale: { duration: 0.35, ease: 'easeOut' },
       }}
       drag="x"
       dragConstraints={{ left: 0, right: 0 }}
