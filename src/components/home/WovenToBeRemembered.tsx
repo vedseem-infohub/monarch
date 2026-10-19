@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import gsap from 'gsap';
@@ -68,7 +68,7 @@ const CRAFT_MOODS = [
   },
 ];
 
-// 3. Wide Panoramic Fashion Image Ensembles - Matching User Screenshot exactly
+// 3. Wide Panoramic Fashion Image Ensembles - Matching User Screenshot
 const PANORAMIC_ITEMS = [
   {
     id: 'monarch-011',
@@ -135,215 +135,54 @@ const PANORAMIC_ITEMS = [
   },
 ];
 
+// Arched Curve offsets matching screenshot: center cards are elevated, sides dip with tangent rotation
+const CARD_CURVE_PRESETS = [
+  { y: 38, rot: -5.5 },
+  { y: 16, rot: -3 },
+  { y: 4, rot: -1 },
+  { y: 0, rot: 0.5 },
+  { y: 5, rot: 2 },
+  { y: 18, rot: 4 },
+  { y: 42, rot: 6.5 },
+];
+
 export const WovenToBeRemembered: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const pinWrapperRef = useRef<HTMLDivElement>(null);
-  const headingContainerRef = useRef<HTMLDivElement>(null);
-  const moodsRailRef = useRef<HTMLDivElement>(null);
-  const ribbonMaskRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const cardRefs = useRef<(HTMLAnchorElement | null)[]>([]);
-  const progressBarRef = useRef<HTMLDivElement>(null);
-  const activeBadgeRef = useRef<HTMLSpanElement>(null);
-  const currentActiveIdxRef = useRef<number>(0);
 
-  // useGSAP handles animation lifecycle cleanly without memory leaks
+  // Clean, standard, idiomatic GSAP ScrollTrigger implementation
   useGSAP(
     () => {
-      const section = sectionRef.current;
       const pinWrapper = pinWrapperRef.current;
       const track = trackRef.current;
-      const cards = cardRefs.current.filter((c): c is HTMLAnchorElement => Boolean(c));
-      const progress = progressBarRef.current;
-      const heading = headingContainerRef.current;
-      const moods = moodsRailRef.current;
-
-      if (!section || !pinWrapper || !track || cards.length === 0) return;
-
-      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (prefersReduced) return;
+      if (!pinWrapper || !track) return;
 
       const isDesktop = window.innerWidth >= 1024;
+      if (!isDesktop) return;
 
-      if (isDesktop) {
-        track.scrollLeft = 0;
+      // Calculate travel distance so the last card aligns with the right side (minimal 20px gap)
+      const getTravel = () => {
+        const containerWidth = pinWrapper.clientWidth;
+        const lastCard = track.querySelector('.panoramic-card:last-child') as HTMLElement | null;
+        if (!lastCard) return track.scrollWidth - containerWidth;
+        const minimalGap = 20;
+        return Math.max(0, lastCard.offsetLeft + lastCard.offsetWidth - (containerWidth - minimalGap));
+      };
 
-        // 1. Smooth entrance reveal
-        const entranceTl = gsap.timeline({
-          scrollTrigger: {
-            trigger: section,
-            start: 'top 25%',
-            toggleActions: 'play none none none',
-          },
-        });
-
-        if (heading) {
-          const words = heading.querySelectorAll('.heading-word');
-          entranceTl.from(
-            words,
-            {
-              yPercent: 80,
-              opacity: 0,
-              duration: 0.7,
-              stagger: 0.05,
-              ease: 'power3.out',
-            },
-            0
-          );
-        }
-
-        if (moods) {
-          const thumbs = moods.querySelectorAll('.mood-thumb');
-          entranceTl.from(
-            thumbs,
-            {
-              y: 20,
-              opacity: 0,
-              scale: 0.95,
-              duration: 0.6,
-              stagger: 0.04,
-              ease: 'power2.out',
-            },
-            0.1
-          );
-        }
-
-        // 2. Measure exact travel distance so the last card touches the right side with just minimal gap
-        const getTravelDistance = () => {
-          const containerWidth = pinWrapper.clientWidth;
-          const lastCard = cards[cards.length - 1];
-          if (!lastCard) return 0;
-
-          // Minimal gap on right edge when fully scrolled (20px on desktop)
-          const minimalRightGap = window.innerWidth >= 1024 ? 20 : 12;
-          const lastCardRight = lastCard.offsetLeft + lastCard.offsetWidth;
-          return Math.max(0, lastCardRight - (containerWidth - minimalRightGap));
-        };
-
-        let travel = getTravelDistance();
-        // Responsive speed: balanced scroll distance (approx. 2600px) for smooth, energetic traversal
-        const pinScrollDistance = Math.max(2600, Math.round(travel * 1.9));
-
-        // Precompute card static center offsets in memory to eliminate all DOM reads during scroll
-        let cardCenters = cards.map((c) => c.offsetLeft + c.offsetWidth / 2);
-
-        // GPU quickSetters for instant hardware-accelerated transforms (0 GC, 0 layout reflows)
-        const cardSetters = cards.map((card) => ({
-          setY: gsap.quickSetter(card, 'y', 'px'),
-          setRot: gsap.quickSetter(card, 'rotation', 'deg'),
-          setScale: gsap.quickSetter(card, 'scale'),
-        }));
-
-        // Dynamic curve computation: cards arch gracefully across the viewport
-        const applyCurvature = (progressVal: number) => {
-          const currentTrackX = -travel * progressVal;
-          const viewportCenter = window.innerWidth / 2;
-          const curveSpan = window.innerWidth * 0.52;
-
-          for (let idx = 0; idx < cards.length; idx++) {
-            const screenX = cardCenters[idx] + currentTrackX;
-            const dist = screenX - viewportCenter;
-            const normalized = dist / curveSpan;
-            const clamped = Math.max(-1.3, Math.min(1.3, normalized));
-
-            // Upward parabolic arch (center card is highest, sides drop down smoothly)
-            const yDrop = Math.pow(Math.abs(clamped), 1.85) * 48;
-            // Tangent rotation along the curved contour
-            const rot = clamped * 6.2;
-            // Subtle perspective scale
-            const scale = 1 - Math.pow(Math.abs(clamped), 2) * 0.03;
-
-            const setters = cardSetters[idx];
-            if (setters) {
-              setters.setY(yDrop);
-              setters.setRot(rot);
-              setters.setScale(scale);
-            }
-          }
-        };
-
-        // Initialize curve state immediately on mount
-        applyCurvature(0);
-
-        // Set initial active card styling
-        if (cards[0]) {
-          cards[0].classList.add('border-monarch-gold', 'ring-1', 'ring-monarch-gold/50');
-          cards[0].classList.remove('border-monarch-gold/30');
-        }
-
-        // Main scrubbed pinned timeline
-        // Crucial fix: attach onUpdate to the timeline itself, so curvature and track position are 100% in sync
-        const scrubTl = gsap.timeline({
-          scrollTrigger: {
-            trigger: pinWrapper,
-            pin: pinWrapper,
-            start: 'top top',
-            end: () => `+=${pinScrollDistance}`,
-            scrub: 0.3,
-            anticipatePin: 1,
-            invalidateOnRefresh: true,
-            onRefresh: () => {
-              travel = getTravelDistance();
-              cardCenters = cards.map((c) => c.offsetLeft + c.offsetWidth / 2);
-              applyCurvature(scrubTl.progress());
-            },
-          },
-          onUpdate: () => {
-            // Using timeline's own interpolated progress ensures track.x and curvature match frame-by-frame
-            const p = scrubTl.progress();
-            applyCurvature(p);
-
-            if (progress) {
-              progress.style.width = `${Math.round(p * 100)}%`;
-            }
-
-            // Fast math-only active index tracking without React re-renders
-            const cardIdx = Math.min(
-              cards.length - 1,
-              Math.max(0, Math.floor(p * cards.length))
-            );
-
-            if (cardIdx !== currentActiveIdxRef.current) {
-              currentActiveIdxRef.current = cardIdx;
-              if (activeBadgeRef.current) {
-                activeBadgeRef.current.textContent = `Ensemble 0${cardIdx + 1} of 0${cards.length}`;
-              }
-              cards.forEach((c, i) => {
-                if (i === cardIdx) {
-                  c.classList.add('border-monarch-gold', 'ring-1', 'ring-monarch-gold/50');
-                  c.classList.remove('border-monarch-gold/30');
-                } else {
-                  c.classList.remove('border-monarch-gold', 'ring-1', 'ring-monarch-gold/50');
-                  c.classList.add('border-monarch-gold/30');
-                }
-              });
-            }
-          },
-        });
-
-        // Horizontal track translation exactly bringing last card to right side with minimal gap
-        scrubTl.fromTo(
-          track,
-          { x: 0 },
-          {
-            x: () => -getTravelDistance(),
-            ease: 'none',
-            duration: 1,
-          },
-          0
-        );
-      } else {
-        // Mobile / Tablet: Smooth unpinned view with a gentle static arc
-        cards.forEach((card, idx) => {
-          const centerIdx = (cards.length - 1) / 2;
-          const diff = (idx - centerIdx) / centerIdx;
-          const yDrop = Math.pow(Math.abs(diff), 2) * 16;
-          const rot = diff * 2.5;
-          gsap.set(card, { y: yDrop, rotation: rot });
-        });
-      }
-
-      ScrollTrigger.refresh();
+      // Simple, standard GSAP ScrollTrigger tween with start: "top 20%"
+      gsap.to(track, {
+        x: () => -getTravel(),
+        ease: 'none',
+        scrollTrigger: {
+          trigger: pinWrapper,
+          pin: true,
+          start: 'top 20%',
+          end: '+=2400',
+          scrub: 1,
+          invalidateOnRefresh: true,
+        },
+      });
     },
     { scope: sectionRef }
   );
@@ -354,31 +193,31 @@ export const WovenToBeRemembered: React.FC = () => {
       ref={sectionRef}
       className="relative w-full bg-[#FAF6F0] text-monarch-charcoal overflow-hidden"
     >
-      {/* Pinned Viewport Container for Scroll Animation */}
+      {/* 1. Top Luxury Ticker Marquee Ribbon */}
+      <div className="w-full bg-[#3F101A] text-monarch-gold-light py-1.5 overflow-hidden border-y border-monarch-gold/30">
+        <div className="flex animate-marquee whitespace-nowrap">
+          {Array.from({ length: 4 }).map((_, repeatIdx) => (
+            <div key={repeatIdx} className="flex items-center gap-8 mx-4">
+              {MARQUEE_ITEMS.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-6 text-[10px] sm:text-[11px] font-nav uppercase tracking-[0.25em]">
+                  <span>{item}</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-monarch-gold shrink-0" />
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Pinned Viewport Container (start: top 20%) */}
       <div
         ref={pinWrapperRef}
-        className="w-full flex flex-col justify-between min-h-screen pt-14 lg:pt-16 pb-4 relative overflow-hidden bg-[#FAF6F0]"
+        className="w-full flex flex-col justify-between py-4 relative overflow-hidden bg-[#FAF6F0]"
       >
-        {/* 1. Top Luxury Ticker Marquee Ribbon */}
-        <div className="w-full bg-[#3F101A] text-monarch-gold-light py-1.5 overflow-hidden border-y border-monarch-gold/30 shrink-0">
-          <div className="flex animate-marquee whitespace-nowrap">
-            {Array.from({ length: 4 }).map((_, repeatIdx) => (
-              <div key={repeatIdx} className="flex items-center gap-8 mx-4">
-                {MARQUEE_ITEMS.map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-6 text-[10px] sm:text-[11px] font-nav uppercase tracking-[0.25em]">
-                    <span>{item}</span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-monarch-gold shrink-0" />
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* 2. Upper Editorial Content: SIX MOODS & Section Heading */}
-        <div className="w-full shrink-0 pt-2 lg:pt-2.5">
+        <div className="w-full shrink-0">
           {/* SIX MOODS Craft Category Rail */}
-          <div ref={moodsRailRef} className="mb-2">
+          <div className="mb-2">
             <div className="flex items-center justify-between mb-1.5 pb-1 border-b border-monarch-gold/20 max-w-5xl mx-auto w-full px-4 sm:px-6">
               <div className="flex items-center gap-2">
                 <span className="font-nav text-xs sm:text-sm uppercase tracking-[0.28em] font-bold text-monarch-charcoal">
@@ -425,10 +264,7 @@ export const WovenToBeRemembered: React.FC = () => {
           </div>
 
           {/* Section Editorial Heading: THE VAULT SIGNATURES / Woven to Be Remembered */}
-          <div
-            ref={headingContainerRef}
-            className="max-w-6xl mx-auto w-full px-4 sm:px-6 flex items-end justify-between my-1 sm:my-2"
-          >
+          <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 flex items-end justify-between my-1 sm:my-2">
             <div>
               <div className="text-[10px] sm:text-[11px] font-nav uppercase tracking-[0.28em] text-monarch-charcoal/70 font-semibold mb-0.5">
                 THE VAULT SIGNATURES
@@ -454,105 +290,87 @@ export const WovenToBeRemembered: React.FC = () => {
         </div>
 
         {/* 3. Curved Panoramic Fashion Image Strip with Tight Gap */}
-        <div
-          ref={ribbonMaskRef}
-          className="relative w-full overflow-hidden select-none my-auto py-2 touch-pan-y"
-        >
-          {/* Horizontal Track Container: minimal gap (gap-2 to gap-3) */}
+        <div className="relative w-full overflow-hidden select-none my-auto py-2">
+          {/* Horizontal Track Container */}
           <div
             ref={trackRef}
             className="flex gap-2 sm:gap-2.5 lg:gap-3 items-end pl-4 sm:pl-8 lg:pl-12 pr-4 sm:pr-6 lg:pr-8 w-max no-scrollbar pb-3 pt-2"
           >
-            {PANORAMIC_ITEMS.map((item, index) => (
-              <Link
-                key={item.id}
-                ref={(el) => {
-                  cardRefs.current[index] = el;
-                }}
-                href={item.href}
-                className="panoramic-card shrink-0 w-[240px] sm:w-[270px] lg:w-[295px] h-[385px] sm:h-[420px] lg:h-[450px] group relative rounded-2xl overflow-hidden bg-monarch-charcoal shadow-xl hover:shadow-2xl transition-[box-shadow,border-color] duration-300 border border-monarch-gold/30 hover:border-monarch-gold flex flex-col justify-end p-4 sm:p-5 will-change-transform transform-gpu select-none"
-                style={{
-                  transformOrigin: '50% 85%',
-                  backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
-                }}
-              >
-                {/* Background Luxury Fashion Model Photo */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={item.image}
-                  alt={item.title}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-106 pointer-events-none"
-                  loading="eager"
-                  decoding="async"
-                />
+            {PANORAMIC_ITEMS.map((item, index) => {
+              const curve = CARD_CURVE_PRESETS[index % CARD_CURVE_PRESETS.length];
 
-                {/* Editorial Gradient Scrim */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#16070B] via-[#16070B]/35 to-transparent opacity-95 group-hover:opacity-85 transition-opacity pointer-events-none" />
+              return (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  className="panoramic-card shrink-0 w-[240px] sm:w-[270px] lg:w-[295px] h-[385px] sm:h-[420px] lg:h-[450px] group relative rounded-2xl overflow-hidden bg-monarch-charcoal shadow-xl hover:shadow-2xl transition-all duration-300 border border-monarch-gold/30 hover:border-monarch-gold flex flex-col justify-end p-4 sm:p-5 will-change-transform transform-gpu select-none"
+                  style={{
+                    transform: `translateY(${curve.y}px) rotate(${curve.rot}deg)`,
+                    transformOrigin: '50% 85%',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                  }}
+                >
+                  {/* Background Luxury Fashion Model Photo */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-106 pointer-events-none"
+                    loading="eager"
+                    decoding="async"
+                  />
 
-                {/* Top Badge: Ensemble Index */}
-                <div className="absolute top-3 left-3 z-10 flex items-center gap-2 pointer-events-none">
-                  <span className="text-[10px] font-mono text-monarch-gold-light bg-black/60 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-monarch-gold/30">
-                    0{index + 1} / 0{PANORAMIC_ITEMS.length}
-                  </span>
-                </div>
+                  {/* Editorial Gradient Scrim */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#16070B] via-[#16070B]/35 to-transparent opacity-95 group-hover:opacity-85 transition-opacity pointer-events-none" />
 
-                {/* Bottom Editorial Content */}
-                <div className="relative z-10 space-y-1.5 pointer-events-none">
-                  <div className="flex items-center gap-2">
-                    <span className="inline-block text-[9px] font-nav uppercase tracking-[0.2em] bg-black/60 backdrop-blur-md px-2.5 py-0.5 rounded-full text-monarch-gold-light border border-monarch-gold/30">
-                      {item.tag}
+                  {/* Top Badge: Ensemble Index */}
+                  <div className="absolute top-3 left-3 z-10 flex items-center gap-2 pointer-events-none">
+                    <span className="text-[10px] font-mono text-monarch-gold-light bg-black/60 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-monarch-gold/30">
+                      0{index + 1} / 0{PANORAMIC_ITEMS.length}
                     </span>
                   </div>
 
-                  <h3 className="font-serif text-base sm:text-lg lg:text-xl text-monarch-ivory font-medium group-hover:text-monarch-gold-light transition-colors line-clamp-1">
-                    {item.title}
-                  </h3>
+                  {/* Bottom Editorial Content */}
+                  <div className="relative z-10 space-y-1.5 pointer-events-none">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block text-[9px] font-nav uppercase tracking-[0.2em] bg-black/60 backdrop-blur-md px-2.5 py-0.5 rounded-full text-monarch-gold-light border border-monarch-gold/30">
+                        {item.tag}
+                      </span>
+                    </div>
 
-                  <p className="text-[11px] font-sans text-monarch-beige/80 line-clamp-1">
-                    {item.craft}
-                  </p>
+                    <h3 className="font-serif text-base sm:text-lg lg:text-xl text-monarch-ivory font-medium group-hover:text-monarch-gold-light transition-colors line-clamp-1">
+                      {item.title}
+                    </h3>
 
-                  <div className="pt-2 flex items-center justify-between text-xs font-nav uppercase tracking-wider text-monarch-beige/90 group-hover:text-white border-t border-monarch-gold/20">
-                    <span className="font-serif font-bold text-monarch-gold-light text-sm sm:text-base">
-                      {item.price}
-                    </span>
-                    <div className="flex items-center gap-1 text-[11px] text-monarch-gold group-hover:text-white transition-colors">
-                      <span>View Ensemble</span>
-                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                    <p className="text-[11px] font-sans text-monarch-beige/80 line-clamp-1">
+                      {item.craft}
+                    </p>
+
+                    <div className="pt-2 flex items-center justify-between text-xs font-nav uppercase tracking-wider text-monarch-beige/90 group-hover:text-white border-t border-monarch-gold/20">
+                      <span className="font-serif font-bold text-monarch-gold-light text-sm sm:text-base">
+                        {item.price}
+                      </span>
+                      <div className="flex items-center gap-1 text-[11px] text-monarch-gold group-hover:text-white transition-colors">
+                        <span>View Ensemble</span>
+                        <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-
-          {/* Progress Tracker Bar */}
-          <div className="max-w-xs mx-auto px-6 mt-3 hidden lg:flex flex-col items-center gap-1.5">
-            <div className="w-full h-1 bg-monarch-beige/40 rounded-full overflow-hidden border border-monarch-gold/20">
-              <div
-                ref={progressBarRef}
-                className="h-full bg-gradient-to-r from-monarch-gold-dark via-monarch-gold to-monarch-gold-light transition-all duration-75 ease-out"
-                style={{ width: '14%' }}
-              />
-            </div>
-            <div className="flex items-center justify-between w-full text-[9px] font-nav uppercase tracking-widest text-monarch-charcoal/60">
-              <span>Scroll to traverse vault</span>
-              <span ref={activeBadgeRef}>
-                Ensemble 01 of 0{PANORAMIC_ITEMS.length}
-              </span>
-            </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
 
         {/* 4. Bottom Archive Link */}
-        <div className="text-center shrink-0 pt-1 pb-1">
+        <div className="text-center shrink-0 pt-2 pb-1">
           <Link
             href="/collections/all"
             className="inline-flex items-center gap-2 text-[11px] font-nav uppercase tracking-[0.2em] font-semibold text-monarch-maroon hover:text-monarch-maroon-dark pb-0.5 border-b border-monarch-maroon/30 transition-all group"
           >
             <span>Discover The Complete Royal Archives</span>
-            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1.5 transition-transform" />
           </Link>
         </div>
       </div>
