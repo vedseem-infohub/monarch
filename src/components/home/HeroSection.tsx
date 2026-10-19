@@ -231,20 +231,23 @@ export const HeroSection: React.FC = () => {
     loadSingleFrame(0, 'high').then(() => {
       if (isCancelled) return;
 
-      // 2. Preload remaining frames in concurrent batches of 8
-      let nextIndex = 1;
-      const concurrency = 8;
+      // 2. Preload remaining frames after intro curtain opens (1.2s delay) with smooth concurrency of 4
+      setTimeout(() => {
+        if (isCancelled) return;
+        let nextIndex = 1;
+        const concurrency = 4;
 
-      const worker = async () => {
-        while (nextIndex < TOTAL_FRAMES && !isCancelled) {
-          const idx = nextIndex++;
-          await loadSingleFrame(idx, 'auto');
+        const worker = async () => {
+          while (nextIndex < TOTAL_FRAMES && !isCancelled) {
+            const idx = nextIndex++;
+            await loadSingleFrame(idx, 'auto');
+          }
+        };
+
+        for (let i = 0; i < concurrency; i++) {
+          worker();
         }
-      };
-
-      for (let i = 0; i < concurrency; i++) {
-        worker();
-      }
+      }, 1200);
     });
 
     return () => {

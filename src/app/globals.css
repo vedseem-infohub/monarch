@@ -36,6 +36,7 @@
 
 html {
   scroll-behavior: smooth;
+  scrollbar-gutter: stable;
   background-color: #F7F0E5;
   color: #211D1A;
 }

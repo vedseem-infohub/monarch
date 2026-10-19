@@ -2,7 +2,7 @@
 
 import React, { useRef } from 'react';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
@@ -11,65 +11,8 @@ if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-// 1. Top Guarantee Marquee Items
-const MARQUEE_ITEMS = [
-  'Pure Zari, Tested & Hallmarked',
-  'Authentic Handloom Kashi Kadwa',
-  'Bespoke Tailoring by Master Artisans',
-  'Ancestral Awadhi Embroidery',
-  'Worldwide Insured Express Delivery',
-  '15-Day Authenticity Guarantee',
-  'Complimentary Bridal Styling',
-];
-
-// 2. Six Moods of Silk - Authentic Indian Handloom Thumbnails
-const CRAFT_MOODS = [
-  {
-    title: 'Kanjivaram Silk',
-    slug: 'designer-sarees',
-    colorName: 'Royal Sapphire',
-    accentColor: '#1A365D',
-    image: '/images/moods/kanjivaram_silk.jpg',
-  },
-  {
-    title: 'Banarasi Brocade',
-    slug: 'designer-sarees',
-    colorName: 'Imperial Crimson',
-    accentColor: '#5A1725',
-    image: '/images/moods/banarasi_brocade.jpg',
-  },
-  {
-    title: 'Chanderi Heritage',
-    slug: 'festive-wear',
-    colorName: 'Haldi Ochre',
-    accentColor: '#9A7737',
-    image: '/images/moods/chanderi_heritage.jpg',
-  },
-  {
-    title: 'Paithani Heirloom',
-    slug: 'designer-sarees',
-    colorName: 'Gulabi Ruby',
-    accentColor: '#7A2436',
-    image: '/images/moods/paithani_heirloom.jpg',
-  },
-  {
-    title: 'Tussar Silk',
-    slug: 'festive-wear',
-    colorName: 'Forest Emerald',
-    accentColor: '#1E3A2F',
-    image: '/images/moods/tussar_silk.jpg',
-  },
-  {
-    title: 'Pure Organza',
-    slug: 'designer-sarees',
-    colorName: 'Rose Champagne',
-    accentColor: '#8E703E',
-    image: '/images/moods/pure_organza.jpg',
-  },
-];
-
-// 3. Wide Panoramic Fashion Image Ensembles - Matching User Screenshot
-const PANORAMIC_ITEMS = [
+// Wide Panoramic Fashion Image Ensembles - Matching User Screenshot 2
+const SIGNATURE_ENSEMBLES = [
   {
     id: 'monarch-011',
     title: 'Janki Courtyard Silk',
@@ -191,112 +134,50 @@ export const WovenToBeRemembered: React.FC = () => {
     <section
       id="woven-to-be-remembered"
       ref={sectionRef}
-      className="relative w-full bg-[#FAF6F0] text-monarch-charcoal overflow-hidden"
+      className="relative w-full bg-[#FAF6F0] text-monarch-charcoal overflow-hidden pt-6 pb-12"
     >
-      {/* 1. Top Luxury Ticker Marquee Ribbon */}
-      <div className="w-full bg-[#3F101A] text-monarch-gold-light py-1.5 overflow-hidden border-y border-monarch-gold/30">
-        <div className="flex animate-marquee whitespace-nowrap">
-          {Array.from({ length: 4 }).map((_, repeatIdx) => (
-            <div key={repeatIdx} className="flex items-center gap-8 mx-4">
-              {MARQUEE_ITEMS.map((item, idx) => (
-                <div key={idx} className="flex items-center gap-6 text-[10px] sm:text-[11px] font-nav uppercase tracking-[0.25em]">
-                  <span>{item}</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-monarch-gold shrink-0" />
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Pinned Viewport Container (start: top 20%) */}
       <div
         ref={pinWrapperRef}
         className="w-full flex flex-col justify-between py-4 relative overflow-hidden bg-[#FAF6F0]"
       >
-        {/* 2. Upper Editorial Content: SIX MOODS & Section Heading */}
-        <div className="w-full shrink-0">
-          {/* SIX MOODS Craft Category Rail */}
-          <div className="mb-2">
-            <div className="flex items-center justify-between mb-1.5 pb-1 border-b border-monarch-gold/20 max-w-5xl mx-auto w-full px-4 sm:px-6">
-              <div className="flex items-center gap-2">
-                <span className="font-nav text-xs sm:text-sm uppercase tracking-[0.28em] font-bold text-monarch-charcoal">
-                  SIX MOODS.
-                </span>
-                <span className="hidden sm:inline-block w-1.5 h-1.5 rounded-full bg-monarch-gold" />
-                <span className="hidden sm:inline-block text-[11px] font-nav uppercase tracking-widest text-monarch-maroon font-semibold">
-                  Curated Heritage Categories
-                </span>
-              </div>
-              <span className="text-[11px] font-sans text-monarch-charcoal/60 tracking-wide">
-                Pure Handloom Silks
+        {/* Header Row: THE VAULT SIGNATURES / Woven to Be Remembered */}
+        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 sm:mb-8">
+          <div>
+            <div className="text-[10px] sm:text-[11px] font-nav uppercase tracking-[0.28em] text-monarch-charcoal/70 font-semibold mb-1">
+              THE VAULT SIGNATURES
+            </div>
+            <h2 className="font-display text-2xl sm:text-3xl lg:text-[42px] font-normal tracking-tight text-monarch-charcoal leading-none">
+              <span>Woven</span> <span>to</span> <span>Be</span>{' '}
+              <span className="font-serif italic text-monarch-gold-dark font-light ml-1 text-[1.12em]">
+                Remembered
               </span>
-            </div>
-
-            {/* Compact Royal Arch Thumbnails */}
-            <div className="flex items-center justify-center gap-2.5 sm:gap-4 lg:gap-5 px-4 max-w-5xl mx-auto w-full overflow-x-auto sm:overflow-visible no-scrollbar pb-0.5">
-              {CRAFT_MOODS.map((mood) => (
-                <Link
-                  key={mood.title}
-                  href={`/collections/${mood.slug}`}
-                  className="mood-thumb group flex flex-col items-center text-center w-[72px] sm:w-[84px] lg:w-[94px] shrink-0 transition-transform duration-300 hover:-translate-y-1"
-                >
-                  <div className="w-full aspect-[3.2/3.8] rounded-t-full rounded-b-md overflow-hidden bg-monarch-charcoal border border-monarch-gold/35 group-hover:border-monarch-gold shadow-sm group-hover:shadow-md transition-all duration-500 relative">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={mood.image}
-                      alt={mood.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                      loading="eager"
-                      decoding="async"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60 group-hover:opacity-30 transition-opacity" />
-                  </div>
-                  <span className="font-serif text-[11px] sm:text-xs text-monarch-charcoal font-medium mt-1 group-hover:text-monarch-maroon transition-colors line-clamp-1">
-                    {mood.title}
-                  </span>
-                  <span className="text-[9px] font-nav uppercase tracking-wider text-monarch-gold-dark font-medium">
-                    Explore
-                  </span>
-                </Link>
-              ))}
-            </div>
+            </h2>
           </div>
 
-          {/* Section Editorial Heading: THE VAULT SIGNATURES / Woven to Be Remembered */}
-          <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 flex items-end justify-between my-1 sm:my-2">
-            <div>
-              <div className="text-[10px] sm:text-[11px] font-nav uppercase tracking-[0.28em] text-monarch-charcoal/70 font-semibold mb-0.5">
-                THE VAULT SIGNATURES
-              </div>
-              <h2 className="font-display text-2xl sm:text-3xl lg:text-[38px] font-normal tracking-tight text-monarch-charcoal leading-none">
-                <span className="heading-word inline-block font-display">Woven</span>{' '}
-                <span className="heading-word inline-block font-display">to</span>{' '}
-                <span className="heading-word inline-block font-display">Be</span>{' '}
-                <span className="heading-word inline-block font-serif italic text-monarch-gold-dark font-light ml-1 text-[1.14em]">
-                  Remembered
-                </span>
-              </h2>
-            </div>
-
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-mono uppercase tracking-widest text-monarch-charcoal/60">
+              Curated 01 / 2026
+            </span>
+            <span className="w-1.5 h-1.5 rounded-full bg-monarch-gold" />
             <Link
               href="/collections/all"
-              className="hidden sm:inline-flex items-center gap-1.5 text-xs font-nav uppercase tracking-widest text-monarch-charcoal/70 hover:text-monarch-maroon transition-colors group pb-0.5 border-b border-monarch-gold/30 hover:border-monarch-maroon"
+              className="inline-flex items-center gap-1.5 text-xs font-nav uppercase tracking-widest text-monarch-maroon hover:text-monarch-maroon-dark transition-colors font-semibold group pb-0.5 border-b border-monarch-gold/30 hover:border-monarch-maroon"
             >
-              <span>Explore All ({PANORAMIC_ITEMS.length})</span>
+              <span>Explore All ({SIGNATURE_ENSEMBLES.length})</span>
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
         </div>
 
-        {/* 3. Curved Panoramic Fashion Image Strip with Tight Gap */}
+        {/* Curved Panoramic Fashion Image Strip with Tight Gap */}
         <div className="relative w-full overflow-hidden select-none my-auto py-2">
           {/* Horizontal Track Container */}
           <div
             ref={trackRef}
             className="flex gap-2 sm:gap-2.5 lg:gap-3 items-end pl-4 sm:pl-8 lg:pl-12 pr-4 sm:pr-6 lg:pr-8 w-max no-scrollbar pb-3 pt-2"
           >
-            {PANORAMIC_ITEMS.map((item, index) => {
+            {SIGNATURE_ENSEMBLES.map((item, index) => {
               const curve = CARD_CURVE_PRESETS[index % CARD_CURVE_PRESETS.length];
 
               return (
@@ -327,7 +208,7 @@ export const WovenToBeRemembered: React.FC = () => {
                   {/* Top Badge: Ensemble Index */}
                   <div className="absolute top-3 left-3 z-10 flex items-center gap-2 pointer-events-none">
                     <span className="text-[10px] font-mono text-monarch-gold-light bg-black/60 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-monarch-gold/30">
-                      0{index + 1} / 0{PANORAMIC_ITEMS.length}
+                      0{index + 1} / 0{SIGNATURE_ENSEMBLES.length}
                     </span>
                   </div>
 
@@ -363,12 +244,13 @@ export const WovenToBeRemembered: React.FC = () => {
           </div>
         </div>
 
-        {/* 4. Bottom Archive Link */}
-        <div className="text-center shrink-0 pt-2 pb-1">
+        {/* Bottom Archive Link */}
+        <div className="text-center shrink-0 pt-6 pb-2">
           <Link
             href="/collections/all"
             className="inline-flex items-center gap-2 text-[11px] font-nav uppercase tracking-[0.2em] font-semibold text-monarch-maroon hover:text-monarch-maroon-dark pb-0.5 border-b border-monarch-maroon/30 transition-all group"
           >
+            <Sparkles className="w-3.5 h-3.5 text-monarch-gold" />
             <span>Discover The Complete Royal Archives</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1.5 transition-transform" />
           </Link>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { HeroSection } from '@/components/home/HeroSection';
 import { SectionImagePreloader } from '@/components/home/shared/SectionImagePreloader';
+import { SixMoodsSection } from '@/components/home/SixMoodsSection';
 import { WovenToBeRemembered } from '@/components/home/WovenToBeRemembered';
 import { NewArrivals } from '@/components/home/NewArrivals';
 import { BestSellers } from '@/components/home/BestSellers';
@@ -22,7 +23,10 @@ export default function HomePage() {
       {/* 0. Flagship Hero Canvas Image Sequence Walkthrough (Preserved 400vh) */}
       <HeroSection />
 
-      {/* SECTION 1: Woven to Be Remembered */}
+      {/* SECTION 1: Six Moods of Silk (Matching Screenshot 1) */}
+      <SixMoodsSection />
+
+      {/* SECTION 2: Woven to Be Remembered (Matching Screenshot 2) */}
       <WovenToBeRemembered />
 
       {/* SECTION 2: New Arrivals */}
