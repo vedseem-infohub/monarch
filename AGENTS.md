@@ -242,6 +242,7 @@ model LatestTrendsDeck {
 | **10**| **Worth Your Attention** | `src/data/worthYourAttention.ts` | `products` via `spotlight` | `Product[]` | `verticalText`, `attentionHeadline`, `spotlightTag`, `offerBadge`. |
 | **11**| **Cinematic Stories** | `src/data/cinematicStories.ts` | `products` via `cinematic_stories` | `Product[]` | `storyTitleLine1`, `storyTitleLine2`, `storySubtitle`, `bgImage` in full-screen pinned dock. |
 | **12**| **Latest Trends** | `src/data/latestTrends.ts` | `products` via `trendsDeck` | `Product[]` | `trendVelocity`, `badge`, `storyBehindDrape`, `rangeCategory`, `rangeCategorySlug`. |
+| **13**| **The Private Atelier & Royal Craft Sanctum** | `src/data/atelier.ts` | `client_diary_entries` & `atelier_bookings` | `ClientDiaryEntry[]` | `clientName`, `weddingLocation`, `quote`, `craftTechnique`, `heritageTag`, canonical `Product` relations, VIP salon concierge. |
 
 ---
 
@@ -265,8 +266,7 @@ Every homepage section connects to a dedicated data model and API endpoint:
 | **11**| **Worth Your Attention** | `WorthYourAttention.tsx` | `worthYourAttention.ts` | `GET /api/v1/spotlight/worth-your-attention` | `SpotlightCollection`: 6 expanding accordion cards with dark-to-colorful hover morph and horizontal scroll track. |
 | **11.5**| **Cinematic Stories** | `CinematicStories.tsx` | `cinematicStories.ts` | `GET /api/v1/stories/cinematic` | `CinematicStory[]`: 4 pinned daily moments in silk with two-phase dock cards & slow left-to-right motion. |
 | **12**| **Latest Trends** | `LatestTrends.tsx` | `latestTrends.ts` | `GET /api/v1/trends/deck` | `LatestTrendsDeck`: 3-column editorial layout with card deck stack ("taas ke paate"), swipe physics, and range navigation. |
-| **13**| **Craftsmanship Sanctum** | `CraftsmanshipSection.tsx`| `craftsmanship.ts` | `GET /api/v1/craftsmanship` | `CraftPillar[]`: Kashi pitlooms, Awadhi zardozi, Tilla embroidery, bespoke canvas. |
-| **14**| **Royal Client Diary** | `TestimonialCarousel.tsx`| `craftsmanship.ts` | `GET /api/v1/testimonials` | `Testimonial[]`: verified client reviews, wedding locations, quotes. |
+| **13**| **The Private Atelier & Royal Craft Sanctum** | `AtelierSanctum.tsx` | `atelier.ts` | `GET /api/v1/atelier/client-diary`, `POST /api/v1/atelier/book-appointment` | `ClientDiaryEntry[]`, `CraftSanctumPillar[]`, `SalonLocation[]`: verified wedding commissions, 24K gold zari hallmarked pillars, private VIP salon suite concierge. |
 
 ---
 

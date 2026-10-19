@@ -14,8 +14,7 @@ import { EditsForEveryOccasion } from '@/components/home/EditsForEveryOccasion';
 import { WorthYourAttention } from '@/components/home/WorthYourAttention';
 import { CinematicStories } from '@/components/home/CinematicStories';
 import { LatestTrends } from '@/components/home/LatestTrends';
-import { CraftsmanshipSection } from '@/components/home/CraftsmanshipSection';
-import { TestimonialCarousel } from '@/components/home/TestimonialCarousel';
+import { AtelierSanctum } from '@/components/home/AtelierSanctum';
 
 export default function HomePage() {
   return (
@@ -65,11 +64,8 @@ export default function HomePage() {
       {/* SECTION 12: Latest Trends */}
       <LatestTrends />
 
-      {/* Interactive 3D Fabric & Brocade Craftsmanship Sanctum */}
-      <CraftsmanshipSection />
-
-      {/* Royal Client Diary Testimonials */}
-      <TestimonialCarousel />
+      {/* SECTION 13: The Private Atelier & Royal Craft Sanctum (Grand Finale Before Footer) */}
+      <AtelierSanctum />
     </div>
   );
 }
