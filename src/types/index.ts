@@ -18,6 +18,9 @@ export interface SectionMetadata {
   campaignTitle?: string;     // e.g. "Awadhi Darbar Couture"
   campaignSubtitle?: string;  // e.g. "Pure Katan Silk Kadwa"
   curatedSaree?: string;      // e.g. "Royal Crimson & Sapphire Weave"
+  // Occasion Edits (Edits for Every Occasion)
+  occasionTag?: string;       // e.g. "CURATED WEDDING TROUSSEAU", "TIMELESS HANDLOOMS"
+  occasionTitle?: string;     // e.g. "The Wedding Edit", "Heritage Weaves"
 
   // Interactive Studio (Change Your Look)
   lookbookName?: string;      // e.g. "IVORY ORGANZA BLOOM"

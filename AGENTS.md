@@ -160,6 +160,18 @@ model LookbookStudio {
   isActive   Boolean        @default(true)
   looks      Product[]      // Curated studio products with audio & color variants
 }
+
+// Occasion Edits & Curated Portals (Edits for Every Occasion)
+model OccasionCollection {
+  id             String         @id // e.g. "edits-for-every-occasion"
+  headingPrimary String         // "EDITS FOR"
+  headingScript  String         // "every occasion"
+  description    String         @db.Text
+  ctaText        String         // "EXPLORE ALL EDITS"
+  ctaHref        String
+  isActive       Boolean        @default(true)
+  products       Product[]      // Curated occasion products (Wedding, Heritage, Drape, Atelier)
+}
 ```
 
 ---
@@ -175,10 +187,11 @@ model LookbookStudio {
 | **3** | **The Bridal Collection** | `src/data/bridal.ts` | `products` (bridal) | `Product[]` | `craftTechnique`, royal trousseau details, large hero card auto-cycle. |
 | **4** | **Autumn–Winter 2026** | `src/data/autumnWinter.ts` | `products` via `campaigns` | `Product[]` | `campaignTag`, `campaignTitle`, `campaignSubtitle`, `curatedSaree` in cathedral arches. |
 | **5** | **Change Your Look** | `src/data/changeLook.ts` | `products` via `lookbook` | `Product[]` | `lookbookName`, `audioTrack: { title, artist }`, `features`, multi-color swatches. |
-| **6** | **Trend of the Day** | `src/data/trends.ts` | `products` (trending) | `Product[]` | `badge`, right-to-left gliding marquee track. |
-| **7** | **Seasonal Special** | `src/data/seasonal.ts` | `products` (seasonal) | `Product[]` | `seasonTag`, left-to-right reverse marquee track. |
-| **8** | **New Arrivals / Best Sellers** | `src/data/products.ts` | `products` (sorted) | `Product[]` | `badge: 'New Arrival' \| 'Bestseller'`. |
-| **9** | **Worth Your Attention / Latest Trends**| `src/data/products.ts` & `trends.ts` | `products` (featured) | `Product[]` | Curated luxury spotlight picks. |
+| **6** | **Edits for Every Occasion** | `src/data/editsForOccasion.ts` | `products` via `occasions` | `Product[]` | `occasionTag`, `occasionTitle`, action links for Wedding, Heritage, Drape, Atelier. |
+| **7** | **Trend of the Day** | `src/data/trends.ts` | `products` (trending) | `Product[]` | `badge`, right-to-left gliding marquee track. |
+| **8** | **Seasonal Special** | `src/data/seasonal.ts` | `products` (seasonal) | `Product[]` | `seasonTag`, left-to-right reverse marquee track. |
+| **9** | **New Arrivals / Best Sellers** | `src/data/products.ts` | `products` (sorted) | `Product[]` | `badge: 'New Arrival' \| 'Bestseller'`. |
+| **10**| **Worth Your Attention / Latest Trends**| `src/data/products.ts` & `trends.ts` | `products` (featured) | `Product[]` | Curated luxury spotlight picks. |
 
 ---
 
@@ -198,10 +211,11 @@ Every homepage section connects to a dedicated data model and API endpoint:
 | **7** | **Seasonal Special** | `SeasonalSpecial.tsx` | `seasonal.ts` | `GET /api/v1/collections/seasonal` | `Product[]`: left-to-right reverse marquee with season tags. |
 | **8** | **Autumn–Winter 2026** | `AutumnWinter2026.tsx` | `autumnWinter.ts` | `GET /api/v1/campaigns/autumn-winter-2026` | `AutumnWinterData`: 3 cathedral arched cards (`Awadhi Darbar`, `Courtyard Baithak`, `Kashi Imperial`). |
 | **9** | **Change Your Look** | `ChangeYourLook.tsx` | `changeLook.ts` | `GET /api/v1/studio/looks` | `LookStyleProduct[]`: interactive center model, sizes, color chips, and audio pill. |
-| **10**| **Worth Your Attention** | `WorthYourAttention.tsx` | `products.ts` | `GET /api/v1/products/featured` | `Product[]`: editorial highlighted luxury picks. |
-| **11**| **Latest Trends** | `LatestTrends.tsx` | `trends.ts` | `GET /api/v1/trends/latest` | `Product[]`: high-engagement trending pieces. |
-| **12**| **Craftsmanship Sanctum** | `CraftsmanshipSection.tsx`| `craftsmanship.ts` | `GET /api/v1/craftsmanship` | `CraftPillar[]`: Kashi pitlooms, Awadhi zardozi, Tilla embroidery, bespoke canvas. |
-| **13**| **Royal Client Diary** | `TestimonialCarousel.tsx`| `craftsmanship.ts` | `GET /api/v1/testimonials` | `Testimonial[]`: verified client reviews, wedding locations, quotes. |
+| **10**| **Edits for Every Occasion** | `EditsForEveryOccasion.tsx` | `editsForOccasion.ts` | `GET /api/v1/collections/occasions` | `OccasionCollection`: 4 portals (`The Wedding Edit`, `Heritage Weaves`, `The New Drape`, `Private Atelier`). |
+| **11**| **Worth Your Attention** | `WorthYourAttention.tsx` | `products.ts` | `GET /api/v1/products/featured` | `Product[]`: editorial highlighted luxury picks. |
+| **12**| **Latest Trends** | `LatestTrends.tsx` | `trends.ts` | `GET /api/v1/trends/latest` | `Product[]`: high-engagement trending pieces. |
+| **13**| **Craftsmanship Sanctum** | `CraftsmanshipSection.tsx`| `craftsmanship.ts` | `GET /api/v1/craftsmanship` | `CraftPillar[]`: Kashi pitlooms, Awadhi zardozi, Tilla embroidery, bespoke canvas. |
+| **14**| **Royal Client Diary** | `TestimonialCarousel.tsx`| `craftsmanship.ts` | `GET /api/v1/testimonials` | `Testimonial[]`: verified client reviews, wedding locations, quotes. |
 
 ---
 

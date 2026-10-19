@@ -3,6 +3,7 @@
 import React, { useState, useRef } from 'react';
 import { CHANGE_LOOK_STYLES, LookStyleItem } from '@/data/changeLook';
 import { LookThumbnailCard } from './LookThumbnailCard';
+import { CurvedAddToCartButton } from './CurvedAddToCartButton';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { Product } from '@/types';
@@ -10,12 +11,12 @@ import {
   ChevronLeft,
   ChevronRight,
   Check,
-  ArrowRight,
   Sparkles,
   Heart,
   Share2,
   ShieldCheck,
   Award,
+  Truck,
 } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -25,7 +26,7 @@ if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-/*
+/**
  * ============================================================================
  * COMPONENT: ChangeYourLook (Interactive Studio)
  * ============================================================================
@@ -33,8 +34,8 @@ if (typeof window !== 'undefined') {
  * - Left column: "Change look" cursive annotation + vertical look thumbnails.
  * - Center: Full-height couture model with fast, silky-smooth left-to-right swift transition.
  * - Right: Complete product studio with rating, title, price, blouse sizes, color chips,
- *          quantity, and signature maroon ADD TO CART pill button with circular arrow.
- * - NO audio/music player as requested.
+ *          quantity, and iconic curved maroon "ADD TO CART" swoosh button with circular arrow.
+ * - NO audio/music player controls.
  *
  * BACKEND API INTEGRATION INSTRUCTIONS:
  * When backend endpoint GET /api/v1/studio/looks is ready:
@@ -62,7 +63,7 @@ export const ChangeYourLook: React.FC = () => {
   const modelImgRef = useRef<HTMLImageElement>(null);
 
   const [activeLookIndex, setActiveLookIndex] = useState(0);
-  const [selectedColorIdx, setSelectedColorIdx] = useState(1); // default rose color
+  const [selectedColorIdx, setSelectedColorIdx] = useState(1); // default rosé color
   const [selectedSize, setSelectedSize] = useState('M');
   const [quantity, setQuantity] = useState(1);
   const [addedNotice, setAddedNotice] = useState(false);
@@ -71,7 +72,14 @@ export const ChangeYourLook: React.FC = () => {
   const { isInWishlist, toggleWishlist } = useWishlist();
 
   const currentLook: LookStyleItem = CHANGE_LOOK_STYLES[activeLookIndex] || CHANGE_LOOK_STYLES[0];
-  const activeColor = currentLook.colors[selectedColorIdx] || currentLook.colors[0];
+  const activeColor =
+    currentLook?.colors?.[selectedColorIdx] ||
+    currentLook?.colors?.[0] || {
+      id: 'rose',
+      name: 'Rosé',
+      hex: '#E79DA2',
+      image: currentLook?.modelImage || '/images/panoramic/ensemble_vara.jpg',
+    };
   const displayImage = activeColor.image || currentLook.modelImage;
   const inWishlist = isInWishlist(currentLook.id);
 
@@ -93,8 +101,8 @@ export const ChangeYourLook: React.FC = () => {
       if (modelImgRef.current) {
         gsap.fromTo(
           modelImgRef.current,
-          { x: -38, opacity: 0.25, scale: 0.98 },
-          { x: 0, opacity: 1, scale: 1, duration: 0.36, ease: 'power3.out' }
+          { x: -42, opacity: 0.35, scale: 0.98 },
+          { x: 0, opacity: 1, scale: 1, duration: 0.32, ease: 'power3.out', clearProps: 'transform' }
         );
       }
 
@@ -102,7 +110,7 @@ export const ChangeYourLook: React.FC = () => {
       gsap.fromTo(
         '.look-text-reveal',
         { y: 12, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.34, stagger: 0.04, ease: 'power2.out' }
+        { y: 0, opacity: 1, duration: 0.3, stagger: 0.035, ease: 'power2.out' }
       );
     },
     { dependencies: [activeLookIndex, selectedColorIdx], scope: sectionRef }
@@ -117,7 +125,7 @@ export const ChangeYourLook: React.FC = () => {
       tagline: currentLook.subtitle,
       description: currentLook.description,
       category: 'designer-sarees',
-      categoryName: 'Couture Organza',
+      categoryName: 'Couture Net & Tissue',
       gender: 'women',
       price: currentLook.rawPrice,
       originalPrice: currentLook.rawPrice + 4300,
@@ -135,7 +143,7 @@ export const ChangeYourLook: React.FC = () => {
       deliveryDays: 3,
       has3D: false,
       inStock: true,
-      rating: 4.9,
+      rating: currentLook.rating,
       reviewsCount: currentLook.reviewCount,
     };
 
@@ -185,7 +193,7 @@ export const ChangeYourLook: React.FC = () => {
                   isActive={activeLookIndex === idx}
                   onSelect={() => {
                     setActiveLookIndex(idx);
-                    setSelectedColorIdx(0);
+                    setSelectedColorIdx(idx === 0 ? 1 : 0);
                   }}
                 />
               ))}
@@ -212,7 +220,7 @@ export const ChangeYourLook: React.FC = () => {
             {/* Previous Look Chevron Arrow (Left) */}
             <button
               onClick={handlePrevLook}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-monarch-charcoal shadow-md flex items-center justify-center backdrop-blur-sm transition-all hover:scale-110 active:scale-95 z-10 cursor-pointer"
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/85 hover:bg-white text-monarch-charcoal shadow-md flex items-center justify-center backdrop-blur-sm transition-all hover:scale-110 active:scale-95 z-10 cursor-pointer"
               aria-label="Previous look"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -221,7 +229,7 @@ export const ChangeYourLook: React.FC = () => {
             {/* Next Look Chevron Arrow (Right) */}
             <button
               onClick={handleNextLook}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-monarch-charcoal shadow-md flex items-center justify-center backdrop-blur-sm transition-all hover:scale-110 active:scale-95 z-10 cursor-pointer"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/85 hover:bg-white text-monarch-charcoal shadow-md flex items-center justify-center backdrop-blur-sm transition-all hover:scale-110 active:scale-95 z-10 cursor-pointer"
               aria-label="Next look"
             >
               <ChevronRight className="w-4 h-4" />
@@ -242,7 +250,7 @@ export const ChangeYourLook: React.FC = () => {
             {/* Category / Breadcrumb & Rating */}
             <div className="look-text-reveal flex items-center justify-between gap-3 text-xs">
               <span className="text-[10px] font-nav uppercase tracking-[0.22em] font-semibold text-gray-500">
-                ROYAL COUTURE ARCHIVE
+                Shop All Sarees &gt; Designer Sarees
               </span>
 
               <div className="flex items-center gap-1.5 text-monarch-gold">
@@ -258,7 +266,7 @@ export const ChangeYourLook: React.FC = () => {
 
             {/* Display Title & Price (Matches Screenshot) */}
             <div className="look-text-reveal space-y-1.5">
-              <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] font-normal tracking-tight text-[#1E1714] leading-tight">
+              <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] font-normal tracking-tight text-[#1E1714] leading-[1.1] uppercase">
                 {currentLook.name}
               </h2>
               <div className="flex items-baseline gap-2.5">
@@ -272,18 +280,22 @@ export const ChangeYourLook: React.FC = () => {
             </div>
 
             {/* Editorial Features Line */}
-            <div className="look-text-reveal flex items-center gap-4 text-xs text-gray-600 pt-1 border-t border-gray-200/80">
+            <div className="look-text-reveal flex items-center gap-4 text-xs text-gray-600 pt-1 border-t border-gray-200/80 flex-wrap">
               <div className="flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5 text-monarch-gold-dark" />
                 <span>Pure Silk Mark</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Award className="w-3.5 h-3.5 text-monarch-gold-dark" />
-                <span>Handloom Kashi Zari</span>
+                <span>Handloom Zari</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Truck className="w-3.5 h-3.5 text-monarch-gold-dark" />
+                <span>Ready to Ship</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-monarch-gold-dark" />
-                <span>Custom Stitched Blouse</span>
+                <span>Custom Blouse</span>
               </div>
             </div>
 
@@ -293,9 +305,12 @@ export const ChangeYourLook: React.FC = () => {
                 <span className="text-[11px] font-nav uppercase tracking-wider text-gray-700 font-semibold">
                   SELECT BLOUSE SIZE:
                 </span>
-                <span className="text-[11px] text-monarch-maroon hover:underline cursor-pointer">
+                <button
+                  type="button"
+                  className="text-[11px] text-monarch-maroon hover:underline cursor-pointer bg-transparent border-0 p-0"
+                >
                   Size Guide
-                </span>
+                </button>
               </div>
               <div className="flex items-center gap-2">
                 {currentLook.sizes.map((size) => (
@@ -303,10 +318,10 @@ export const ChangeYourLook: React.FC = () => {
                     key={size}
                     type="button"
                     onClick={() => setSelectedSize(size)}
-                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center justify-center ${
                       selectedSize === size
-                        ? 'bg-black text-white shadow-md ring-1 ring-black'
-                        : 'bg-white hover:bg-gray-100 text-gray-800 border border-gray-200'
+                        ? 'border-2 border-black bg-white text-black shadow-xs font-bold'
+                        : 'border border-gray-200 bg-white hover:border-gray-400 text-gray-700'
                     }`}
                   >
                     {size}
@@ -321,7 +336,7 @@ export const ChangeYourLook: React.FC = () => {
                 <span className="text-[11px] font-nav uppercase tracking-wider text-gray-700 font-semibold">
                   SELECT COLOUR:
                 </span>
-                <span className="text-xs font-serif font-medium text-monarch-charcoal uppercase tracking-wider">
+                <span className="text-xs font-serif font-semibold text-monarch-charcoal uppercase tracking-wider">
                   {activeColor.name}
                 </span>
               </div>
@@ -332,10 +347,10 @@ export const ChangeYourLook: React.FC = () => {
                     key={color.id}
                     type="button"
                     onClick={() => setSelectedColorIdx(idx)}
-                    className={`w-9 h-9 rounded-lg border transition-all cursor-pointer flex items-center justify-center ${
+                    className={`w-9 h-9 rounded-md transition-all cursor-pointer flex items-center justify-center ${
                       selectedColorIdx === idx
-                        ? 'ring-2 ring-black border-white shadow-sm scale-105'
-                        : 'border-gray-300 hover:scale-102'
+                        ? 'ring-2 ring-black ring-offset-2 scale-105 shadow-sm'
+                        : 'border border-gray-300 hover:scale-102'
                     }`}
                     style={{ backgroundColor: color.hex }}
                     title={color.name}
@@ -345,79 +360,71 @@ export const ChangeYourLook: React.FC = () => {
               </div>
             </div>
 
-            {/* Quantity + Signature Curved Maroon "ADD TO CART" Pill Button (Exact Screenshot Match) */}
-            <div className="look-text-reveal flex items-center gap-3 pt-3">
-              {/* Quantity Counter */}
-              <div className="flex items-center rounded-full bg-white border border-gray-200 px-3 py-2 shadow-xs">
-                <button
-                  type="button"
-                  onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                  className="w-6 h-6 rounded-full hover:bg-gray-100 text-gray-800 flex items-center justify-center font-bold text-sm cursor-pointer"
-                  aria-label="Decrease quantity"
-                >
-                  -
-                </button>
-                <span className="font-mono text-xs font-semibold px-2.5 min-w-[20px] text-center">
-                  {quantity}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setQuantity((prev) => prev + 1)}
-                  className="w-6 h-6 rounded-full hover:bg-gray-100 text-gray-800 flex items-center justify-center font-bold text-sm cursor-pointer"
-                  aria-label="Increase quantity"
-                >
-                  +
-                </button>
+            {/* Quantity + Signature Curved Swoosh ADD TO CART Button (Exact Screenshot Match) */}
+            <div className="look-text-reveal pt-2 flex flex-col gap-3">
+              <div className="flex items-center gap-4 sm:gap-6 flex-wrap">
+                {/* Quantity Counter */}
+                <div className="flex items-center rounded-full bg-white border border-gray-200 px-3 py-1.5 shadow-xs">
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
+                    className="w-6 h-6 rounded-full hover:bg-gray-100 text-gray-800 flex items-center justify-center font-bold text-sm cursor-pointer"
+                    aria-label="Decrease quantity"
+                  >
+                    -
+                  </button>
+                  <span className="font-mono text-xs font-semibold px-3 min-w-[20px] text-center">
+                    {quantity}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((prev) => prev + 1)}
+                    className="w-6 h-6 rounded-full hover:bg-gray-100 text-gray-800 flex items-center justify-center font-bold text-sm cursor-pointer"
+                    aria-label="Increase quantity"
+                  >
+                    +
+                  </button>
+                </div>
+
+                {/* Signature Curved Ruby Swoosh ADD TO CART Button with Circular Arrow */}
+                <CurvedAddToCartButton onClick={handleAddToCart} />
               </div>
 
-              {/* Signature Maroon Pill ADD TO CART Button with Round White Arrow Button */}
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                className="flex-1 relative flex items-center justify-between pl-7 pr-2.5 py-3 rounded-full bg-gradient-to-r from-[#701024] via-[#7F152C] to-[#921932] text-white shadow-xl hover:shadow-[0_15px_35px_rgba(112,16,36,0.35)] transition-all duration-300 hover:brightness-110 active:scale-[0.99] group overflow-hidden cursor-pointer"
-              >
-                <span className="font-nav text-xs uppercase tracking-[0.22em] font-semibold text-white">
-                  ADD TO CART
-                </span>
+              {/* Action Badges Row (Below Button, Matches Screenshot) */}
+              <div className="flex items-center gap-8 justify-end max-w-[400px] pr-4 text-gray-600">
+                <button
+                  type="button"
+                  onClick={() => toggleWishlist(currentLook.id)}
+                  className="flex flex-col items-center gap-1 text-[9px] font-nav uppercase tracking-wider hover:text-black transition-colors cursor-pointer bg-transparent border-0 p-0"
+                  aria-label="Save to Wishlist"
+                >
+                  <Heart className={`w-4 h-4 ${inWishlist ? 'fill-monarch-maroon text-monarch-maroon' : 'text-gray-600'}`} />
+                  <span>Wishlist</span>
+                </button>
 
-                <span className="w-8 h-8 rounded-full bg-white text-[#701024] flex items-center justify-center shadow-md transition-transform duration-300 group-hover:translate-x-1 group-hover:scale-105 shrink-0 ml-3">
-                  <ArrowRight className="w-4 h-4 text-[#701024]" />
-                </span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (typeof navigator !== 'undefined' && navigator.share) {
+                      navigator.share({
+                        title: currentLook.name,
+                        text: currentLook.description,
+                        url: window.location.href,
+                      }).catch(() => {});
+                    }
+                  }}
+                  className="flex flex-col items-center gap-1 text-[9px] font-nav uppercase tracking-wider hover:text-black transition-colors cursor-pointer bg-transparent border-0 p-0"
+                  aria-label="Share Ensemble"
+                >
+                  <Share2 className="w-4 h-4 text-gray-600" />
+                  <span>Share</span>
+                </button>
 
-              {/* Wishlist Button */}
-              <button
-                type="button"
-                onClick={() => toggleWishlist(currentLook.id)}
-                className={`p-3 rounded-full border transition-all cursor-pointer ${
-                  inWishlist
-                    ? 'bg-monarch-maroon text-monarch-gold border-monarch-gold'
-                    : 'bg-white text-gray-700 hover:text-monarch-maroon border-gray-200 hover:border-gray-400'
-                }`}
-                title="Wishlist"
-                aria-label="Toggle Wishlist"
-              >
-                <Heart className={`w-4 h-4 ${inWishlist ? 'fill-monarch-gold text-monarch-gold' : ''}`} />
-              </button>
-
-              {/* Share Button */}
-              <button
-                type="button"
-                onClick={() => {
-                  if (typeof navigator !== 'undefined' && navigator.share) {
-                    navigator.share({
-                      title: currentLook.name,
-                      text: currentLook.description,
-                      url: window.location.href,
-                    }).catch(() => {});
-                  }
-                }}
-                className="p-3 rounded-full bg-white text-gray-700 hover:text-monarch-maroon border border-gray-200 hover:border-gray-400 transition-all cursor-pointer"
-                title="Share Ensemble"
-                aria-label="Share"
-              >
-                <Share2 className="w-4 h-4" />
-              </button>
+                <div className="flex flex-col items-center gap-1 text-[9px] font-nav uppercase tracking-wider text-gray-500">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  <span>Authentic</span>
+                </div>
+              </div>
             </div>
 
             {/* Added to Cart Feedback Toast */}

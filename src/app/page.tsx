@@ -10,6 +10,7 @@ import { TrendOfTheDay } from '@/components/home/TrendOfTheDay';
 import { SeasonalSpecial } from '@/components/home/SeasonalSpecial';
 import { AutumnWinter2026 } from '@/components/home/AutumnWinter2026';
 import { ChangeYourLook } from '@/components/home/ChangeYourLook';
+import { EditsForEveryOccasion } from '@/components/home/EditsForEveryOccasion';
 import { WorthYourAttention } from '@/components/home/WorthYourAttention';
 import { LatestTrends } from '@/components/home/LatestTrends';
 import { CraftsmanshipSection } from '@/components/home/CraftsmanshipSection';
@@ -51,7 +52,10 @@ export default function HomePage() {
       {/* SECTION 8: Interactive Studio: Change Your Look (Matching Screenshot 2) */}
       <ChangeYourLook />
 
-      {/* SECTION 8: Worth Your Attention */}
+      {/* SECTION 9: Edits for Every Occasion (Matching Screenshot 3) */}
+      <EditsForEveryOccasion />
+
+      {/* SECTION 10: Worth Your Attention */}
       <WorthYourAttention />
 
       {/* SECTION 9: Latest Trends */}
