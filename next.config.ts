@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    turbopackPluginRuntimeStrategy: 'workerThreads',
+  },
   transpilePackages: ['three', '@react-three/fiber', '@react-three/drei'],
   turbopack: {
     rules: {

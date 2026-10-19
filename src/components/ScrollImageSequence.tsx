@@ -181,7 +181,7 @@ export default function ScrollImageSequence({
   /**
    * LERP damping ticker
    */
-  const tickDamping = useCallback(() => {
+  const tickDamping = useCallback(function tick() {
     const target = targetFrameRef.current;
     const current = currentFrameRef.current;
     const total = framePaths.length;
@@ -198,7 +198,7 @@ export default function ScrollImageSequence({
       }
 
       isDampingActiveRef.current = true;
-      dampingRafIdRef.current = requestAnimationFrame(tickDamping);
+      dampingRafIdRef.current = requestAnimationFrame(tick);
     } else {
       currentFrameRef.current = target;
       const finalIdx = Math.min(total - 1, Math.max(0, Math.round(target)));

@@ -7,6 +7,7 @@ import { WishlistProvider } from '@/context/WishlistContext';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { SmoothScrollProvider } from '@/components/common/SmoothScrollProvider';
+import { SareeLoader } from '@/components/common/SareeLoader';
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -64,6 +65,7 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
+        <link rel="preload" href="/images/saree-pattern.jpg" as="image" />
       </head>
       <body
         suppressHydrationWarning
@@ -74,6 +76,7 @@ export default function RootLayout({
             {/* <AnnouncementBar /> */}
             <Header />
             <SmoothScrollProvider>
+              <SareeLoader />
               <main className="flex-1">{children}</main>
             </SmoothScrollProvider>
             <Footer />
