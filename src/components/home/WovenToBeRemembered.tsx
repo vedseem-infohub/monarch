@@ -208,19 +208,24 @@ export const WovenToBeRemembered: React.FC = () => {
           );
         }
 
-        // 2. Measure travel and set up pinned scrub with increased scroll pin height
+        // 2. Measure exact travel distance so the last card touches the right side with just minimal gap
         const getTravelDistance = () => {
-          const trackWidth = track.scrollWidth;
           const containerWidth = pinWrapper.clientWidth;
-          return Math.max(0, trackWidth - containerWidth + 96);
+          const lastCard = cards[cards.length - 1];
+          if (!lastCard) return 0;
+
+          // Minimal gap on right edge when fully scrolled (20px on desktop)
+          const minimalRightGap = window.innerWidth >= 1024 ? 20 : 12;
+          const lastCardRight = lastCard.offsetLeft + lastCard.offsetWidth;
+          return Math.max(0, lastCardRight - (containerWidth - minimalRightGap));
         };
 
-        const travel = getTravelDistance();
-        // Substantially increased scroll pin height for a leisurely, ultra-smooth traversal
-        const pinScrollDistance = Math.max(3800, Math.round(travel * 2.8));
+        let travel = getTravelDistance();
+        // Further increased scroll pin height (5200px+) for an ultra-spacious, luxurious traversal
+        const pinScrollDistance = Math.max(5200, Math.round(travel * 3.8));
 
-        // Precompute card static offsets ONCE in memory to completely eliminate DOM reads during scroll
-        const cardCenters = cards.map((c) => c.offsetLeft + c.offsetWidth / 2);
+        // Precompute card static center offsets in memory to eliminate all DOM reads during scroll
+        let cardCenters = cards.map((c) => c.offsetLeft + c.offsetWidth / 2);
 
         // GPU quickSetters for instant hardware-accelerated transforms (0 GC, 0 layout reflows)
         const cardSetters = cards.map((card) => ({
@@ -244,9 +249,9 @@ export const WovenToBeRemembered: React.FC = () => {
             // Upward parabolic arch (center card is highest, sides drop down smoothly)
             const yDrop = Math.pow(Math.abs(clamped), 1.85) * 52;
             // Tangent rotation along the curved contour
-            const rot = clamped * 6.8;
+            const rot = clamped * 6.5;
             // Subtle perspective scale
-            const scale = 1 - Math.pow(Math.abs(clamped), 2) * 0.04;
+            const scale = 1 - Math.pow(Math.abs(clamped), 2) * 0.035;
 
             const setters = cardSetters[idx];
             if (setters) {
@@ -277,6 +282,11 @@ export const WovenToBeRemembered: React.FC = () => {
             scrub: 0.2,
             anticipatePin: 1,
             invalidateOnRefresh: true,
+            onRefresh: () => {
+              travel = getTravelDistance();
+              cardCenters = cards.map((c) => c.offsetLeft + c.offsetWidth / 2);
+              applyCurvature(scrubTl.scrollTrigger?.progress || 0);
+            },
             onUpdate: (self) => {
               if (progress) {
                 progress.style.width = `${Math.round(self.progress * 100)}%`;
@@ -309,7 +319,7 @@ export const WovenToBeRemembered: React.FC = () => {
           },
         });
 
-        // Horizontal track translation
+        // Horizontal track translation exactly bringing last card to right side with minimal gap
         scrubTl.fromTo(
           track,
           { x: 0 },
@@ -441,15 +451,15 @@ export const WovenToBeRemembered: React.FC = () => {
           </div>
         </div>
 
-        {/* 3. Curved Panoramic Fashion Image Strip */}
+        {/* 3. Curved Panoramic Fashion Image Strip with Tight Gap */}
         <div
           ref={ribbonMaskRef}
           className="relative w-full overflow-hidden select-none my-auto py-2"
         >
-          {/* Horizontal Track Container with Curved Cards */}
+          {/* Horizontal Track Container: minimal gap (gap-2 to gap-3) */}
           <div
             ref={trackRef}
-            className="flex gap-4 sm:gap-5 lg:gap-6 items-end px-6 sm:px-12 lg:px-16 w-max overflow-x-auto lg:overflow-visible no-scrollbar pb-3 pt-2"
+            className="flex gap-2 sm:gap-2.5 lg:gap-3 items-end pl-4 sm:pl-8 lg:pl-12 pr-4 sm:pr-6 lg:pr-8 w-max overflow-x-auto lg:overflow-visible no-scrollbar pb-3 pt-2"
           >
             {PANORAMIC_ITEMS.map((item, index) => (
               <Link
