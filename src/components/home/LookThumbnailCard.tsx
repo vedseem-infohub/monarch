@@ -20,7 +20,8 @@ export const LookThumbnailCard: React.FC<LookThumbnailCardProps> = ({
     <button
       onClick={onSelect}
       type="button"
-      className={`group relative w-20 sm:w-24 lg:w-28 aspect-[3/4.2] rounded-xl overflow-hidden border-2 transition-all duration-300 text-left shrink-0 cursor-pointer ${
+      style={{ aspectRatio: '3 / 4.2' }}
+      className={`group relative w-20 sm:w-24 lg:w-28 h-28 sm:h-32 lg:h-36 rounded-xl overflow-hidden border-2 transition-all duration-300 text-left shrink-0 cursor-pointer ${
         isActive
           ? 'border-monarch-maroon shadow-lg scale-105 ring-2 ring-monarch-gold/60'
           : 'border-monarch-beige/60 opacity-70 hover:opacity-100 hover:border-monarch-gold hover:scale-102'

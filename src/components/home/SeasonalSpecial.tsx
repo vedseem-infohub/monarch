@@ -4,7 +4,7 @@ import React, { useRef } from 'react';
 import Link from 'next/link';
 import { SEASONAL_PRODUCTS } from '@/data/seasonal';
 import { HorizontalProductCard } from './HorizontalProductCard';
-import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
@@ -13,93 +13,105 @@ if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
 }
 
+/*
+ * ============================================================================
+ * SECTION: SeasonalSpecial
+ * ============================================================================
+ * Features:
+ * - Header: "| Seasonal Special" with gold vertical bar accent
+ * - Marquee Track: Glides smoothly in the OPPOSITE DIRECTION (Left to Right, .animate-marquee-reverse)
+ * - Auto-pauses on hover so cards can be inspected and added to bag
+ *
+ * BACKEND API INTEGRATION INSTRUCTIONS:
+ * When the backend API is ready:
+ * 1. Replace SEASONAL_PRODUCTS with data fetched from your backend endpoint (e.g. GET /api/collections/seasonal)
+ * 2. Example with React Query / SWR / useEffect:
+ *
+ *    // const [seasonalProducts, setSeasonalProducts] = useState<Product[]>(SEASONAL_PRODUCTS);
+ *    // useEffect(() => {
+ *    //   async function loadSeasonal() {
+ *    //     try {
+ *    //       const res = await fetch('/api/collections/seasonal?season=current');
+ *    //       const json = await res.json();
+ *    //       if (json?.data) setSeasonalProducts(json.data);
+ *    //     } catch (err) {
+ *    //       console.error('Failed to load seasonal specials from backend:', err);
+ *    //     }
+ *    //   }
+ *    //   loadSeasonal();
+ *    // }, []);
+ * ============================================================================
+ */
+
 export const SeasonalSpecial: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
 
   useGSAP(
     () => {
-      if (trackRef.current) {
-        gsap.from(trackRef.current.querySelectorAll('.seasonal-item'), {
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: 'top 85%',
-            toggleActions: 'play none none none',
-          },
-          y: 25,
-          opacity: 0,
-          duration: 0.75,
-          stagger: 0.08,
-          ease: 'power3.out',
-        });
-      }
+      gsap.from('.seasonal-header-reveal', {
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: 'top 85%',
+          toggleActions: 'play none none none',
+        },
+        y: 20,
+        opacity: 0,
+        duration: 0.7,
+        ease: 'power3.out',
+      });
     },
     { scope: sectionRef }
   );
 
-  const scrollLeft = () => {
-    if (trackRef.current) {
-      trackRef.current.scrollBy({ left: -340, behavior: 'smooth' });
-    }
-  };
-
-  const scrollRight = () => {
-    if (trackRef.current) {
-      trackRef.current.scrollBy({ left: 340, behavior: 'smooth' });
-    }
-  };
-
   return (
     <section
       ref={sectionRef}
-      className="py-8 sm:py-12 bg-[#FAF7F2] text-monarch-charcoal relative overflow-hidden pb-14 border-t border-monarch-gold/15"
+      className="py-7 sm:py-9 bg-[#FAF7F2] text-monarch-charcoal relative overflow-hidden pb-12 border-t border-monarch-gold/15"
     >
       <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header: "| Seasonal Special" (Matching Screenshot) */}
-        <div className="flex items-center justify-between gap-4 mb-5 pb-2">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[#C59B27] font-serif font-light text-2xl sm:text-3xl select-none">
+        <div className="seasonal-header-reveal flex items-center justify-between gap-4 mb-4 pb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-[#C59B27] font-serif font-light text-2xl sm:text-3xl select-none leading-none">
               |
             </span>
-            <h2 className="font-serif text-xl sm:text-2xl lg:text-[28px] font-normal tracking-tight text-[#1E1714]">
+            <h2 className="font-serif text-xl sm:text-2xl lg:text-[27px] font-normal tracking-tight text-[#1E1714]">
               Seasonal Special
             </h2>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Link
-              href="/collections/all"
-              className="hidden sm:inline-flex items-center gap-1 text-xs font-nav uppercase tracking-wider text-monarch-maroon hover:text-monarch-maroon-dark font-medium mr-2"
-            >
-              <span>View All</span>
-              <ArrowRight className="w-3 h-3" />
-            </Link>
-
-            <button
-              onClick={scrollLeft}
-              className="p-1.5 rounded-full bg-white hover:bg-monarch-gold text-gray-700 hover:text-white border border-gray-200/80 transition-all shadow-xs active:scale-95"
-              aria-label="Scroll left"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              onClick={scrollRight}
-              className="p-1.5 rounded-full bg-white hover:bg-monarch-gold text-gray-700 hover:text-white border border-gray-200/80 transition-all shadow-xs active:scale-95"
-              aria-label="Scroll right"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
+          <Link
+            href="/collections/all"
+            className="inline-flex items-center gap-1.5 text-xs font-nav uppercase tracking-wider text-monarch-maroon hover:text-monarch-maroon-dark font-medium transition-colors"
+          >
+            <span>View All</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
+      </div>
 
-        {/* Horizontal Scrolling Card Track */}
+      {/* Marquee Track: Glides smoothly in OPPOSITE DIRECTION (Left to Right) */}
+      <div className="relative w-full overflow-hidden select-none py-1">
+        {/* Edge Gradient Masks */}
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-8 sm:w-16 bg-gradient-to-r from-[#FAF7F2] to-transparent z-10" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-8 sm:w-16 bg-gradient-to-l from-[#FAF7F2] to-transparent z-10" />
+
         <div
-          ref={trackRef}
-          className="flex gap-3.5 sm:gap-4 overflow-x-auto no-scrollbar scroll-smooth py-1.5"
+          className="flex gap-4 sm:gap-5 w-max animate-marquee-reverse hover:[animation-play-state:paused] py-2 px-2"
+          style={{
+            animation: 'marquee 35s linear infinite reverse',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.animationPlayState = 'paused';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.animationPlayState = 'running';
+          }}
         >
-          {SEASONAL_PRODUCTS.map((product, idx) => (
-            <div key={product.id} className="seasonal-item shrink-0">
-              <HorizontalProductCard product={product} priority={idx < 2} />
+          {/* Seamless infinite loop: duplicate items */}
+          {[...SEASONAL_PRODUCTS, ...SEASONAL_PRODUCTS].map((product, idx) => (
+            <div key={`seasonal-${product.id}-${idx}`} className="shrink-0">
+              <HorizontalProductCard product={product} priority={idx < 4} />
             </div>
           ))}
         </div>

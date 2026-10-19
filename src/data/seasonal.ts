@@ -1,9 +1,66 @@
 import { Product } from '@/types';
 
-/**
- * Backend Data Model: Seasonal Special Collections
- * Simulated backend dataset returned from /api/collections/seasonal
+/*
+ * ============================================================================
+ * BACKEND API INTEGRATION GUIDE: SEASONAL SPECIAL
+ * ============================================================================
+ * Endpoint: GET /api/collections/seasonal
+ * Description: Fetches limited seasonal, wedding, and festive campaign drops.
+ *
+ * Expected Request:
+ *   GET /api/collections/seasonal?season=winter-wedding-2026&status=active
+ *   Headers: {
+ *     'Content-Type': 'application/json',
+ *     'Authorization': 'Bearer <token>' (if applicable)
+ *   }
+ *
+ * Expected Backend Response JSON Schema:
+ *   {
+ *     "success": true,
+ *     "timestamp": "2026-10-19T10:00:00Z",
+ *     "season": "Winter Festive & Wedding 2026",
+ *     "count": 5,
+ *     "data": [
+ *       {
+ *         "id": "seasonal-001",
+ *         "name": "Rukmini Temple Silk",
+ *         "slug": "rukmini-temple-silk",
+ *         "tagline": "Heritage Silk · Temple Weave",
+ *         "description": "...",
+ *         "category": "designer-sarees",
+ *         "categoryName": "Heritage Silk · Temple Weave",
+ *         "price": 16400,
+ *         "originalPrice": 19500,
+ *         "images": ["/images/..."],
+ *         "colors": [{ "name": "Deep Crimson", "hex": "#5A1725" }],
+ *         "sizes": ["S", "M", "L", "XL"],
+ *         "rating": 4.9,
+ *         "reviewsCount": 36,
+ *         "inStock": true
+ *       }
+ *     ]
+ *   }
+ *
+ * Sample Next.js / React Server Component Fetch Implementation:
+ *
+ * export async function getSeasonalSpecialsFromBackend(): Promise<Product[]> {
+ *   try {
+ *     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.monarch.luxury';
+ *     const res = await fetch(`${apiUrl}/api/collections/seasonal`, {
+ *       headers: { 'Accept': 'application/json' },
+ *       next: { revalidate: 3600 } // Cache for 1 hour with ISR
+ *     });
+ *     if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+ *     const json = await res.json();
+ *     return json.data;
+ *   } catch (error) {
+ *     console.warn('Backend API unavailable, using fallback mock data:', error);
+ *     return SEASONAL_PRODUCTS;
+ *   }
+ * }
+ * ============================================================================
  */
+
 export const SEASONAL_PRODUCTS: Product[] = [
   {
     id: 'seasonal-001',
