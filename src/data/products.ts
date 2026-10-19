@@ -5,6 +5,7 @@ import { CHANGE_LOOK_PRODUCTS } from '@/data/changeLook';
 import { EDITS_FOR_OCCASION_DATA } from '@/data/editsForOccasion';
 import { SEASONAL_PRODUCTS } from '@/data/seasonal';
 import { TREND_PRODUCTS } from '@/data/trends';
+import { ATTENTION_PRODUCTS } from '@/data/worthYourAttention';
 
 const BASE_PRODUCTS: Product[] = [
   {
@@ -486,6 +487,7 @@ const DEDUPED_CATALOG: Product[] = [
   ...EDITS_FOR_OCCASION_DATA.products,
   ...SEASONAL_PRODUCTS,
   ...TREND_PRODUCTS,
+  ...ATTENTION_PRODUCTS,
 ].filter((p, index, self) => index === self.findIndex((item) => item.id === p.id));
 
 export const ALL_PRODUCTS: Product[] = DEDUPED_CATALOG;

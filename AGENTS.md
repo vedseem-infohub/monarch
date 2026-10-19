@@ -172,6 +172,18 @@ model OccasionCollection {
   isActive       Boolean        @default(true)
   products       Product[]      // Curated occasion products (Wedding, Heritage, Drape, Atelier)
 }
+
+// Spotlight Accordion: Worth Your Attention
+model SpotlightCollection {
+  id          String         @id // e.g. "worth-your-attention"
+  eyebrow     String         // "ROYAL SPOTLIGHT"
+  heading     String         // "Worth your attention"
+  description String         @db.Text
+  ctaText     String         // "EXPLORE ALL SPOTLIGHTS"
+  ctaHref     String
+  isActive    Boolean        @default(true)
+  products    Product[]      // Curated spotlight products with accordion metadata
+}
 ```
 
 ---
@@ -191,7 +203,8 @@ model OccasionCollection {
 | **7** | **Trend of the Day** | `src/data/trends.ts` | `products` (trending) | `Product[]` | `badge`, right-to-left gliding marquee track. |
 | **8** | **Seasonal Special** | `src/data/seasonal.ts` | `products` (seasonal) | `Product[]` | `seasonTag`, left-to-right reverse marquee track. |
 | **9** | **New Arrivals / Best Sellers** | `src/data/products.ts` | `products` (sorted) | `Product[]` | `badge: 'New Arrival' \| 'Bestseller'`. |
-| **10**| **Worth Your Attention / Latest Trends**| `src/data/products.ts` & `trends.ts` | `products` (featured) | `Product[]` | Curated luxury spotlight picks. |
+| **10**| **Worth Your Attention** | `src/data/worthYourAttention.ts` | `products` via `spotlight` | `Product[]` | `verticalText`, `attentionHeadline`, `spotlightTag`, `offerBadge`. |
+| **11**| **Latest Trends** | `src/data/trends.ts` | `products` (featured) | `Product[]` | `badge`, trending engagement score. |
 
 ---
 
@@ -212,7 +225,7 @@ Every homepage section connects to a dedicated data model and API endpoint:
 | **8** | **Autumn–Winter 2026** | `AutumnWinter2026.tsx` | `autumnWinter.ts` | `GET /api/v1/campaigns/autumn-winter-2026` | `AutumnWinterData`: 3 cathedral arched cards (`Awadhi Darbar`, `Courtyard Baithak`, `Kashi Imperial`). |
 | **9** | **Change Your Look** | `ChangeYourLook.tsx` | `changeLook.ts` | `GET /api/v1/studio/looks` | `LookStyleProduct[]`: interactive center model, sizes, color chips, and audio pill. |
 | **10**| **Edits for Every Occasion** | `EditsForEveryOccasion.tsx` | `editsForOccasion.ts` | `GET /api/v1/collections/occasions` | `OccasionCollection`: 4 portals (`The Wedding Edit`, `Heritage Weaves`, `The New Drape`, `Private Atelier`). |
-| **11**| **Worth Your Attention** | `WorthYourAttention.tsx` | `products.ts` | `GET /api/v1/products/featured` | `Product[]`: editorial highlighted luxury picks. |
+| **11**| **Worth Your Attention** | `WorthYourAttention.tsx` | `worthYourAttention.ts` | `GET /api/v1/spotlight/worth-your-attention` | `SpotlightCollection`: 6 expanding accordion cards with dark-to-colorful hover morph and horizontal scroll track. |
 | **12**| **Latest Trends** | `LatestTrends.tsx` | `trends.ts` | `GET /api/v1/trends/latest` | `Product[]`: high-engagement trending pieces. |
 | **13**| **Craftsmanship Sanctum** | `CraftsmanshipSection.tsx`| `craftsmanship.ts` | `GET /api/v1/craftsmanship` | `CraftPillar[]`: Kashi pitlooms, Awadhi zardozi, Tilla embroidery, bespoke canvas. |
 | **14**| **Royal Client Diary** | `TestimonialCarousel.tsx`| `craftsmanship.ts` | `GET /api/v1/testimonials` | `Testimonial[]`: verified client reviews, wedding locations, quotes. |

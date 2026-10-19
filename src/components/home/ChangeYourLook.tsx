@@ -185,8 +185,8 @@ export const ChangeYourLook: React.FC = () => {
               </svg>
             </div>
 
-            {/* Vertical thumbnails list */}
-            <div className="flex lg:flex-col gap-3 sm:gap-3.5 overflow-x-auto no-scrollbar w-full py-1">
+            {/* Vertical thumbnails list with alternating casual tilts */}
+            <div className="flex lg:flex-col gap-4 sm:gap-5 overflow-x-auto lg:overflow-visible no-scrollbar w-full py-3 px-2">
               {CHANGE_LOOK_STYLES.map((look, idx) => (
                 <LookThumbnailCard
                   key={look.id}

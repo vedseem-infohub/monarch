@@ -35,6 +35,13 @@ export interface SectionMetadata {
   // Seasonal & Trending Drops
   seasonTag?: string;         // e.g. "Winter Festive 2026"
   trendVelocity?: string;     // e.g. "High Demand"
+
+  // Worth Your Attention (Spotlight & Offers)
+  verticalText?: string;      // e.g. "CURRENT OFFERS"
+  attentionHeadline?: string; // e.g. "Occasionwear, reduced"
+  spotlightTag?: string;      // e.g. "ROYAL ARCHIVE · 15% PRIVILEGE"
+  offerBadge?: string;        // e.g. "LIMITED PRIVILEGE"
+  href?: string;
 }
 
 export interface Model3DConfig {
