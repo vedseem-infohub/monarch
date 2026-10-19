@@ -4,58 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { ArrowRight, Sparkles } from 'lucide-react';
 
-// 1. Top Guarantee Marquee Items
-const MARQUEE_ITEMS = [
-  'Pure Zari, Tested & Hallmarked',
-  'Authentic Handloom Kashi Kadwa',
-  'Bespoke Tailoring by Master Artisans',
-  'Ancestral Awadhi Embroidery',
-  'Worldwide Insured Express Delivery',
-  '15-Day Authenticity Guarantee',
-  'Complimentary Bridal Styling',
-];
-
-// 2. Six Moods of Silk - Matching Screenshot 1
-const SIX_MOODS = [
-  {
-    title: 'KANJIVARAM SILK',
-    subtitle: 'Royal Temple Weave',
-    slug: 'designer-sarees',
-    image: '/images/moods/kanjivaram_silk.jpg',
-  },
-  {
-    title: 'CHANDERI HERITAGE',
-    subtitle: 'Gossamer Gold Weft',
-    slug: 'festive-wear',
-    image: '/images/moods/chanderi_heritage.jpg',
-  },
-  {
-    title: 'TUSSAR SILK',
-    subtitle: 'Forest Raw Mulberry',
-    slug: 'festive-wear',
-    image: '/images/moods/tussar_silk.jpg',
-  },
-  {
-    title: 'PAITHANI HEIRLOOM',
-    subtitle: 'Ancestral Peacock Pallu',
-    slug: 'designer-sarees',
-    image: '/images/moods/paithani_heirloom.jpg',
-  },
-  {
-    title: 'BANARASI BROCADE',
-    subtitle: 'Kashi Kadwa Gold Zari',
-    slug: 'designer-sarees',
-    image: '/images/moods/banarasi_brocade.jpg',
-  },
-  {
-    title: 'PURE ORGANZA',
-    subtitle: 'Ethereal Zari Sheer',
-    slug: 'designer-sarees',
-    image: '/images/moods/pure_organza.jpg',
-  },
-];
-
-// 3. The 2026 Signatures - Matching Screenshot 2 Curved Arc
+// The 2026 Signatures - Matching Screenshot 2 Curved Arc
 const SIGNATURE_ENSEMBLES = [
   {
     id: 'monarch-011',
@@ -123,193 +72,105 @@ export const WovenToBeRemembered: React.FC = () => {
   return (
     <section
       id="woven-to-be-remembered"
-      className="relative w-full bg-[#FAF6F0] text-monarch-charcoal overflow-hidden"
+      className="relative w-full bg-[#FAF6F0] text-monarch-charcoal overflow-hidden pt-12 sm:pt-16 pb-16 sm:pb-20"
     >
-      {/* ============================================================ */}
-      {/* 1. TOP LUXURY MARQUEE TICKER RIBBON                          */}
-      {/* ============================================================ */}
-      <div className="w-full bg-[#3F101A] text-monarch-gold-light py-2 overflow-hidden border-y border-monarch-gold/30 shrink-0">
-        <div className="flex animate-marquee whitespace-nowrap">
-          {Array.from({ length: 4 }).map((_, repeatIdx) => (
-            <div key={repeatIdx} className="flex items-center gap-8 mx-4">
-              {MARQUEE_ITEMS.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center gap-6 text-[10px] sm:text-[11px] font-nav uppercase tracking-[0.25em]"
-                >
-                  <span>{item}</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-monarch-gold shrink-0" />
-                </div>
-              ))}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header Row: THE 2026 SIGNATURES / Woven to Be Remembered */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 sm:mb-12">
+          <div>
+            <div className="text-[10px] sm:text-[11px] font-nav uppercase tracking-[0.28em] text-monarch-charcoal/70 font-semibold mb-1">
+              THE 2026 SIGNATURES
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ============================================================ */}
-      {/* 2. SECTION 1: SIX MOODS. (Matching Screenshot 1)             */}
-      {/* ============================================================ */}
-      <div className="w-full pt-12 sm:pt-16 pb-12 sm:pb-16 border-b border-monarch-gold/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Section Header */}
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 mb-8 sm:mb-12">
-            <div>
-              <div className="flex items-baseline gap-3 flex-wrap">
-                <h2 className="font-sans font-extrabold text-2xl sm:text-3xl lg:text-4xl uppercase tracking-[0.06em] text-monarch-charcoal">
-                  SIX MOODS.
-                </h2>
-                <span className="font-serif italic text-monarch-gold-dark text-lg sm:text-xl font-light">
-                  Six Shades of You
-                </span>
-              </div>
-              <p className="text-xs sm:text-sm text-monarch-charcoal/70 mt-1.5 max-w-xl font-sans leading-relaxed">
-                Six authentic Indian handloom silk traditions, each celebrating an irreplaceable mood of festive grandeur.
-              </p>
-            </div>
-
-            <div className="hidden sm:flex items-center gap-2 text-xs font-nav uppercase tracking-widest text-monarch-gold-dark font-medium">
-              <span>Authentic Handloom Archives</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-monarch-gold" />
-            </div>
+            <h2 className="font-display text-2xl sm:text-3xl lg:text-[42px] font-normal tracking-tight text-monarch-charcoal leading-none">
+              <span>Woven</span> <span>to</span> <span>Be</span>{' '}
+              <span className="font-serif italic text-monarch-gold-dark font-light ml-1">
+                Remembered
+              </span>
+            </h2>
           </div>
 
-          {/* 6 Large Arch-Topped Cards (Matching Screenshot 1) */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5 sm:gap-4 lg:gap-5">
-            {SIX_MOODS.map((mood) => (
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-mono uppercase tracking-widest text-monarch-charcoal/60">
+              Curated 01 / 2026
+            </span>
+            <span className="w-1.5 h-1.5 rounded-full bg-monarch-gold" />
+            <Link
+              href="/collections/all"
+              className="inline-flex items-center gap-1.5 text-xs font-nav uppercase tracking-widest text-monarch-maroon hover:text-monarch-maroon-dark transition-colors font-semibold group"
+            >
+              <span>Explore All (06)</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+        </div>
+
+        {/* 6 Curved Panoramic Cards (Matching Screenshot 2 Arc Ribbon) */}
+        <div className="w-full overflow-x-auto lg:overflow-visible no-scrollbar pb-6 pt-3">
+          <div className="flex lg:grid lg:grid-cols-6 gap-3.5 sm:gap-4 lg:gap-3.5 xl:gap-4 items-end min-w-max lg:min-w-0 px-2 lg:px-0">
+            {SIGNATURE_ENSEMBLES.map((item, index) => (
               <Link
-                key={mood.title}
-                href={`/collections/${mood.slug}`}
-                className="group flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1.5"
+                key={item.id}
+                href={item.href}
+                className="group relative rounded-xl sm:rounded-2xl overflow-hidden bg-monarch-charcoal shadow-lg hover:shadow-2xl transition-all duration-500 border border-monarch-gold/30 hover:border-monarch-gold flex flex-col justify-end w-[220px] sm:w-[240px] lg:w-auto aspect-[3/4.6] shrink-0"
+                style={{
+                  transform: `translateY(${item.arcY}px) rotate(${item.arcRot}deg)`,
+                  transformOrigin: '50% 90%',
+                }}
               >
-                {/* Arch-topped Card: rounded-t-full with gold border */}
-                <div className="w-full aspect-[3/4.6] rounded-t-full rounded-b-xl overflow-hidden bg-monarch-charcoal border border-monarch-gold/40 group-hover:border-monarch-gold shadow-md group-hover:shadow-xl transition-all duration-500 relative">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={mood.image}
-                    alt={mood.title}
-                    className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent opacity-60 group-hover:opacity-30 transition-opacity" />
+                {/* Model Photo from existing images */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-106"
+                  loading="lazy"
+                  decoding="async"
+                />
+
+                {/* Dark Gradient Scrim for text readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent opacity-90 group-hover:opacity-75 transition-opacity duration-300" />
+
+                {/* Top Index Pill */}
+                <div className="absolute top-2.5 left-2.5 z-10">
+                  <span className="text-[9px] font-mono text-monarch-gold-light bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full border border-monarch-gold/30">
+                    0{index + 1}
+                  </span>
                 </div>
 
-                {/* Card Title (Matching Screenshot 1) */}
-                <h3 className="font-sans text-[11px] sm:text-xs font-bold uppercase tracking-wider text-monarch-charcoal mt-3 group-hover:text-monarch-maroon transition-colors line-clamp-1">
-                  {mood.title}
-                </h3>
-                <span className="text-[10px] text-monarch-gold-dark/90 font-serif italic mt-0.5">
-                  {mood.subtitle}
-                </span>
-                <span className="w-0 group-hover:w-6 h-0.5 bg-monarch-gold transition-all duration-300 mt-1 rounded-full" />
+                {/* Bottom Text Content (Matching Screenshot 2) */}
+                <div className="relative z-10 p-3 sm:p-3.5 space-y-1">
+                  <span className="inline-block text-[8px] sm:text-[9px] font-nav uppercase tracking-[0.18em] text-monarch-gold-light/90">
+                    {item.tag}
+                  </span>
+
+                  <h3 className="font-serif text-xs sm:text-[13px] lg:text-[14px] text-monarch-ivory font-medium group-hover:text-monarch-gold-light transition-colors line-clamp-1">
+                    {item.title}
+                  </h3>
+
+                  <div className="pt-1 flex items-center justify-between text-[10px] sm:text-[11px] font-nav uppercase tracking-wider text-monarch-beige/90 border-t border-monarch-gold/20">
+                    <span className="font-serif font-bold text-monarch-gold-light">
+                      {item.price}
+                    </span>
+                    <span className="text-[9px] text-monarch-gold group-hover:text-white transition-colors">
+                      View →
+                    </span>
+                  </div>
+                </div>
               </Link>
             ))}
           </div>
         </div>
-      </div>
 
-      {/* ============================================================ */}
-      {/* 3. SECTION 2: WOVEN TO BE REMEMBERED (Matching Screenshot 2) */}
-      {/* ============================================================ */}
-      <div className="w-full pt-12 sm:pt-16 pb-16 sm:pb-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header Row: THE 2026 SIGNATURES / Woven to Be Remembered */}
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 sm:mb-12">
-            <div>
-              <div className="text-[10px] sm:text-[11px] font-nav uppercase tracking-[0.28em] text-monarch-charcoal/70 font-semibold mb-1">
-                THE 2026 SIGNATURES
-              </div>
-              <h2 className="font-display text-2xl sm:text-3xl lg:text-[42px] font-normal tracking-tight text-monarch-charcoal leading-none">
-                <span>Woven</span> <span>to</span> <span>Be</span>{' '}
-                <span className="font-serif italic text-monarch-gold-dark font-light ml-1">
-                  Remembered
-                </span>
-              </h2>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-mono uppercase tracking-widest text-monarch-charcoal/60">
-                Curated 01 / 2026
-              </span>
-              <span className="w-1.5 h-1.5 rounded-full bg-monarch-gold" />
-              <Link
-                href="/collections/all"
-                className="inline-flex items-center gap-1.5 text-xs font-nav uppercase tracking-widest text-monarch-maroon hover:text-monarch-maroon-dark transition-colors font-semibold group"
-              >
-                <span>Explore All (06)</span>
-                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </div>
-          </div>
-
-          {/* 6 Curved Panoramic Cards (Matching Screenshot 2 Arc Ribbon) */}
-          <div className="w-full overflow-x-auto lg:overflow-visible no-scrollbar pb-6 pt-3">
-            <div className="flex lg:grid lg:grid-cols-6 gap-3.5 sm:gap-4 lg:gap-3.5 xl:gap-4 items-end min-w-max lg:min-w-0 px-2 lg:px-0">
-              {SIGNATURE_ENSEMBLES.map((item, index) => (
-                <Link
-                  key={item.id}
-                  href={item.href}
-                  className="group relative rounded-xl sm:rounded-2xl overflow-hidden bg-monarch-charcoal shadow-lg hover:shadow-2xl transition-all duration-500 border border-monarch-gold/30 hover:border-monarch-gold flex flex-col justify-end w-[220px] sm:w-[240px] lg:w-auto aspect-[3/4.6] shrink-0"
-                  style={{
-                    transform: `translateY(${item.arcY}px) rotate(${item.arcRot}deg)`,
-                    transformOrigin: '50% 90%',
-                  }}
-                >
-                  {/* Model Photo from existing images */}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-106"
-                    loading="lazy"
-                    decoding="async"
-                  />
-
-                  {/* Dark Gradient Scrim for text readability */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent opacity-90 group-hover:opacity-75 transition-opacity duration-300" />
-
-                  {/* Top Index Pill */}
-                  <div className="absolute top-2.5 left-2.5 z-10">
-                    <span className="text-[9px] font-mono text-monarch-gold-light bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full border border-monarch-gold/30">
-                      0{index + 1}
-                    </span>
-                  </div>
-
-                  {/* Bottom Text Content (Matching Screenshot 2) */}
-                  <div className="relative z-10 p-3 sm:p-3.5 space-y-1">
-                    <span className="inline-block text-[8px] sm:text-[9px] font-nav uppercase tracking-[0.18em] text-monarch-gold-light/90">
-                      {item.tag}
-                    </span>
-
-                    <h3 className="font-serif text-xs sm:text-[13px] lg:text-[14px] text-monarch-ivory font-medium group-hover:text-monarch-gold-light transition-colors line-clamp-1">
-                      {item.title}
-                    </h3>
-
-                    <div className="pt-1 flex items-center justify-between text-[10px] sm:text-[11px] font-nav uppercase tracking-wider text-monarch-beige/90 border-t border-monarch-gold/20">
-                      <span className="font-serif font-bold text-monarch-gold-light">
-                        {item.price}
-                      </span>
-                      <span className="text-[9px] text-monarch-gold group-hover:text-white transition-colors">
-                        View →
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* Bottom Archive Link */}
-          <div className="text-center pt-8">
-            <Link
-              href="/collections/all"
-              className="inline-flex items-center gap-2 text-xs font-nav uppercase tracking-[0.22em] font-semibold text-monarch-maroon hover:text-monarch-maroon-dark pb-0.5 border-b border-monarch-maroon/30 transition-all group"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-monarch-gold" />
-              <span>Discover The Complete Royal Archives</span>
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1.5 transition-transform" />
-            </Link>
-          </div>
+        {/* Bottom Archive Link */}
+        <div className="text-center pt-8">
+          <Link
+            href="/collections/all"
+            className="inline-flex items-center gap-2 text-xs font-nav uppercase tracking-[0.22em] font-semibold text-monarch-maroon hover:text-monarch-maroon-dark pb-0.5 border-b border-monarch-maroon/30 transition-all group"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-monarch-gold" />
+            <span>Discover The Complete Royal Archives</span>
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1.5 transition-transform" />
+          </Link>
         </div>
       </div>
     </section>
