@@ -9,6 +9,7 @@ import { Search, Heart, ShoppingBag, User, Menu, X, ChevronDown, Sparkles } from
 import { MegaMenu } from './MegaMenu';
 import { SearchOverlay } from './SearchOverlay';
 import { CartDrawer } from './CartDrawer';
+import { ProductQuickView } from '@/components/product/ProductQuickView';
 import { WOMEN_CATEGORIES, MEN_CATEGORIES } from '@/data/categories';
 
 export const Header: React.FC = () => {
@@ -193,6 +194,9 @@ export const Header: React.FC = () => {
 
       {/* Cart Drawer */}
       <CartDrawer />
+
+      {/* Global Couture Quick View Drawer */}
+      <ProductQuickView />
 
       {/* Mobile Drawer */}
       {isMobileMenuOpen && (

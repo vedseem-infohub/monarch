@@ -4,10 +4,10 @@ import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { PRODUCTS } from '@/data/products';
 import { ProductCard } from '@/components/product/ProductCard';
-import { SectionHeader } from '@/components/home/shared/SectionHeader';
 import { ChevronLeft, ChevronRight, Award } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -42,8 +42,9 @@ export const BestSellers: React.FC = () => {
     trackRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    const ctx = gsap.context(() => {
+  // GSAP animation scoped cleanly using useGSAP hook per Rule 2
+  useGSAP(
+    () => {
       if (trackRef.current) {
         gsap.from(trackRef.current.querySelectorAll('.bestseller-card'), {
           scrollTrigger: {
@@ -51,7 +52,7 @@ export const BestSellers: React.FC = () => {
             start: 'top 85%',
             toggleActions: 'play none none none',
           },
-          scale: 0.95,
+          scale: 0.96,
           y: 35,
           opacity: 0,
           duration: 0.9,
@@ -59,16 +60,17 @@ export const BestSellers: React.FC = () => {
           ease: 'power3.out',
         });
       }
-    }, containerRef);
+    },
+    { scope: containerRef }
+  );
 
+  useEffect(() => {
     const track = trackRef.current;
     if (track) {
       track.addEventListener('scroll', updateScrollState, { passive: true });
       updateScrollState();
     }
-
     return () => {
-      ctx.revert();
       if (track) track.removeEventListener('scroll', updateScrollState);
     };
   }, []);
@@ -109,7 +111,7 @@ export const BestSellers: React.FC = () => {
               onClick={() => handleScroll('left')}
               disabled={!canScrollLeft}
               aria-label="Scroll left"
-              className="p-2.5 rounded-full border border-monarch-gold/40 bg-white/90 hover:bg-white text-monarch-charcoal hover:text-monarch-maroon disabled:opacity-30 transition-all shadow-sm"
+              className="p-2.5 rounded-full border border-monarch-gold/40 bg-white/90 hover:bg-white text-monarch-charcoal hover:text-monarch-maroon disabled:opacity-30 transition-all shadow-sm hover:border-monarch-gold"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -117,7 +119,7 @@ export const BestSellers: React.FC = () => {
               onClick={() => handleScroll('right')}
               disabled={!canScrollRight}
               aria-label="Scroll right"
-              className="p-2.5 rounded-full border border-monarch-gold/40 bg-white/90 hover:bg-white text-monarch-charcoal hover:text-monarch-maroon disabled:opacity-30 transition-all shadow-sm"
+              className="p-2.5 rounded-full border border-monarch-gold/40 bg-white/90 hover:bg-white text-monarch-charcoal hover:text-monarch-maroon disabled:opacity-30 transition-all shadow-sm hover:border-monarch-gold"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -129,20 +131,22 @@ export const BestSellers: React.FC = () => {
           ref={trackRef}
           className="flex gap-5 sm:gap-6 overflow-x-auto no-scrollbar scroll-smooth pb-4 px-1"
         >
-          {bestSellerProducts.map((product, index) => (
-            <div
-              key={product.id}
-              className="bestseller-card shrink-0 w-[270px] sm:w-[300px] lg:w-[325px] relative"
-            >
-              {/* Ranking Pill Tag */}
-              <div className="absolute top-2 left-2 z-20 pointer-events-none">
-                <span className="text-[10px] font-mono font-bold bg-[#3F101A] text-monarch-gold-light border border-monarch-gold/40 px-2 py-0.5 rounded shadow-sm">
-                  #{index + 1} Best Seller
-                </span>
+          {bestSellerProducts.map((product, index) => {
+            // Unify ranking badge directly into the Product model to prevent duplicate badges
+            const productWithRank = {
+              ...product,
+              badge: `#${index + 1} Best Seller`,
+            };
+
+            return (
+              <div
+                key={product.id}
+                className="bestseller-card shrink-0 w-[270px] sm:w-[300px] lg:w-[325px] relative"
+              >
+                <ProductCard product={productWithRank} priority={index < 3} />
               </div>
-              <ProductCard product={product} priority={index < 3} />
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

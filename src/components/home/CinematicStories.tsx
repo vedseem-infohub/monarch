@@ -17,10 +17,6 @@ import {
   Check,
   Heart,
   ArrowRight,
-  X,
-  Sparkles,
-  ShieldCheck,
-  Clock,
 } from 'lucide-react';
 
 if (typeof window !== 'undefined') {
@@ -53,7 +49,6 @@ export const CinematicStories: React.FC = () => {
   const [[page, direction], setPage] = useState([0, 1]);
   const [addedToast, setAddedToast] = useState(false);
   const [wishlistToast, setWishlistToast] = useState<string | null>(null);
-  const [isExploreOpen, setIsExploreOpen] = useState(false);
 
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
@@ -347,15 +342,15 @@ export const CinematicStories: React.FC = () => {
                 />
               </button>
 
-              {/* EXPLORE ENSEMBLE Button */}
-              <button
-                type="button"
-                onClick={() => setIsExploreOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-full bg-white/10 hover:bg-white text-white hover:text-black text-[10px] font-mono uppercase tracking-[0.18em] font-medium backdrop-blur-md border border-white/20 transition-all hover:scale-105 cursor-pointer"
+              {/* EXPLORE ENSEMBLE: Direct Link to Full Product Detailing */}
+              <Link
+                href={`/product/${activeStory.slug || activeStory.id}`}
+                className="group inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-white/10 hover:bg-white text-white hover:text-black text-[10px] font-mono uppercase tracking-[0.18em] font-medium backdrop-blur-md border border-white/20 transition-all hover:scale-105 cursor-pointer"
+                title={`View full detailing for ${activeStory.name}`}
               >
                 <span>EXPLORE</span>
-                <ArrowRight className="w-3 h-3" />
-              </button>
+                <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-1" />
+              </Link>
             </div>
           </div>
 
@@ -419,175 +414,6 @@ export const CinematicStories: React.FC = () => {
         </div>
       </div>
       </div>
-
-      {/* ============================================================ */}
-      {/* SLIDE-OVER ENSEMBLE EXPLORATION DRAWER                       */}
-      {/* ============================================================ */}
-      <AnimatePresence>
-        {isExploreOpen && (
-          <div className="fixed inset-0 z-50 flex justify-end">
-            {/* Backdrop Scrim */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              onClick={() => setIsExploreOpen(false)}
-              className="fixed inset-0 bg-black/70 backdrop-blur-xs cursor-pointer"
-            />
-
-            {/* Slide-Over Panel */}
-            <motion.aside
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="relative w-full max-w-md h-full bg-[#181313] text-white border-l border-white/15 shadow-[0_0_50px_rgba(0,0,0,0.85)] overflow-y-auto flex flex-col p-6 sm:p-8 z-10 select-text"
-            >
-              {/* Drawer Header */}
-              <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-monarch-gold-light font-semibold">
-                  {activeStory.storyCategoryTag} · MOMENTS IN SILK
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setIsExploreOpen(false)}
-                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white text-white hover:text-black flex items-center justify-center transition-all cursor-pointer"
-                  aria-label="Close drawer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Ensemble Hero Image */}
-              <div className="relative w-full aspect-4/3 rounded-xl overflow-hidden mt-6 border border-white/10 shadow-lg">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={activeStory.bgImage}
-                  alt={activeStory.name}
-                  className="w-full h-full object-cover object-center"
-                />
-                <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded text-[10px] font-mono text-monarch-gold-light uppercase tracking-wider">
-                  {activeStory.storySubtitle}
-                </div>
-              </div>
-
-              {/* Title, Tagline & Price */}
-              <div className="mt-5 space-y-1">
-                <h3 className="font-serif text-2xl font-normal text-white">
-                  {activeStory.name}
-                </h3>
-                <p className="font-sans text-xs text-white/60">
-                  {activeStory.tagline}
-                </p>
-                <div className="pt-2">
-                  <span className="font-serif text-2xl font-bold text-white">
-                    {activeStory.formattedPrice}
-                  </span>
-                  <span className="text-[11px] text-white/50 ml-2 font-sans">
-                    (MRP incl. all taxes)
-                  </span>
-                </div>
-              </div>
-
-              {/* Story Narrative */}
-              <p className="mt-4 text-xs font-sans text-white/80 leading-relaxed border-t border-white/10 pt-4">
-                {activeStory.description}
-              </p>
-
-              {/* Craftsmanship Specifications Grid */}
-              <div className="mt-5 grid grid-cols-1 gap-3 bg-white/5 p-4 rounded-xl border border-white/10 text-xs font-sans">
-                <div className="flex items-start gap-2.5">
-                  <Sparkles className="w-4 h-4 text-monarch-gold-light shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-mono text-[10px] uppercase tracking-wider text-white/50 block">
-                      Fabric & Weave
-                    </span>
-                    <span className="text-white/95">{activeStory.fabric}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-2.5">
-                  <ShieldCheck className="w-4 h-4 text-monarch-gold-light shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-mono text-[10px] uppercase tracking-wider text-white/50 block">
-                      Authentic Embroidery
-                    </span>
-                    <span className="text-white/95">{activeStory.embroidery}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-2.5">
-                  <Clock className="w-4 h-4 text-monarch-gold-light shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-mono text-[10px] uppercase tracking-wider text-white/50 block">
-                      Craftsmanship Heritage
-                    </span>
-                    <span className="text-white/90 text-[11px] leading-relaxed">
-                      {activeStory.craftsmanshipStory}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Occasions */}
-              <div className="mt-4">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-white/50 block mb-1.5">
-                  Recommended For
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {activeStory.occasion.map((occ) => (
-                    <span
-                      key={occ}
-                      className="px-2.5 py-0.5 rounded-full bg-white/10 text-[10px] font-sans text-white/80 border border-white/10"
-                    >
-                      {occ}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Action Buttons in Drawer */}
-              <div className="mt-auto pt-6 space-y-2.5 border-t border-white/10">
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleAddToCart();
-                      setIsExploreOpen(false);
-                    }}
-                    className="flex-1 py-3 rounded-full bg-monarch-maroon hover:bg-monarch-maroon-light text-white text-xs font-mono uppercase tracking-[0.2em] font-semibold transition-all hover:scale-102 flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <ShoppingBag className="w-4 h-4" />
-                    <span>ADD TO BAG</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleToggleWishlist}
-                    className={`w-11 h-11 rounded-full flex items-center justify-center border transition-all ${
-                      isWished
-                        ? 'bg-monarch-maroon text-monarch-gold-light border-monarch-gold/60'
-                        : 'bg-white/10 text-white border-white/20'
-                    }`}
-                    aria-label="Wishlist toggle"
-                  >
-                    <Heart className={`w-4 h-4 ${isWished ? 'fill-current' : ''}`} />
-                  </button>
-                </div>
-
-                <Link
-                  href={`/product/${activeStory.slug || activeStory.id}`}
-                  className="w-full py-2.5 rounded-full bg-white/10 hover:bg-white text-white hover:text-black text-xs font-mono uppercase tracking-wider font-semibold transition-all flex items-center justify-center gap-2 border border-white/20"
-                >
-                  <span>VIEW FULL PRODUCT DETAILS</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </motion.aside>
-          </div>
-        )}
-      </AnimatePresence>
     </section>
   );
 };

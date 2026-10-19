@@ -11,6 +11,10 @@ export interface ClientDiaryEntry {
   quote: string;
   rating: number;
   portraitImage: string;
+  craftDetailImage?: string;
+  artisanHours?: string;
+  zariPurity?: string;
+  venueType?: string;
   ensemble: Product & { formattedPrice: string };
 }
 
@@ -24,18 +28,26 @@ export interface CraftSanctumPillar {
   statLabel: string;
   macroImage: string;
   badge: string;
+  provenanceProof?: string;
 }
 
 export interface SalonLocation {
   slug: string;
   city: string;
   name: string;
+  subheading?: string;
   address: string;
   country: string;
   phone: string;
   email: string;
   timeSlots: string[];
   badge?: string;
+  salonImage: string;
+  curatorName: string;
+  curatorRole?: string;
+  salonQuote: string;
+  suitesCount?: string;
+  amenities?: string[];
 }
 
 export interface AtelierExperience {
@@ -60,6 +72,7 @@ export const CRAFT_SANCTUM_PILLARS: CraftSanctumPillar[] = [
     statLabel: 'Hallmarked Real Gold & Silver',
     macroImage: '/images/moods/banarasi_brocade.jpg',
     badge: 'Precious Metallurgy',
+    provenanceProof: 'Bureau of Indian Standards hallmarked 24K silver-gold core wire.',
   },
   {
     id: 'pillar-kashi-looms',
@@ -72,6 +85,7 @@ export const CRAFT_SANCTUM_PILLARS: CraftSanctumPillar[] = [
     statLabel: 'Continuous Artisan Hours Per Drape',
     macroImage: '/images/moods/chanderi_heritage.jpg',
     badge: 'Archival Provenance',
+    provenanceProof: 'Authentic Geographical Indication (GI) tagged Varanasi master guild.',
   },
   {
     id: 'pillar-awadhi-zardozi',
@@ -84,6 +98,7 @@ export const CRAFT_SANCTUM_PILLARS: CraftSanctumPillar[] = [
     statLabel: 'Artisans In Royal Atelier Guild',
     macroImage: '/images/moods/paithani_heirloom.jpg',
     badge: 'Haute Relief',
+    provenanceProof: 'Awadhi court karchob embroidery documented in royal royal records.',
   },
 ];
 
@@ -102,6 +117,10 @@ export const ROYAL_CLIENT_DIARIES: ClientDiaryEntry[] = [
       'Standing under the palace arches in 24k gold woven Banarasi felt like wearing centuries of royal heritage. The drape was effortless poetry, capturing the starlight on Lake Pichola.',
     rating: 5.0,
     portraitImage: '/images/panoramic/ensemble_vara.jpg',
+    craftDetailImage: '/images/moods/banarasi_brocade.jpg',
+    artisanHours: '420 Artisan Hours',
+    zariPurity: 'Certified 24K Real Gold Zari',
+    venueType: 'Lakefront Palace Accord',
     ensemble: {
       id: 'p-diary-01',
       name: 'Gulnaar Imperial Zardozi Lehenga',
@@ -113,9 +132,9 @@ export const ROYAL_CLIENT_DIARIES: ClientDiaryEntry[] = [
       gender: 'women',
       price: 285000,
       formattedPrice: formatINR(285000),
-      images: ['/images/panoramic/ensemble_vara.jpg'],
+      images: ['/images/panoramic/ensemble_vara.jpg', '/images/moods/banarasi_brocade.jpg'],
       colors: [{ name: 'Royal Crimson', hex: '#5A1725', imageIndex: 0 }],
-      sizes: ['Custom Bespoke'],
+      sizes: ['Custom Bespoke', '36', '38', '40'],
       fabric: 'Royal Micro-Velvet & Tissue Organza',
       embroidery: 'Handcrafted Zardozi & 24K Gold Dabka',
       occasion: ['Bridal', 'Royal Wedding'],
@@ -143,6 +162,10 @@ export const ROYAL_CLIENT_DIARIES: ClientDiaryEntry[] = [
       'We wanted a bridal ensemble that held the grandeur of our Indian heritage yet felt light and luminous against Lake Como. The bespoke tissue drape moved with the evening breeze.',
     rating: 5.0,
     portraitImage: '/images/panoramic/ensemble_kalyani.jpg',
+    craftDetailImage: '/images/moods/pure_organza.jpg',
+    artisanHours: '310 Artisan Hours',
+    zariPurity: 'Liquid Metallic Mulberry Tissue',
+    venueType: 'Historic Italian Villa',
     ensemble: {
       id: 'p-diary-02',
       name: 'Noor-e-Kashi Metallic Tissue Saree',
@@ -154,7 +177,7 @@ export const ROYAL_CLIENT_DIARIES: ClientDiaryEntry[] = [
       gender: 'women',
       price: 195000,
       formattedPrice: formatINR(195000),
-      images: ['/images/panoramic/ensemble_kalyani.jpg'],
+      images: ['/images/panoramic/ensemble_kalyani.jpg', '/images/moods/pure_organza.jpg'],
       colors: [{ name: 'Liquid Champagne', hex: '#E6D7B8', imageIndex: 0 }],
       sizes: ['Standard 5.5m + Blouse'],
       fabric: 'Pure Handloom Metallic Silk Tissue',
@@ -184,6 +207,10 @@ export const ROYAL_CLIENT_DIARIES: ClientDiaryEntry[] = [
       'The MONARCH atelier team flew down to Jaipur for the final fitting. The attention to the drape symmetry and the weight distribution of the real silver zari was incomparable.',
     rating: 5.0,
     portraitImage: '/images/panoramic/ensemble_utsav.jpg',
+    craftDetailImage: '/images/moods/chanderi_heritage.jpg',
+    artisanHours: '480 Artisan Hours',
+    zariPurity: 'Pure Beaten Silver Gota Patti',
+    venueType: 'Royal Rajputana Palace',
     ensemble: {
       id: 'p-diary-03',
       name: 'Rajputana Kesari Vermilion Ensemble',
@@ -195,9 +222,9 @@ export const ROYAL_CLIENT_DIARIES: ClientDiaryEntry[] = [
       gender: 'women',
       price: 340000,
       formattedPrice: formatINR(340000),
-      images: ['/images/panoramic/ensemble_utsav.jpg'],
+      images: ['/images/panoramic/ensemble_utsav.jpg', '/images/moods/chanderi_heritage.jpg'],
       colors: [{ name: 'Imperial Vermilion', hex: '#B22222', imageIndex: 0 }],
-      sizes: ['Custom Bespoke'],
+      sizes: ['Custom Bespoke', '36', '38', '40'],
       fabric: 'Bandhani Georgette & Raw Silk',
       embroidery: 'Authentic Beaten Silver Gota Patti',
       occasion: ['Pheras', 'Royal Wedding'],
@@ -225,6 +252,10 @@ export const ROYAL_CLIENT_DIARIES: ClientDiaryEntry[] = [
       'Our guests were mesmerized by the subtle iridescence of the ivory organza. It was regal without being ostentatious — the pure hallmark of heirloom luxury.',
     rating: 5.0,
     portraitImage: '/images/panoramic/ensemble_aarunya.jpg',
+    craftDetailImage: '/images/moods/paithani_heirloom.jpg',
+    artisanHours: '360 Artisan Hours',
+    zariPurity: 'Basra Seed Pearls & Silver Wire',
+    venueType: 'Imperial Sandstone Fortress',
     ensemble: {
       id: 'p-diary-04',
       name: 'Chandramukhi Pearl Organza Saree',
@@ -236,7 +267,7 @@ export const ROYAL_CLIENT_DIARIES: ClientDiaryEntry[] = [
       gender: 'women',
       price: 165000,
       formattedPrice: formatINR(165000),
-      images: ['/images/panoramic/ensemble_aarunya.jpg'],
+      images: ['/images/panoramic/ensemble_aarunya.jpg', '/images/moods/paithani_heirloom.jpg'],
       colors: [{ name: 'Moonlit Pearl Ivory', hex: '#FDFBF7', imageIndex: 0 }],
       sizes: ['Standard 5.5m + Blouse'],
       fabric: 'Pure Mulberry Organza',
@@ -265,44 +296,96 @@ export const SALON_LOCATIONS: SalonLocation[] = [
     slug: 'new-delhi',
     city: 'New Delhi',
     name: 'The Mehrauli Pavilion Flagship',
+    subheading: 'Sandstone Archways & Imperial Vault',
     address: 'Ambawatta One, Kalka Das Marg, Mehrauli',
     country: 'India',
     phone: '+91 11 4982 7700',
     email: 'delhi.atelier@monarch-couture.com',
     badge: 'Global Flagship',
+    salonImage: '/images/footer-heritage-drift-wide.jpg',
+    curatorName: 'Pt. Raghunath Mishra',
+    curatorRole: 'Master Draper & Archival Weaver',
+    salonQuote:
+      'Set amidst ancient sandstone arches, our flagship salon houses over 2,000 archival handloom weaves and three private fitting chambers.',
+    suitesCount: '3 Private Suites',
+    amenities: [
+      'Private Fitting Chambers',
+      'Archival Silk Vault (2,000+ Weaves)',
+      '1-on-1 Master Draper Consultation',
+      'Complimentary Vintage Champagne Service',
+    ],
     timeSlots: ['11:00 AM - 01:00 PM', '02:00 PM - 04:00 PM', '04:30 PM - 06:30 PM', '07:00 PM - 09:00 PM'],
   },
   {
     slug: 'mumbai',
     city: 'Mumbai',
     name: 'Kala Ghoda Heritage Salon',
+    subheading: 'Colonial Ceilings & Teakwood Looms',
     address: 'Forbes Street, Ropewalk Lane, Fort',
     country: 'India',
     phone: '+91 22 6128 4400',
     email: 'mumbai.atelier@monarch-couture.com',
     badge: 'Artisan Suite',
+    salonImage: '/images/footer-heritage-drift.jpg',
+    curatorName: 'Gayatri Sen',
+    curatorRole: 'Bridal Styling Director',
+    salonQuote:
+      'Located in the historic art district of Kala Ghoda, providing an intimate sanctuary for bespoke royal trousseau curation.',
+    suitesCount: '2 Private Suites',
+    amenities: [
+      'Heritage Teakwood Looms',
+      'Custom Color Dye Studio',
+      'Bridal Trousseau Styling Chamber',
+      'Private Valet & Concierge Escort',
+    ],
     timeSlots: ['11:00 AM - 01:00 PM', '02:00 PM - 04:00 PM', '04:30 PM - 06:30 PM'],
   },
   {
     slug: 'london',
     city: 'London',
     name: 'Mayfair Private Suite',
+    subheading: 'Discreet Mount Street Townhouse',
     address: 'Mount Street, Mayfair, London W1K 2RN',
     country: 'United Kingdom',
     phone: '+44 20 7946 0880',
     email: 'london.atelier@monarch-couture.com',
     badge: 'International Suite',
+    salonImage: '/images/panoramic/ensemble_saanjh.jpg',
+    curatorName: 'Eleanor Vance',
+    curatorRole: 'Mayfair Salon Director',
+    salonQuote:
+      'Bringing the majestic craft of Indian royal looms to Mayfair, offering private bespoke trunk viewings and overseas bridal fittings.',
+    suitesCount: '1 VIP Townhouse Suite',
+    amenities: [
+      'Discreet Mayfair Townhouse Suite',
+      'Archival Trunk Curation',
+      'International Bridal Fitting Escort',
+      'Direct Kashi Karigar Video Link',
+    ],
     timeSlots: ['10:30 AM - 12:30 PM', '01:30 PM - 03:30 PM', '04:00 PM - 06:00 PM'],
   },
   {
     slug: 'virtual',
     city: 'Virtual VIP',
     name: 'Global Haute Couture Concierge',
+    subheading: 'Lake Palace Studio & 4K Digital Lounge',
     address: 'High-Definition 1-on-1 Digital Salon Studio',
     country: 'Worldwide',
     phone: '+91 800 666 2724',
     email: 'vip.concierge@monarch-couture.com',
     badge: 'Global Digital',
+    salonImage: '/images/footer-banner-lake-palace.jpg',
+    curatorName: 'Aarav Singhania',
+    curatorRole: 'Global Couture Concierge',
+    salonQuote:
+      'Ultra-high-definition 4K video consultation, fabric swatch delivery to your doorstep, and bespoke international commissioning.',
+    suitesCount: 'Worldwide Digital Suites',
+    amenities: [
+      '4K Ultra-HD Drape Analysis',
+      'Physical Swatch Mailer Delivery',
+      'Worldwide Insured Air Courier',
+      'Custom Digital Body Avatar Mapping',
+    ],
     timeSlots: ['12:00 PM - 01:30 PM IST', '04:00 PM - 05:30 PM IST', '08:00 PM - 09:30 PM IST'],
   },
 ];

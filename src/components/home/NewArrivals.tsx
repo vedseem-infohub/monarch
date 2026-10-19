@@ -5,9 +5,10 @@ import Link from 'next/link';
 import { PRODUCTS } from '@/data/products';
 import { ProductCard } from '@/components/product/ProductCard';
 import { SectionHeader } from '@/components/home/shared/SectionHeader';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -35,13 +36,14 @@ export const NewArrivals: React.FC = () => {
 
   const handleScroll = (direction: 'left' | 'right') => {
     if (!trackRef.current) return;
-    const cardWidth = 320;
+    const cardWidth = 330;
     const scrollAmount = direction === 'left' ? -cardWidth * 2 : cardWidth * 2;
     trackRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    const ctx = gsap.context(() => {
+  // GSAP animation scoped cleanly using useGSAP hook per Rule 2
+  useGSAP(
+    () => {
       if (trackRef.current) {
         gsap.from(trackRef.current.querySelectorAll('.product-rail-card'), {
           scrollTrigger: {
@@ -56,16 +58,17 @@ export const NewArrivals: React.FC = () => {
           ease: 'power3.out',
         });
       }
-    }, containerRef);
+    },
+    { scope: containerRef }
+  );
 
+  useEffect(() => {
     const track = trackRef.current;
     if (track) {
       track.addEventListener('scroll', updateScrollState, { passive: true });
       updateScrollState();
     }
-
     return () => {
-      ctx.revert();
       if (track) track.removeEventListener('scroll', updateScrollState);
     };
   }, []);
@@ -73,23 +76,29 @@ export const NewArrivals: React.FC = () => {
   return (
     <section
       ref={containerRef}
-      className="py-16 sm:py-24 bg-[#F7F0E5] text-monarch-charcoal relative overflow-hidden border-t border-monarch-gold/20"
+      className="py-16 sm:py-24 bg-[#F7F0E5] text-monarch-charcoal relative overflow-hidden border-t border-monarch-gold/25"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
-          <SectionHeader
-            eyebrow="The Fresh Palette"
-            title="New"
-            italicWord="Arrivals"
-            description="Contemporary royal silhouettes woven with heirloom sensibilities for the upcoming festive calendar."
-            align="left"
-            className="mb-0"
-          />
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-monarch-gold/15 border border-monarch-gold/30 text-[11px] font-nav uppercase tracking-[0.25em] text-monarch-gold-dark font-medium mb-3">
+              <Sparkles className="w-3.5 h-3.5 text-monarch-gold" />
+              <span>The Fresh Palette</span>
+            </div>
+            <SectionHeader
+              eyebrow=""
+              title="New"
+              italicWord="Arrivals"
+              description="Contemporary royal silhouettes woven with heirloom sensibilities for the upcoming festive calendar."
+              align="left"
+              className="mb-0"
+            />
+          </div>
 
           <div className="flex items-center gap-3 shrink-0">
             <Link
-              href="/collections/all"
+              href="/collections/all?filter=new"
               className="text-xs font-nav uppercase tracking-[0.2em] font-semibold text-monarch-maroon hover:text-monarch-maroon-dark pb-0.5 border-b border-monarch-maroon/30 transition-colors mr-2"
             >
               View All
@@ -99,7 +108,7 @@ export const NewArrivals: React.FC = () => {
               onClick={() => handleScroll('left')}
               disabled={!canScrollLeft}
               aria-label="Scroll left"
-              className="p-2.5 rounded-full border border-monarch-gold/40 bg-white/90 hover:bg-white text-monarch-charcoal hover:text-monarch-maroon disabled:opacity-30 transition-all shadow-sm"
+              className="p-2.5 rounded-full border border-monarch-gold/40 bg-white/90 hover:bg-white text-monarch-charcoal hover:text-monarch-maroon disabled:opacity-30 transition-all shadow-sm hover:border-monarch-gold"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -107,7 +116,7 @@ export const NewArrivals: React.FC = () => {
               onClick={() => handleScroll('right')}
               disabled={!canScrollRight}
               aria-label="Scroll right"
-              className="p-2.5 rounded-full border border-monarch-gold/40 bg-white/90 hover:bg-white text-monarch-charcoal hover:text-monarch-maroon disabled:opacity-30 transition-all shadow-sm"
+              className="p-2.5 rounded-full border border-monarch-gold/40 bg-white/90 hover:bg-white text-monarch-charcoal hover:text-monarch-maroon disabled:opacity-30 transition-all shadow-sm hover:border-monarch-gold"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -122,7 +131,7 @@ export const NewArrivals: React.FC = () => {
           {newArrivalProducts.map((product, idx) => (
             <div
               key={product.id}
-              className="product-rail-card shrink-0 w-[260px] sm:w-[290px] lg:w-[310px]"
+              className="product-rail-card shrink-0 w-[270px] sm:w-[300px] lg:w-[325px]"
             >
               <ProductCard product={product} priority={idx < 3} />
             </div>

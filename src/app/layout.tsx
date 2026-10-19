@@ -6,6 +6,7 @@ import { WishlistProvider } from '@/context/WishlistContext';
 // import { AnnouncementBar } from '@/components/layout/AnnouncementBar';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { QuickViewProvider } from '@/context/QuickViewContext';
 import { SmoothScrollProvider } from '@/components/common/SmoothScrollProvider';
 import { SareeLoader } from '@/components/common/SareeLoader';
 
@@ -73,13 +74,15 @@ export default function RootLayout({
       >
         <CartProvider>
           <WishlistProvider>
-            {/* <AnnouncementBar /> */}
-            <Header />
-            <SmoothScrollProvider>
-              <SareeLoader />
-              <main className="flex-1">{children}</main>
-            </SmoothScrollProvider>
-            <Footer />
+            <QuickViewProvider>
+              {/* <AnnouncementBar /> */}
+              <Header />
+              <SmoothScrollProvider>
+                <SareeLoader />
+                <main className="flex-1">{children}</main>
+              </SmoothScrollProvider>
+              <Footer />
+            </QuickViewProvider>
           </WishlistProvider>
         </CartProvider>
       </body>

@@ -24,6 +24,10 @@ export async function generateStaticParams() {
     'women',
     'men',
     'wedding-edit',
+    'new-arrivals',
+    'sarees',
+    'bridal',
+    'best-sellers',
     ...ALL_CATEGORIES.map((c) => c.slug),
   ];
   return Array.from(new Set(categories)).map((category) => ({ category }));
@@ -99,6 +103,22 @@ export default async function CategoryCollectionPage({ params, searchParams }: P
     description = matchedCategory?.description || `Exquisite handwoven ${silkKeyword} silks from royal ateliers.`;
     activeSlug = 'all';
     initialFabric = silkKeyword;
+  } else if (category === 'sarees') {
+    title = 'Imperial Silk Sarees';
+    description = 'Authentic handwoven Banarasi, Kanjivaram, and Chanderi sarees created with gold zari.';
+    activeSlug = 'designer-sarees';
+  } else if (category === 'bridal') {
+    title = 'Royal Bridal Edit';
+    description = 'Bespoke bridal lehengas and wedding silks curated for unforgettable celebrations.';
+    activeSlug = 'bridal-lehengas';
+  } else if (category === 'new-arrivals') {
+    title = 'New Arrivals';
+    description = 'The newest seasonal expressions and handwoven silks fresh from the royal looms.';
+    activeSlug = 'all';
+  } else if (category === 'best-sellers') {
+    title = 'Best Sellers';
+    description = 'The most revered and celebrated handwoven silks across our ateliers.';
+    activeSlug = 'all';
   } else if (category === 'all') {
     if (queryCategory && queryCategory !== 'all') {
       const matchedCategory = ALL_CATEGORIES.find((c) => c.slug === queryCategory);

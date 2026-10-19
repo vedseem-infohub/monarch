@@ -11,7 +11,8 @@ interface CartContextType {
     selectedColor: string,
     selectedSize: string,
     quantity?: number,
-    customMeasurements?: CustomMeasurements
+    customMeasurements?: CustomMeasurements,
+    openCart?: boolean
   ) => void;
   removeFromCart: (cartItemId: string) => void;
   updateQuantity: (cartItemId: string, quantity: number) => void;
@@ -81,7 +82,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     selectedColor: string,
     selectedSize: string,
     quantity = 1,
-    customMeasurements?: CustomMeasurements
+    customMeasurements?: CustomMeasurements,
+    openCart = true
   ) => {
     const itemId = `${product.id}-${selectedColor}-${selectedSize}`;
     setCart((prev) => {
@@ -105,7 +107,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         },
       ];
     });
-    setIsCartOpen(true);
+    if (openCart) {
+      setIsCartOpen(true);
+    }
   };
 
   const removeFromCart = (cartItemId: string) => {
