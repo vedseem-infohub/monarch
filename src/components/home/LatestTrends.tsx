@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
+import { AnimatePresence } from 'framer-motion';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { LATEST_TRENDS_DATA } from '@/data/latestTrends';
 import { TrendDeckCard } from './TrendDeckCard';
@@ -15,24 +16,25 @@ if (typeof window !== 'undefined') {
 
 export const LatestTrends: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
-
   const products = LATEST_TRENDS_DATA.products;
   const total = products.length;
+
+  // Track page and direction for Framer Motion AnimatePresence
+  const [[page, direction], setPage] = useState([0, 0]);
+
+  const paginate = (newDirection: number) => {
+    setPage(([prevPage]) => [prevPage + newDirection, newDirection]);
+  };
+
+  const activeIndex = ((page % total) + total) % total;
   const currentProduct = products[activeIndex];
-
-  const handleNext = () => {
-    setActiveIndex((prev) => (prev + 1) % total);
-  };
-
-  const handlePrev = () => {
-    setActiveIndex((prev) => (prev - 1 + total) % total);
-  };
 
   const handleSelectCategory = (categorySlug: string) => {
     const foundIdx = products.findIndex((p) => p.rangeCategorySlug === categorySlug);
-    if (foundIdx !== -1) {
-      setActiveIndex(foundIdx);
+    if (foundIdx !== -1 && foundIdx !== activeIndex) {
+      const diff = foundIdx - activeIndex;
+      const step = diff > 0 ? 1 : -1;
+      setPage(([prevPage]) => [prevPage + diff, step]);
     }
   };
 
@@ -107,36 +109,74 @@ export const LatestTrends: React.FC = () => {
               <h3 className="font-serif text-xl sm:text-2xl text-[#141416] font-normal leading-snug">
                 {LATEST_TRENDS_DATA.storyHeading}
               </h3>
-              <p className="text-xs sm:text-[13px] text-black/60 font-sans leading-relaxed mt-2">
+              <p className="text-xs sm:text-[13px] text-black/60 font-sans leading-relaxed mt-2 min-h-[48px] transition-all duration-300">
                 {currentProduct.storyBehindDrape || LATEST_TRENDS_DATA.storyDescription}
               </p>
             </div>
           </div>
 
           {/* ======================================================== */}
-          {/* 2. CENTER COLUMN: INTERACTIVE CARD DECK (TAAS KE PAATE)  */}
+          {/* 2. CENTER COLUMN: CARD DECK (TAAS KE PAATE IN/OUT)      */}
           {/* ======================================================== */}
           <div className="trends-col lg:col-span-5 flex flex-col items-center justify-center">
             {/* The Deck Container */}
             <div className="relative w-full max-w-[330px] sm:max-w-[380px] lg:max-w-[420px] aspect-[4/5] min-h-[440px] sm:min-h-[500px]">
-              {products.map((product, idx) => (
-                <TrendDeckCard
-                  key={product.id}
-                  product={product}
-                  index={idx}
-                  activeIndex={activeIndex}
-                  totalCards={total}
-                  onSwipeNext={handleNext}
-                  onSwipePrev={handlePrev}
+              {/* Layer 3 (Deep Deck Card) */}
+              <div
+                style={{
+                  transform: 'scale(0.88) translateY(28px) rotate(2.8deg)',
+                  opacity: 0.65,
+                  zIndex: 5,
+                }}
+                className="absolute inset-0 rounded-3xl overflow-hidden shadow-xl bg-black pointer-events-none transition-all duration-500 ease-out"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={products[(activeIndex + 2) % total].images[0]}
+                  alt=""
+                  className="w-full h-full object-cover pointer-events-none opacity-80"
+                  draggable={false}
                 />
-              ))}
+                <div className="absolute inset-0 bg-black/40" />
+              </div>
+
+              {/* Layer 2 (Underneath Card) */}
+              <div
+                style={{
+                  transform: 'scale(0.94) translateY(14px) rotate(-2.8deg)',
+                  opacity: 0.88,
+                  zIndex: 10,
+                }}
+                className="absolute inset-0 rounded-3xl overflow-hidden shadow-2xl bg-black pointer-events-none transition-all duration-500 ease-out"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={products[(activeIndex + 1) % total].images[0]}
+                  alt=""
+                  className="w-full h-full object-cover pointer-events-none opacity-90"
+                  draggable={false}
+                />
+                <div className="absolute inset-0 bg-black/25" />
+              </div>
+
+              {/* Top Active Card with AnimatePresence for both IN and OUT animations */}
+              <AnimatePresence initial={false} custom={direction} mode="popLayout">
+                <TrendDeckCard
+                  key={page}
+                  product={currentProduct}
+                  index={activeIndex}
+                  direction={direction}
+                  onSwipeNext={() => paginate(1)}
+                  onSwipePrev={() => paginate(-1)}
+                />
+              </AnimatePresence>
             </div>
 
             {/* Bottom Carousel Navigation Controls */}
             <div className="flex items-center justify-center gap-5 mt-7 sm:mt-9">
               <button
                 type="button"
-                onClick={handlePrev}
+                onClick={() => paginate(-1)}
                 className="w-8 h-8 rounded-full border border-black/15 hover:border-black text-black/70 hover:text-black flex items-center justify-center transition-colors cursor-pointer active:scale-95"
                 aria-label="Previous card"
               >
@@ -149,7 +189,7 @@ export const LatestTrends: React.FC = () => {
 
               <button
                 type="button"
-                onClick={handleNext}
+                onClick={() => paginate(1)}
                 className="w-8 h-8 rounded-full border border-black/15 hover:border-black text-black/70 hover:text-black flex items-center justify-center transition-colors cursor-pointer active:scale-95"
                 aria-label="Next card"
               >
