@@ -172,7 +172,7 @@ export const WovenToBeRemembered: React.FC = () => {
         const entranceTl = gsap.timeline({
           scrollTrigger: {
             trigger: section,
-            start: 'top 85%',
+            start: 'top 25%',
             toggleActions: 'play none none none',
           },
         });
@@ -221,8 +221,8 @@ export const WovenToBeRemembered: React.FC = () => {
         };
 
         let travel = getTravelDistance();
-        // Greatly increased scroll pin height (7500px+) for an ultra-spacious, luxurious traversal
-        const pinScrollDistance = Math.max(7500, Math.round(travel * 5.2));
+        // Responsive speed: balanced scroll distance (approx. 2600px) for smooth, energetic traversal
+        const pinScrollDistance = Math.max(2600, Math.round(travel * 1.9));
 
         // Precompute card static center offsets in memory to eliminate all DOM reads during scroll
         let cardCenters = cards.map((c) => c.offsetLeft + c.offsetWidth / 2);
@@ -238,7 +238,7 @@ export const WovenToBeRemembered: React.FC = () => {
         const applyCurvature = (progressVal: number) => {
           const currentTrackX = -travel * progressVal;
           const viewportCenter = window.innerWidth / 2;
-          const curveSpan = window.innerWidth * 0.54;
+          const curveSpan = window.innerWidth * 0.52;
 
           for (let idx = 0; idx < cards.length; idx++) {
             const screenX = cardCenters[idx] + currentTrackX;
@@ -247,11 +247,11 @@ export const WovenToBeRemembered: React.FC = () => {
             const clamped = Math.max(-1.3, Math.min(1.3, normalized));
 
             // Upward parabolic arch (center card is highest, sides drop down smoothly)
-            const yDrop = Math.pow(Math.abs(clamped), 1.85) * 52;
+            const yDrop = Math.pow(Math.abs(clamped), 1.85) * 48;
             // Tangent rotation along the curved contour
-            const rot = clamped * 6.5;
+            const rot = clamped * 6.2;
             // Subtle perspective scale
-            const scale = 1 - Math.pow(Math.abs(clamped), 2) * 0.035;
+            const scale = 1 - Math.pow(Math.abs(clamped), 2) * 0.03;
 
             const setters = cardSetters[idx];
             if (setters) {
@@ -272,50 +272,52 @@ export const WovenToBeRemembered: React.FC = () => {
         }
 
         // Main scrubbed pinned timeline
-        // start: 'top 20px' pins the section at top 20px
+        // Crucial fix: attach onUpdate to the timeline itself, so curvature and track position are 100% in sync
         const scrubTl = gsap.timeline({
           scrollTrigger: {
             trigger: pinWrapper,
             pin: pinWrapper,
-            start: 'top 20px',
+            start: 'top top',
             end: () => `+=${pinScrollDistance}`,
-            scrub: 0.2,
+            scrub: 0.3,
             anticipatePin: 1,
             invalidateOnRefresh: true,
             onRefresh: () => {
               travel = getTravelDistance();
               cardCenters = cards.map((c) => c.offsetLeft + c.offsetWidth / 2);
-              applyCurvature(scrubTl.scrollTrigger?.progress || 0);
+              applyCurvature(scrubTl.progress());
             },
-            onUpdate: (self) => {
-              if (progress) {
-                progress.style.width = `${Math.round(self.progress * 100)}%`;
+          },
+          onUpdate: () => {
+            // Using timeline's own interpolated progress ensures track.x and curvature match frame-by-frame
+            const p = scrubTl.progress();
+            applyCurvature(p);
+
+            if (progress) {
+              progress.style.width = `${Math.round(p * 100)}%`;
+            }
+
+            // Fast math-only active index tracking without React re-renders
+            const cardIdx = Math.min(
+              cards.length - 1,
+              Math.max(0, Math.floor(p * cards.length))
+            );
+
+            if (cardIdx !== currentActiveIdxRef.current) {
+              currentActiveIdxRef.current = cardIdx;
+              if (activeBadgeRef.current) {
+                activeBadgeRef.current.textContent = `Ensemble 0${cardIdx + 1} of 0${cards.length}`;
               }
-
-              // Fast math-only active index tracking without React re-renders
-              const cardIdx = Math.min(
-                cards.length - 1,
-                Math.max(0, Math.floor(self.progress * cards.length))
-              );
-
-              if (cardIdx !== currentActiveIdxRef.current) {
-                currentActiveIdxRef.current = cardIdx;
-                if (activeBadgeRef.current) {
-                  activeBadgeRef.current.textContent = `Ensemble 0${cardIdx + 1} of 0${cards.length}`;
+              cards.forEach((c, i) => {
+                if (i === cardIdx) {
+                  c.classList.add('border-monarch-gold', 'ring-1', 'ring-monarch-gold/50');
+                  c.classList.remove('border-monarch-gold/30');
+                } else {
+                  c.classList.remove('border-monarch-gold', 'ring-1', 'ring-monarch-gold/50');
+                  c.classList.add('border-monarch-gold/30');
                 }
-                cards.forEach((c, i) => {
-                  if (i === cardIdx) {
-                    c.classList.add('border-monarch-gold', 'ring-1', 'ring-monarch-gold/50');
-                    c.classList.remove('border-monarch-gold/30');
-                  } else {
-                    c.classList.remove('border-monarch-gold', 'ring-1', 'ring-monarch-gold/50');
-                    c.classList.add('border-monarch-gold/30');
-                  }
-                });
-              }
-
-              applyCurvature(self.progress);
-            },
+              });
+            }
           },
         });
 
@@ -355,7 +357,7 @@ export const WovenToBeRemembered: React.FC = () => {
       {/* Pinned Viewport Container for Scroll Animation */}
       <div
         ref={pinWrapperRef}
-        className="w-full flex flex-col justify-between min-h-screen pt-16 lg:pt-20 pb-4 relative overflow-hidden bg-[#FAF6F0]"
+        className="w-full flex flex-col justify-between min-h-screen pt-14 lg:pt-16 pb-4 relative overflow-hidden bg-[#FAF6F0]"
       >
         {/* 1. Top Luxury Ticker Marquee Ribbon */}
         <div className="w-full bg-[#3F101A] text-monarch-gold-light py-1.5 overflow-hidden border-y border-monarch-gold/30 shrink-0">
@@ -454,12 +456,12 @@ export const WovenToBeRemembered: React.FC = () => {
         {/* 3. Curved Panoramic Fashion Image Strip with Tight Gap */}
         <div
           ref={ribbonMaskRef}
-          className="relative w-full overflow-hidden select-none my-auto py-2"
+          className="relative w-full overflow-hidden select-none my-auto py-2 touch-pan-y"
         >
           {/* Horizontal Track Container: minimal gap (gap-2 to gap-3) */}
           <div
             ref={trackRef}
-            className="flex gap-2 sm:gap-2.5 lg:gap-3 items-end pl-4 sm:pl-8 lg:pl-12 pr-4 sm:pr-6 lg:pr-8 w-max overflow-x-auto lg:overflow-visible no-scrollbar pb-3 pt-2"
+            className="flex gap-2 sm:gap-2.5 lg:gap-3 items-end pl-4 sm:pl-8 lg:pl-12 pr-4 sm:pr-6 lg:pr-8 w-max no-scrollbar pb-3 pt-2"
           >
             {PANORAMIC_ITEMS.map((item, index) => (
               <Link
@@ -550,7 +552,7 @@ export const WovenToBeRemembered: React.FC = () => {
             className="inline-flex items-center gap-2 text-[11px] font-nav uppercase tracking-[0.2em] font-semibold text-monarch-maroon hover:text-monarch-maroon-dark pb-0.5 border-b border-monarch-maroon/30 transition-all group"
           >
             <span>Discover The Complete Royal Archives</span>
-            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1.5 transition-transform" />
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
       </div>
