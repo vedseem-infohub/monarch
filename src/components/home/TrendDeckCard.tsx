@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { motion, useMotionValue, useTransform, Variants } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
 import { TrendDeckProduct } from '@/data/latestTrends';
 
@@ -16,17 +16,19 @@ interface TrendDeckCardProps {
 
 const cardVariants: Variants = {
   enter: (dir: number) => ({
-    x: dir >= 0 ? 460 : -460,
-    y: 12,
-    rotate: dir >= 0 ? 16 : -16,
-    opacity: 0,
-    scale: 0.93,
+    // Next card emerges solid and crisp from underneath deck layer
+    // Prev card slides in gently from the side
+    x: dir >= 0 ? 0 : -180,
+    y: dir >= 0 ? 14 : -8,
+    rotate: dir >= 0 ? -2.8 : -8,
+    scale: dir >= 0 ? 0.94 : 0.96,
+    opacity: 1, // NO FADING: 100% solid, crisp silk card
+    zIndex: 20,
     transition: {
-      x: { type: 'spring' as const, stiffness: 280, damping: 26 },
-      y: { type: 'spring' as const, stiffness: 280, damping: 26 },
-      rotate: { type: 'spring' as const, stiffness: 280, damping: 26 },
-      scale: { duration: 0.4, ease: [0.16, 1, 0.3, 1] },
-      opacity: { duration: 0.35, ease: 'easeOut' },
+      type: 'spring' as const,
+      stiffness: 280,
+      damping: 26,
+      mass: 0.8,
     },
   }),
   center: {
@@ -37,26 +39,27 @@ const cardVariants: Variants = {
     opacity: 1,
     scale: 1,
     transition: {
-      x: { type: 'spring' as const, stiffness: 280, damping: 26 },
-      y: { type: 'spring' as const, stiffness: 280, damping: 26 },
-      rotate: { type: 'spring' as const, stiffness: 280, damping: 26 },
-      scale: { duration: 0.4, ease: [0.16, 1, 0.3, 1] },
-      opacity: { duration: 0.35 },
+      type: 'spring' as const,
+      stiffness: 280,
+      damping: 26,
+      mass: 0.8,
     },
   },
   exit: (dir: number) => ({
-    zIndex: 30, // Remains above incoming card during sweep
-    x: dir >= 0 ? -520 : 520, // Full clean clearance
-    y: -30, // Tactile upward wrist deal flick
-    rotate: dir >= 0 ? -22 : 22, // Natural playing card spin
-    opacity: 0,
-    scale: 0.95,
+    // Physical playing card deck deal & cycle ("taas ke paate"):
+    // 1. Compact travel (±180px, stays neatly inside column, never travels too far)
+    // 2. Zero fading: opacity stays 1 throughout (no transparent ghostly fade)
+    // 3. Drops zIndex behind the deck and tucks into the bottom stack
+    x: [0, dir >= 0 ? -180 : 180, 0],
+    y: [0, -10, 26],
+    rotate: [0, dir >= 0 ? -10 : 10, dir >= 0 ? 2.8 : -2.8],
+    scale: [1, 0.96, 0.88],
+    zIndex: [25, 25, 2],
+    opacity: 1, // Completely solid, NO FADING!
     transition: {
-      x: { duration: 0.48, ease: [0.32, 0.72, 0, 1] },
-      y: { duration: 0.48, ease: [0.32, 0.72, 0, 1] },
-      rotate: { duration: 0.48, ease: [0.32, 0.72, 0, 1] },
-      scale: { duration: 0.44, ease: 'easeOut' },
-      opacity: { duration: 0.48, ease: [0.55, 0, 1, 0.45] }, // Sustains opacity throughout flick
+      duration: 0.5,
+      ease: [0.22, 1, 0.36, 1],
+      times: [0, 0.44, 1],
     },
   }),
 };
@@ -68,10 +71,6 @@ export const TrendDeckCard: React.FC<TrendDeckCardProps> = ({
   onSwipeNext,
   onSwipePrev,
 }) => {
-  // Motion value for responsive interactive dragging
-  const x = useMotionValue(0);
-  const dragRotate = useTransform(x, [-250, 250], [-18, 18]);
-
   const handleDragEnd = (
     _event: MouseEvent | TouchEvent | PointerEvent,
     info: { offset: { x: number; y: number }; velocity: { x: number; y: number } }
@@ -93,13 +92,10 @@ export const TrendDeckCard: React.FC<TrendDeckCardProps> = ({
       initial="enter"
       animate="center"
       exit="exit"
-      style={{
-        x,
-        rotate: dragRotate,
-      }}
       drag="x"
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.65}
+      whileDrag={{ scale: 0.98 }}
       onDragEnd={handleDragEnd}
       onClick={onSwipeNext}
       className="absolute inset-0 select-none rounded-3xl overflow-hidden shadow-2xl bg-black cursor-grab active:cursor-grabbing hover:shadow-black/35 z-20"
