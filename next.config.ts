@@ -1,4 +1,7 @@
 import type { NextConfig } from "next";
+import path from "path";
+
+const rootDir = __dirname.includes('.worktrees') ? path.resolve(__dirname, '../..') : __dirname;
 
 const nextConfig: NextConfig = {
   experimental: {
@@ -6,6 +9,7 @@ const nextConfig: NextConfig = {
   },
   transpilePackages: ['three', '@react-three/fiber', '@react-three/drei'],
   turbopack: {
+    root: rootDir,
     rules: {
       "*.css": {
         loaders: ["@tailwindcss/turbopack"],
