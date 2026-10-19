@@ -1,9 +1,65 @@
 import { Product } from '@/types';
 
-/**
- * Backend Data Model: Daily Trend Spotlights
- * Simulated backend dataset returned from /api/trends/daily
+/*
+ * ============================================================================
+ * BACKEND API INTEGRATION GUIDE: TREND OF THE DAY
+ * ============================================================================
+ * Endpoint: GET /api/trends/daily
+ * Description: Fetches curated high-velocity trending ensembles for the day.
+ *
+ * Expected Request:
+ *   GET /api/trends/daily?limit=10&status=active
+ *   Headers: {
+ *     'Content-Type': 'application/json',
+ *     'Authorization': 'Bearer <token>' (if applicable)
+ *   }
+ *
+ * Expected Backend Response JSON Schema:
+ *   {
+ *     "success": true,
+ *     "timestamp": "2026-10-19T10:00:00Z",
+ *     "count": 5,
+ *     "data": [
+ *       {
+ *         "id": "trend-001",
+ *         "name": "Aarunya Emerald Kanjivaram",
+ *         "slug": "aarunya-emerald-kanjivaram",
+ *         "tagline": "Pure Silk · Kanjivaram Weave",
+ *         "description": "...",
+ *         "category": "designer-sarees",
+ *         "categoryName": "Pure Silk · Kanjivaram",
+ *         "price": 18900,
+ *         "originalPrice": 22500,
+ *         "images": ["/images/..."],
+ *         "colors": [{ "name": "Emerald Gold", "hex": "#1C3A27" }],
+ *         "sizes": ["S", "M", "L", "XL"],
+ *         "rating": 4.8,
+ *         "reviewsCount": 42,
+ *         "inStock": true
+ *       }
+ *     ]
+ *   }
+ *
+ * Sample Next.js / React Server Component Fetch Implementation:
+ *
+ * export async function getDailyTrendsFromBackend(): Promise<Product[]> {
+ *   try {
+ *     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.monarch.luxury';
+ *     const res = await fetch(`${apiUrl}/api/trends/daily`, {
+ *       headers: { 'Accept': 'application/json' },
+ *       next: { revalidate: 3600 } // Cache for 1 hour with ISR
+ *     });
+ *     if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+ *     const json = await res.json();
+ *     return json.data;
+ *   } catch (error) {
+ *     console.warn('Backend API unavailable, using fallback mock data:', error);
+ *     return TREND_PRODUCTS;
+ *   }
+ * }
+ * ============================================================================
  */
+
 export const TREND_PRODUCTS: Product[] = [
   {
     id: 'trend-001',

@@ -153,7 +153,10 @@ export const ChangeYourLook: React.FC = () => {
           {/* ======================================================== */}
           {/* COLUMN 2: CENTER FASHION MODEL SPOTLIGHT (Col 5)         */}
           {/* ======================================================== */}
-          <div className="lg:col-span-5 relative w-full aspect-[3/4.5] sm:aspect-[3/4.6] rounded-3xl overflow-hidden bg-monarch-ivory border border-monarch-gold/30 shadow-2xl flex items-center justify-center">
+          <div
+            style={{ aspectRatio: '3 / 4.4' }}
+            className="lg:col-span-5 relative w-full h-[520px] sm:h-[580px] lg:h-[640px] min-h-[480px] rounded-3xl overflow-hidden bg-monarch-ivory border border-monarch-gold/30 shadow-2xl flex items-center justify-center"
+          >
             {/* Main Couture Model Saree Image */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img

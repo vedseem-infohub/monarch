@@ -2,7 +2,7 @@
 
 import React, { useRef } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { AUTUMN_WINTER_DATA } from '@/data/autumnWinter';
 import { ArchedCard } from './ArchedCard';
 import gsap from 'gsap';
@@ -17,24 +17,39 @@ export const AutumnWinter2026: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const cardsContainerRef = useRef<HTMLDivElement>(null);
 
-  // Scoped GSAP entrance animations matching project guidelines
+  // Safe GSAP entrance animation with guaranteed visibility fallback
   useGSAP(
     () => {
       const cards = cardsContainerRef.current?.querySelectorAll('.arched-card');
       if (!cards || cards.length === 0) return;
 
-      gsap.from(cards, {
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top 80%',
-          toggleActions: 'play none none none',
-        },
-        y: 40,
-        opacity: 0,
-        duration: 0.9,
-        stagger: 0.15,
-        ease: 'power3.out',
-      });
+      // Ensure cards are never permanently invisible
+      const ctx = gsap.fromTo(
+        cards,
+        { opacity: 0.35, y: 30 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.85,
+          stagger: 0.12,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: 'top 85%',
+            toggleActions: 'play none none none',
+          },
+        }
+      );
+
+      // Force recalculation of scroll triggers after other page elements mount
+      const timer = setTimeout(() => {
+        ScrollTrigger.refresh();
+      }, 500);
+
+      return () => {
+        clearTimeout(timer);
+        ctx.revert();
+      };
     },
     { scope: sectionRef }
   );
@@ -48,13 +63,11 @@ export const AutumnWinter2026: React.FC = () => {
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header: Matching Screenshot 1 */}
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 sm:gap-8 mb-10 sm:mb-14">
-          {/* Left: Season Tag & Display Title */}
-          <div className="max-w-xl">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-monarch-gold" />
-              <span className="text-[10px] sm:text-[11px] font-nav uppercase tracking-[0.28em] text-monarch-charcoal/70 font-semibold">
-                {AUTUMN_WINTER_DATA.tag}
-              </span>
+          {/* Left: Stacked Tag & Display Title (Matching Screenshot 1 exactly) */}
+          <div className="flex items-start gap-4 sm:gap-6">
+            <div className="text-[10px] sm:text-[11px] font-nav uppercase tracking-[0.25em] text-monarch-charcoal/60 font-semibold leading-tight pt-1.5 sm:pt-2 select-none shrink-0 border-l-2 border-monarch-gold/60 pl-2.5">
+              <div>SEASON</div>
+              <div>FORECAST</div>
             </div>
 
             <h2 className="font-serif text-3xl sm:text-5xl lg:text-[56px] font-normal tracking-tight text-monarch-charcoal leading-[1.08]">
@@ -87,7 +100,7 @@ export const AutumnWinter2026: React.FC = () => {
         {/* 3 Arched Cards Grid: Matching Screenshot 1 Cathedral Windows */}
         <div
           ref={cardsContainerRef}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-7 lg:gap-8"
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-7 lg:gap-8 w-full min-h-[480px]"
         >
           {AUTUMN_WINTER_DATA.campaigns.map((item, index) => (
             <ArchedCard key={item.id} item={item} priority={index === 0} />
@@ -97,3 +110,4 @@ export const AutumnWinter2026: React.FC = () => {
     </section>
   );
 };
+

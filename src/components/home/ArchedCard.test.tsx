@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { AUTUMN_WINTER_DATA } from '../../data/autumnWinter';
+import { AUTUMN_WINTER_DATA } from '@/data/autumnWinter';
 
 describe('ArchedCard Component & Data Validation', () => {
   it('validates autumn winter campaign dataset structure', () => {

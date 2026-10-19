@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { CHANGE_LOOK_STYLES } from '../../data/changeLook';
+import { CHANGE_LOOK_STYLES } from '@/data/changeLook';
 
 describe('ChangeYourLook Section Component & Integration', () => {
   it('contains valid lookbook items with complete metadata', () => {

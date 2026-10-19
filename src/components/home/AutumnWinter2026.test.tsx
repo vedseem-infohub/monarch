@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { AUTUMN_WINTER_DATA } from '../../data/autumnWinter';
+import { AUTUMN_WINTER_DATA } from '@/data/autumnWinter';
 
 describe('AutumnWinter2026 Section Data & Component Specs', () => {
   it('loads Autumn-Winter 2026 forecast metadata correctly', () => {
