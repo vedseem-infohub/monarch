@@ -8,6 +8,7 @@ import { BestSellers } from '@/components/home/BestSellers';
 import { BridalCollection } from '@/components/home/BridalCollection';
 import { TrendOfTheDay } from '@/components/home/TrendOfTheDay';
 import { SeasonalSpecial } from '@/components/home/SeasonalSpecial';
+import { AutumnWinter2026 } from '@/components/home/AutumnWinter2026';
 import { ChangeYourLook } from '@/components/home/ChangeYourLook';
 import { WorthYourAttention } from '@/components/home/WorthYourAttention';
 import { LatestTrends } from '@/components/home/LatestTrends';
@@ -44,7 +45,10 @@ export default function HomePage() {
       {/* SECTION 6: Seasonal Special */}
       <SeasonalSpecial />
 
-      {/* SECTION 7: Change Your Look */}
+      {/* SECTION 7: Autumn–Winter 2026 Season Forecast (Matching Screenshot 1) */}
+      <AutumnWinter2026 />
+
+      {/* SECTION 8: Interactive Studio: Change Your Look (Matching Screenshot 2) */}
       <ChangeYourLook />
 
       {/* SECTION 8: Worth Your Attention */}
