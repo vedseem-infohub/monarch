@@ -22,6 +22,8 @@ interface CollectionBrowserProps {
   collectionDescription?: string;
   activeCategorySlug?: string;
   genderFilter?: 'women' | 'men';
+  initialOccasion?: string;
+  initialFabric?: string;
 }
 
 export const CollectionBrowser: React.FC<CollectionBrowserProps> = ({
@@ -30,6 +32,8 @@ export const CollectionBrowser: React.FC<CollectionBrowserProps> = ({
   collectionDescription,
   activeCategorySlug,
   genderFilter,
+  initialOccasion,
+  initialFabric,
 }) => {
   // Filters State
   const [selectedCategory, setSelectedCategory] = useState<string>(activeCategorySlug || 'all');
@@ -37,11 +41,36 @@ export const CollectionBrowser: React.FC<CollectionBrowserProps> = ({
   const [priceMax, setPriceMax] = useState<number>(350000);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
-  const [selectedOccasions, setSelectedOccasions] = useState<string[]>([]);
-  const [selectedFabrics, setSelectedFabrics] = useState<string[]>([]);
+  const [selectedOccasions, setSelectedOccasions] = useState<string[]>(
+    initialOccasion ? [initialOccasion] : []
+  );
+  const [selectedFabrics, setSelectedFabrics] = useState<string[]>(
+    initialFabric ? [initialFabric] : []
+  );
   const [sortBy, setSortBy] = useState<'featured' | 'newest' | 'price-asc' | 'price-desc' | 'rating'>('featured');
   const [gridCols, setGridCols] = useState<3 | 4>(3);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+
+  // Sync prop updates if navigation route or search parameters change
+  React.useEffect(() => {
+    if (activeCategorySlug) setSelectedCategory(activeCategorySlug);
+  }, [activeCategorySlug]);
+
+  React.useEffect(() => {
+    if (genderFilter) setSelectedGender(genderFilter);
+  }, [genderFilter]);
+
+  React.useEffect(() => {
+    if (initialOccasion) {
+      setSelectedOccasions([initialOccasion]);
+    }
+  }, [initialOccasion]);
+
+  React.useEffect(() => {
+    if (initialFabric) {
+      setSelectedFabrics([initialFabric]);
+    }
+  }, [initialFabric]);
 
   // Extract available filter options dynamically from initial products
   const availableSizes = ['XS', 'S', 'M', 'L', 'XL', 'Custom Bespoke'];
@@ -78,20 +107,26 @@ export const CollectionBrowser: React.FC<CollectionBrowserProps> = ({
   };
 
   const toggleOccasion = (occ: string) => {
-    setSelectedOccasions((prev) =>
-      prev.includes(occ) ? prev.filter((o) => o !== occ) : [...prev, occ]
-    );
+    setSelectedOccasions((prev) => {
+      const exists = prev.some((o) => o.toLowerCase() === occ.toLowerCase());
+      return exists
+        ? prev.filter((o) => o.toLowerCase() !== occ.toLowerCase())
+        : [...prev, occ];
+    });
   };
 
   const toggleFabric = (fabric: string) => {
-    setSelectedFabrics((prev) =>
-      prev.includes(fabric) ? prev.filter((f) => f !== fabric) : [...prev, fabric]
-    );
+    setSelectedFabrics((prev) => {
+      const exists = prev.some((f) => f.toLowerCase() === fabric.toLowerCase());
+      return exists
+        ? prev.filter((f) => f.toLowerCase() !== fabric.toLowerCase())
+        : [...prev, fabric];
+    });
   };
 
   const clearAllFilters = () => {
-    setSelectedCategory(activeCategorySlug || 'all');
-    setSelectedGender(genderFilter || 'all');
+    setSelectedCategory('all');
+    setSelectedGender('all');
     setPriceMax(350000);
     setSelectedSizes([]);
     setSelectedColors([]);
@@ -109,9 +144,29 @@ export const CollectionBrowser: React.FC<CollectionBrowserProps> = ({
       result = result.filter((p) => p.gender === selectedGender);
     }
 
-    // Category filter
+    // Category filter (supports canonical categories and silk moods)
     if (selectedCategory !== 'all') {
-      result = result.filter((p) => p.category === selectedCategory);
+      const isSilkCategory = [
+        'kanjivaram-silk',
+        'chanderi-silk',
+        'tussar-silk',
+        'paithani-silk',
+        'banarasi-silk',
+        'organza-tissue',
+      ].includes(selectedCategory);
+
+      if (isSilkCategory) {
+        const silkKey = selectedCategory.replace('-silk', '').replace('-tissue', '');
+        result = result.filter(
+          (p) =>
+            p.category === selectedCategory ||
+            p.fabric.toLowerCase().includes(silkKey) ||
+            p.name.toLowerCase().includes(silkKey) ||
+            p.tagline.toLowerCase().includes(silkKey)
+        );
+      } else {
+        result = result.filter((p) => p.category === selectedCategory);
+      }
     }
 
     // Price range
@@ -124,24 +179,37 @@ export const CollectionBrowser: React.FC<CollectionBrowserProps> = ({
       );
     }
 
-    // Colors
+    // Colors (case-insensitive partial match)
     if (selectedColors.length > 0) {
       result = result.filter((p) =>
-        p.colors.some((c) => selectedColors.includes(c.name))
+        p.colors.some((c) =>
+          selectedColors.some((sc) =>
+            c.name.toLowerCase().includes(sc.toLowerCase()) ||
+            sc.toLowerCase().includes(c.name.toLowerCase())
+          )
+        )
       );
     }
 
-    // Occasions
+    // Occasions (case-insensitive flexible match)
     if (selectedOccasions.length > 0) {
       result = result.filter((p) =>
-        p.occasion.some((o) => selectedOccasions.includes(o))
+        p.occasion.some((o) =>
+          selectedOccasions.some((so) =>
+            o.toLowerCase().includes(so.toLowerCase()) ||
+            so.toLowerCase().includes(o.toLowerCase())
+          )
+        )
       );
     }
 
-    // Fabrics
+    // Fabrics (case-insensitive flexible match)
     if (selectedFabrics.length > 0) {
       result = result.filter((p) =>
-        selectedFabrics.some((f) => p.fabric.toLowerCase().includes(f.toLowerCase()))
+        selectedFabrics.some((f) =>
+          p.fabric.toLowerCase().includes(f.toLowerCase()) ||
+          f.toLowerCase().includes(p.fabric.toLowerCase())
+        )
       );
     }
 
@@ -170,8 +238,8 @@ export const CollectionBrowser: React.FC<CollectionBrowserProps> = ({
   ]);
 
   const activeFiltersCount =
-    (selectedCategory !== 'all' && selectedCategory !== activeCategorySlug ? 1 : 0) +
-    (selectedGender !== 'all' && selectedGender !== genderFilter ? 1 : 0) +
+    (selectedCategory !== 'all' ? 1 : 0) +
+    (selectedGender !== 'all' ? 1 : 0) +
     (priceMax < 350000 ? 1 : 0) +
     selectedSizes.length +
     selectedColors.length +

@@ -1,29 +1,35 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-describe('CurvedAddToCartButton Exact Contour Architecture', () => {
-  it('validates closed organic silhouette coordinates match reference measurements', () => {
-    // Exact contour path
-    const pathD = `M 41.4 147.6
-             C 63.0 99.0, 126.0 43.2, 216.0 16.2
-             C 244.8 7.2, 284.4 9.0, 302.4 32.4
-             C 313.2 48.6, 298.8 66.6, 273.6 73.8
-             C 216.0 93.6, 135.0 133.2, 81.0 169.2
-             C 59.4 174.6, 34.2 165.6, 41.4 147.6 Z`;
+describe('CurvedAddToCartButton Unified Token Architecture', () => {
+  it('guarantees the white action disc and arrow form a single unified composite part', () => {
+    const cx = 268;
+    const cy = 38;
+    const r = 19;
 
-    assert.ok(pathD.includes('M 41.4 147.6'), 'Starts at measured bottom-left cap');
-    assert.ok(pathD.includes('302.4 32.4'), 'Reaches measured top-right terminus');
-    assert.ok(pathD.endsWith('Z'), 'Path must be a closed silhouette');
+    // Arrow stem endpoints
+    const arrowStartX = 259;
+    const arrowEndX = 277;
+    const arrowMidY = 38;
+
+    // Verify arrow is perfectly centered inside the circle
+    const arrowCenter = (arrowStartX + arrowEndX) / 2;
+    assert.strictEqual(arrowCenter, cx, 'Arrow horizontal center must match circle cx');
+    assert.strictEqual(arrowMidY, cy, 'Arrow vertical line must match circle cy');
+
+    // Arrow must fit strictly inside the circle with margin
+    assert.ok(arrowStartX > cx - r, 'Arrow start is inside circle');
+    assert.ok(arrowEndX < cx + r, 'Arrow end is inside circle');
   });
 
-  it('verifies circular token alignment inside top-right apex', () => {
-    const circleCx = 273.6;
-    const circleCy = 34.2;
-    const circleR = 23;
+  it('guarantees the composite token is strictly contained inside the maroon silhouette', () => {
+    const cx = 268;
+    const cy = 38;
+    const r = 19;
 
-    // Must be positioned within the top-right envelope (x: 245-302, y: 10-60)
-    assert.ok(circleCx > 245 && circleCx < 302, 'Circle center X inside top-right lobe');
-    assert.ok(circleCy > 10 && circleCy < 60, 'Circle center Y inside top-right lobe');
-    assert.strictEqual(circleR, 23, 'Circle radius matches scaled measurement');
+    assert.ok(cy - r > 15, 'Token top has maroon border above it');
+    assert.ok(cy + r < 75, 'Token bottom has maroon border below it');
+    assert.ok(cx + r < 312, 'Token right has maroon border to the right of it');
+    assert.ok(cx - r > 240, 'Token left is preceded by maroon body');
   });
 });

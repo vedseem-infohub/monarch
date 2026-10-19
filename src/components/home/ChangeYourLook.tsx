@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
+import Link from 'next/link';
 import { CHANGE_LOOK_STYLES, LookStyleItem } from '@/data/changeLook';
 import { LookThumbnailCard } from './LookThumbnailCard';
 import { CurvedAddToCartButton } from './CurvedAddToCartButton';
@@ -17,6 +18,7 @@ import {
   ShieldCheck,
   Award,
   Truck,
+  ArrowRight,
 } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -241,6 +243,15 @@ export const ChangeYourLook: React.FC = () => {
                 New Drop 2026
               </span>
             </div>
+
+            {/* Bottom-Right: "View Product →" */}
+            <Link
+              href={`/product/${currentLook.slug || currentLook.id}`}
+              className="absolute bottom-6 right-6 z-10 select-none inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black/65 hover:bg-black/90 text-white text-[11px] font-nav uppercase tracking-wider backdrop-blur-md border border-white/20 transition-all hover:scale-105"
+            >
+              <span>View Details</span>
+              <ArrowRight className="w-3 h-3" />
+            </Link>
           </div>
 
           {/* ======================================================== */}
@@ -266,9 +277,14 @@ export const ChangeYourLook: React.FC = () => {
 
             {/* Display Title & Price (Matches Screenshot) */}
             <div className="look-text-reveal space-y-1.5">
-              <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] font-normal tracking-tight text-[#1E1714] leading-[1.1] uppercase">
-                {currentLook.name}
-              </h2>
+              <Link
+                href={`/product/${currentLook.slug || currentLook.id}`}
+                className="group/title block"
+              >
+                <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] font-normal tracking-tight text-[#1E1714] group-hover/title:text-monarch-maroon transition-colors leading-[1.1] uppercase">
+                  {currentLook.name}
+                </h2>
+              </Link>
               <div className="flex items-baseline gap-2.5">
                 <span className="font-serif text-2xl sm:text-3xl font-bold text-[#1E1714]">
                   {currentLook.formattedPrice}

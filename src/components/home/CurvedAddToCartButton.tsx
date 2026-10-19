@@ -1,6 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 
 export interface CurvedAddToCartButtonProps {
   onClick: () => void;
@@ -13,7 +15,8 @@ export interface CurvedAddToCartButtonProps {
  * CurvedAddToCartButton
  *
  * Exact organic curved maroon/ruby swoosh button with arched text and
- * circular arrow action badge on the right, matching the reference editorial screenshot.
+ * an animated inset white circular action token containing the directional arrow.
+ * Includes silky-smooth idle nudge, hover expansion, and tactile click rebound using scoped useGSAP.
  */
 export const CurvedAddToCartButton: React.FC<CurvedAddToCartButtonProps> = ({
   onClick,
@@ -21,17 +24,84 @@ export const CurvedAddToCartButton: React.FC<CurvedAddToCartButtonProps> = ({
   disabled = false,
   className = '',
 }) => {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const tokenGroupRef = useRef<SVGGElement>(null);
+  const arrowPathRef = useRef<SVGPathElement>(null);
+
+  // Scoped GSAP idle micro-nudge animation
+  useGSAP(
+    () => {
+      if (!arrowPathRef.current || !tokenGroupRef.current) return;
+
+      const idleTimeline = gsap.timeline({ repeat: -1, repeatDelay: 2.4 });
+      idleTimeline
+        .to(tokenGroupRef.current, { x: 2, duration: 0.28, ease: 'power2.out' }, '+=0.2')
+        .to(arrowPathRef.current, { x: 2.5, duration: 0.28, ease: 'power2.out' }, '<')
+        .to(tokenGroupRef.current, { x: 0, duration: 0.35, ease: 'power2.inOut' })
+        .to(arrowPathRef.current, { x: 0, duration: 0.35, ease: 'power2.inOut' }, '<');
+    },
+    { scope: buttonRef }
+  );
+
+  // Smooth hover expansion & forward glide
+  const handleMouseEnter = () => {
+    if (!tokenGroupRef.current || !arrowPathRef.current) return;
+    gsap.to(tokenGroupRef.current, {
+      scale: 1.08,
+      x: 3.5,
+      duration: 0.3,
+      ease: 'back.out(1.7)',
+    });
+    gsap.to(arrowPathRef.current, {
+      x: 3,
+      duration: 0.26,
+      ease: 'power2.out',
+    });
+  };
+
+  // Return to resting position on leave
+  const handleMouseLeave = () => {
+    if (!tokenGroupRef.current || !arrowPathRef.current) return;
+    gsap.to(tokenGroupRef.current, {
+      scale: 1,
+      x: 0,
+      duration: 0.28,
+      ease: 'power2.out',
+    });
+    gsap.to(arrowPathRef.current, {
+      x: 0,
+      duration: 0.24,
+      ease: 'power2.out',
+    });
+  };
+
+  // Tactile click rebound
+  const handleClick = () => {
+    if (disabled) return;
+    if (tokenGroupRef.current) {
+      gsap.fromTo(
+        tokenGroupRef.current,
+        { scale: 0.9 },
+        { scale: 1.06, duration: 0.32, ease: 'elastic.out(1.2, 0.4)' }
+      );
+    }
+    onClick();
+  };
+
   return (
     <button
+      ref={buttonRef}
       type="button"
-      onClick={onClick}
+      onClick={handleClick}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       disabled={disabled}
       aria-label={label}
       className={`group relative inline-flex items-center justify-center p-0 bg-transparent border-0 outline-none cursor-pointer select-none transition-all duration-300 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
     >
       <svg
-        viewBox="0 0 320 185"
-        className="w-[235px] sm:w-[255px] md:w-[270px] h-auto overflow-visible transition-transform duration-300 group-hover:scale-[1.025] group-hover:-translate-y-0.5"
+        viewBox="0 0 326 185"
+        className="w-[235px] sm:w-[255px] md:w-[270px] h-auto overflow-visible transition-transform duration-300 group-hover:scale-[1.02] group-hover:-translate-y-0.5"
         style={{
           filter: 'drop-shadow(0 14px 24px rgba(160, 18, 45, 0.45))',
         }}
@@ -40,10 +110,10 @@ export const CurvedAddToCartButton: React.FC<CurvedAddToCartButtonProps> = ({
           {/* Smooth upward arch curve for text path */}
           <path
             id="cart-text-arch"
-            d="M 58 144 C 108 94, 172 58, 238 42"
+            d="M 58 142 C 106 94, 168 56, 230 42"
           />
 
-          {/* Deep regal ruby maroon gradient matching reference image */}
+          {/* Deep regal ruby maroon gradient matching reference screenshot */}
           <linearGradient id="exact-maroon-grad" x1="0%" y1="100%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#58141F" />
             <stop offset="40%" stopColor="#701124" />
@@ -51,14 +121,15 @@ export const CurvedAddToCartButton: React.FC<CurvedAddToCartButtonProps> = ({
           </linearGradient>
         </defs>
 
-        {/* Closed organic curved silhouette traced directly from reference */}
+        {/* Closed organic curved silhouette with generous cushion enclosing the white token */}
         <path
-          d="M 41.4 147.6
-             C 63.0 99.0, 126.0 43.2, 216.0 16.2
-             C 244.8 7.2, 284.4 9.0, 302.4 32.4
-             C 313.2 48.6, 298.8 66.6, 273.6 73.8
-             C 216.0 93.6, 135.0 133.2, 81.0 169.2
-             C 59.4 174.6, 34.2 165.6, 41.4 147.6 Z"
+          d="M 42 146
+             C 64 98, 126 44, 216 18
+             C 246 10, 276 10, 298 20
+             C 314 28, 316 48, 304 62
+             C 292 74, 270 78, 246 84
+             C 188 98, 128 136, 78 172
+             C 56 178, 34 168, 42 146 Z"
           fill="url(#exact-maroon-grad)"
           className="transition-colors duration-300 group-hover:brightness-110"
         />
@@ -68,7 +139,7 @@ export const CurvedAddToCartButton: React.FC<CurvedAddToCartButtonProps> = ({
           fill="#FFFFFF"
           fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
           fontWeight="900"
-          fontSize="17"
+          fontSize="16.5"
           letterSpacing="0.1em"
           className="pointer-events-none select-none uppercase tracking-[0.1em]"
         >
@@ -77,24 +148,26 @@ export const CurvedAddToCartButton: React.FC<CurvedAddToCartButtonProps> = ({
           </textPath>
         </text>
 
-        {/* Circular white action badge on right end */}
-        <circle
-          cx="273.6"
-          cy="34.2"
-          r="23"
-          fill="#FFFFFF"
-          className="transition-transform duration-300 group-hover:scale-105"
-        />
-
-        {/* Clean directional arrow inside the circle */}
+        {/* Animated White Action Token: Circle + Arrow unified as ONE single part with GSAP animation */}
         <g
-          className="transition-transform duration-300 group-hover:translate-x-1"
-          style={{ transformOrigin: '273.6px 34.2px' }}
+          ref={tokenGroupRef}
+          style={{ transformOrigin: '268px 38px' }}
         >
+          {/* White disc badge - 100% nested inside the maroon body */}
+          <circle
+            cx="268"
+            cy="38"
+            r="19"
+            fill="#FFFFFF"
+            className="shadow-sm"
+          />
+
+          {/* Directional arrow inside the white disc with animation ref */}
           <path
-            d="M 264.5 34.2 L 282.5 34.2 M 276.5 28.2 L 282.5 34.2 L 276.5 40.2"
+            ref={arrowPathRef}
+            d="M 259 38 L 277 38 M 271 32 L 277 38 L 271 44"
             stroke="#1E1714"
-            strokeWidth="3.2"
+            strokeWidth="2.8"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
