@@ -16,18 +16,18 @@ interface TrendDeckCardProps {
 
 const cardVariants: Variants = {
   enter: (dir: number) => ({
-    // Next card emerges solid and crisp from underneath deck layer
-    // Prev card slides in gently from the side
-    x: dir >= 0 ? 0 : -180,
-    y: dir >= 0 ? 14 : -8,
-    rotate: dir >= 0 ? -2.8 : -8,
+    // If navigating forward, next card emerges from the underneath stack
+    // If navigating backward, previous card slides in gently from the side
+    x: dir >= 0 ? 0 : -200,
+    y: dir >= 0 ? 14 : -10,
+    rotate: dir >= 0 ? -2.8 : -10,
     scale: dir >= 0 ? 0.94 : 0.96,
-    opacity: 1, // NO FADING: 100% solid, crisp silk card
+    opacity: dir >= 0 ? 0.9 : 0,
     zIndex: 20,
     transition: {
       type: 'spring' as const,
-      stiffness: 280,
-      damping: 26,
+      stiffness: 260,
+      damping: 24,
       mass: 0.8,
     },
   }),
@@ -40,26 +40,28 @@ const cardVariants: Variants = {
     scale: 1,
     transition: {
       type: 'spring' as const,
-      stiffness: 280,
-      damping: 26,
+      stiffness: 260,
+      damping: 24,
       mass: 0.8,
     },
   },
   exit: (dir: number) => ({
-    // Physical playing card deck deal & cycle ("taas ke paate"):
-    // 1. Compact travel (±180px, stays neatly inside column, never travels too far)
-    // 2. Zero fading: opacity stays 1 throughout (no transparent ghostly fade)
-    // 3. Drops zIndex behind the deck and tucks into the bottom stack
-    x: [0, dir >= 0 ? -180 : 180, 0],
-    y: [0, -10, 26],
-    rotate: [0, dir >= 0 ? -10 : 10, dir >= 0 ? 2.8 : -2.8],
-    scale: [1, 0.96, 0.88],
-    zIndex: [25, 25, 2],
-    opacity: 1, // Completely solid, NO FADING!
+    // Compact, elegant card deal flick:
+    // 1. Contained distance (±220px, never flies across adjacent columns)
+    // 2. Tactile upward wrist tilt (y: -18, rotate: ±12°)
+    // 3. Faded then gone: holds visibility during initial peel, then fades out smoothly to 0
+    zIndex: 35,
+    x: dir >= 0 ? -220 : 220,
+    y: -18,
+    rotate: dir >= 0 ? -12 : 12,
+    scale: 0.96,
+    opacity: [1, 0.85, 0],
     transition: {
-      duration: 0.5,
-      ease: [0.22, 1, 0.36, 1],
-      times: [0, 0.44, 1],
+      x: { duration: 0.44, ease: [0.22, 1, 0.36, 1] },
+      y: { duration: 0.44, ease: [0.22, 1, 0.36, 1] },
+      rotate: { duration: 0.44, ease: [0.22, 1, 0.36, 1] },
+      scale: { duration: 0.4, ease: 'easeOut' },
+      opacity: { duration: 0.44, times: [0, 0.35, 1], ease: 'easeInOut' },
     },
   }),
 };
