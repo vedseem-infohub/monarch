@@ -20,13 +20,12 @@ export const LookThumbnailCard: React.FC<LookThumbnailCardProps> = ({
     <button
       onClick={onSelect}
       type="button"
-      style={{ aspectRatio: '3 / 4.2' }}
-      className={`group relative w-20 sm:w-24 lg:w-28 h-28 sm:h-32 lg:h-36 rounded-xl overflow-hidden border-2 transition-all duration-300 text-left shrink-0 cursor-pointer ${
+      className={`group relative w-18 sm:w-20 lg:w-[88px] h-24 sm:h-28 lg:h-32 rounded-xl overflow-hidden transition-all duration-300 text-left shrink-0 cursor-pointer block ${
         isActive
-          ? 'border-monarch-maroon shadow-lg scale-105 ring-2 ring-monarch-gold/60'
-          : 'border-monarch-beige/60 opacity-70 hover:opacity-100 hover:border-monarch-gold hover:scale-102'
+          ? 'border-2 border-pink-400 ring-2 ring-pink-300/80 shadow-lg scale-105'
+          : 'border border-gray-200/80 opacity-70 hover:opacity-100 hover:border-gray-400 hover:scale-102'
       }`}
-      aria-label={`Select ${look.name}`}
+      aria-label={`Select ${look.name} (Look 0${index + 1})`}
     >
       {/* Thumbnail Saree Model Photo */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -38,23 +37,13 @@ export const LookThumbnailCard: React.FC<LookThumbnailCardProps> = ({
         decoding="async"
       />
 
-      {/* Scrim Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent pointer-events-none" />
+      {/* Subtle Bottom Scrim */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
 
-      {/* Active Selection Indicator */}
+      {/* Active Indicator dot */}
       {isActive && (
-        <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-monarch-gold ring-2 ring-black" />
+        <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-pink-400 ring-1 ring-white" />
       )}
-
-      {/* Bottom Look Label */}
-      <div className="absolute bottom-1.5 inset-x-2 pointer-events-none">
-        <span className="text-[9px] font-nav uppercase tracking-widest text-monarch-gold-light block font-semibold">
-          Look 0{index + 1}
-        </span>
-        <span className="text-[10px] font-serif text-white line-clamp-1">
-          {look.colorName}
-        </span>
-      </div>
     </button>
   );
 };

@@ -11,72 +11,7 @@ if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-// Wide Panoramic Fashion Image Ensembles - Matching User Screenshot 2
-const SIGNATURE_ENSEMBLES = [
-  {
-    id: 'monarch-011',
-    title: 'Janki Courtyard Silk',
-    tag: 'Awadhi Karchob Flora',
-    craft: 'Hand-Stretched 3D Dabka',
-    price: '₹ 2,60,000',
-    image: '/images/panoramic/ensemble_utsav.jpg',
-    href: '/product/monarch-011',
-  },
-  {
-    id: 'monarch-012',
-    title: 'Tara Peacock Paithani',
-    tag: 'Ancestral Pitloom Weft',
-    craft: 'Certified Silk Mark Guild',
-    price: '₹ 2,30,000',
-    image: '/images/panoramic/ensemble_vara.jpg',
-    href: '/product/monarch-012',
-  },
-  {
-    id: 'monarch-003',
-    title: 'Aarunya Emerald Kanjivaram',
-    tag: 'Pure Zari Weft',
-    craft: '24K Gold Electroplated Zari',
-    price: '₹ 2,45,000',
-    image: '/images/panoramic/ensemble_aarunya.jpg',
-    href: '/product/monarch-003',
-  },
-  {
-    id: 'monarch-001',
-    title: 'Rukmini Temple Silk',
-    tag: 'Authentic Kashi Kadwa',
-    craft: 'Ancestral Varanasi Pitloom',
-    price: '₹ 2,85,000',
-    image: '/images/panoramic/ensemble_kalyani.jpg',
-    href: '/product/monarch-001',
-  },
-  {
-    id: 'monarch-005',
-    title: 'Saanjh Mystery Banarasi',
-    tag: 'Hand-Hammered Mukaish',
-    craft: 'Pure Micro-Velvet & Gota',
-    price: '₹ 2,15,000',
-    image: '/images/panoramic/ensemble_saanjh.jpg',
-    href: '/product/monarch-005',
-  },
-  {
-    id: 'monarch-007',
-    title: 'Prerna Festive Tissue',
-    tag: 'Metallic Silk Weave',
-    craft: 'Rose-Gold Gossamer Weft',
-    price: '₹ 1,95,000',
-    image: '/images/panoramic/ensemble_prerna.jpg',
-    href: '/product/monarch-007',
-  },
-  {
-    id: 'monarch-008',
-    title: 'Gulabi Ruby Brocade',
-    tag: 'Imperial Shikargah Weft',
-    craft: 'Ancestral Varanasi Weft',
-    price: '₹ 2,75,000',
-    image: '/images/panoramic/ensemble_vara.jpg',
-    href: '/product/monarch-008',
-  },
-];
+import { SIGNATURE_ENSEMBLES } from '@/data/bridal';
 
 export const WovenToBeRemembered: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);

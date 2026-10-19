@@ -30,11 +30,10 @@ export const BridalCard: React.FC<BridalCardProps> = ({
     e.preventDefault();
     e.stopPropagation();
 
-    if (ensemble.product) {
-      const defaultColor = ensemble.product.colors[0]?.name || 'Bridal Edition';
-      const defaultSize = ensemble.product.sizes[0] || 'Standard';
-      addToCart(ensemble.product, defaultColor, defaultSize, 1);
-    }
+    const targetProduct = ensemble.product || ensemble;
+    const defaultColor = targetProduct.colors?.[0]?.name || 'Bridal Edition';
+    const defaultSize = targetProduct.sizes?.[0] || 'Standard';
+    addToCart(targetProduct, defaultColor, defaultSize, 1);
 
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
