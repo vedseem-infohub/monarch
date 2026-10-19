@@ -22,9 +22,9 @@ export const AttentionAccordionCard: React.FC<AttentionAccordionCardProps> = ({
 }) => {
   // STRICTLY 2 STATES:
   // State 1: Not active (dark card) -> Substantial increased width (~220-240px)
-  // State 2: Active (hovered)        -> Expands into full colorful view (~640-700px)
+  // State 2: Active (hovered)        -> Expands into full colorful view (~460-500px)
   const widthClass = isActive
-    ? 'w-[360px] sm:w-[500px] lg:w-[640px] xl:w-[700px] shadow-2xl border-monarch-gold/50 z-20'
+    ? 'w-[280px] sm:w-[380px] lg:w-[460px] xl:w-[500px] shadow-2xl border-monarch-gold/50 z-20'
     : 'w-[140px] sm:w-[180px] lg:w-[220px] xl:w-[240px] border-black/10 shadow-sm hover:border-black/30 z-10';
 
   return (

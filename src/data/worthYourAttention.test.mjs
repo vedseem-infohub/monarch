@@ -4,11 +4,11 @@ import assert from 'node:assert/strict';
 describe('WorthYourAttention Architecture & Geometry (Strictly 2 States)', () => {
   it('validates strictly 2 geometry states: non-active dark card with increased width and expanded active card', () => {
     const notActiveDarkWidth = 220; // approx px when not active (increased width dark card)
-    const expandedWidth = 660; // approx px when hovered (expanded full story)
+    const expandedWidth = 480; // approx px when hovered (moderately expanded, decreased from 700px)
     const minHeight = 500;
 
     assert.ok(notActiveDarkWidth >= 180 && notActiveDarkWidth <= 260, 'State 1 (Not active): dark card has substantial increased width');
-    assert.ok(expandedWidth >= 500 && expandedWidth <= 720, 'State 2 (Hovered): card expands to full rich width');
+    assert.ok(expandedWidth >= 420 && expandedWidth <= 540, 'State 2 (Hovered): card expands cleanly to a balanced decreased width');
     assert.ok(minHeight >= 460, 'Card height ensures vertical editorial presence');
   });
 
