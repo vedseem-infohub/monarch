@@ -34,11 +34,13 @@ export const Header: React.FC = () => {
   }, []);
 
   // Header background logic:
-  // On homepage before scroll: transparent with gold/ivory text
-  // After scroll or on inner pages: solid deep burgundy (#240E14) or ivory with fine gold border
-  const headerBgClass = isScrolled || !isHomePage
-    ? 'bg-[#240E14]/95 backdrop-blur-md border-b border-monarch-gold/30 shadow-lg text-monarch-ivory py-3.5'
-    : 'bg-transparent text-monarch-ivory py-5';
+  // When starting (at top): pure white blur gradient with increased frosted blur, zero border
+  // When scrolling: smoothly transitions to default solid deep burgundy (#240E14) with zero border
+  const isGlossy = !isScrolled;
+
+  const headerBgClass = isGlossy
+    ? 'bg-gradient-to-b from-white/30 via-white/15 to-transparent backdrop-blur-md border-none text-monarch-ivory py-4'
+    : 'bg-[#240E14]/95 backdrop-blur-md border-none shadow-xl text-monarch-ivory py-3.5';
 
   return (
     <>
@@ -128,11 +130,11 @@ export const Header: React.FC = () => {
             <div className="flex flex-col items-center">
               <Link href="/" className="group text-center">
                 <div className="flex items-center justify-center gap-2">
-                  <span className="font-serif text-2xl sm:text-3xl tracking-[0.22em] text-monarch-ivory group-hover:text-monarch-gold-light transition-colors uppercase font-medium">
+                  <span className="font-serif text-2xl sm:text-3xl tracking-[0.22em] text-monarch-ivory group-hover:text-monarch-gold-light transition-colors uppercase font-medium [text-shadow:_0_2px_8px_rgba(0,0,0,0.85)]">
                     MONARCH
                   </span>
                 </div>
-                <span className="hidden sm:block text-[9px] tracking-[0.35em] text-monarch-gold/80 font-nav uppercase -mt-1 group-hover:text-monarch-gold transition-colors">
+                <span className="hidden sm:block text-[10px] tracking-[0.35em] text-monarch-gold-light font-medium font-nav uppercase -mt-0.5 group-hover:text-white transition-colors [text-shadow:_0_1px_5px_rgba(0,0,0,0.95)]">
                   Haute Couture Heritage
                 </span>
               </Link>
@@ -186,11 +188,11 @@ export const Header: React.FC = () => {
         </div>
 
         {/* MegaMenu Dropdown */}
-        <MegaMenu activeMenu={activeMenu} onClose={() => setActiveMenu(null)} />
+        <MegaMenu activeMenu={activeMenu} onClose={() => setActiveMenu(null)} isGlossy={isGlossy} />
       </header>
 
       {/* Full-Screen Search Modal */}
-      <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} isGlossy={isGlossy} />
 
       {/* Cart Drawer */}
       <CartDrawer />
@@ -206,7 +208,13 @@ export const Header: React.FC = () => {
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           />
 
-          <div className="absolute inset-y-0 left-0 w-4/5 max-w-sm bg-[#240E14] text-monarch-ivory border-r border-monarch-gold/30 p-6 flex flex-col justify-between overflow-y-auto">
+          <div
+            className={`absolute inset-y-0 left-0 w-4/5 max-w-sm text-monarch-ivory p-6 flex flex-col justify-between overflow-y-auto transition-colors duration-500 ${
+              isGlossy
+                ? 'bg-gradient-to-b from-black/85 via-black/75 to-black/60 backdrop-blur-md border-none'
+                : 'bg-[#240E14] border-r border-monarch-gold/30'
+            }`}
+          >
             <div>
               <div className="flex items-center justify-between pb-6 border-b border-monarch-gold/25">
                 <Link

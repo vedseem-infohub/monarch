@@ -10,6 +10,7 @@ import { CINEMATIC_STORIES, CinematicStoryProduct } from '@/data/cinematicStorie
 import { StoryFloatingCard } from './StoryFloatingCard';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
+import { useSmoothScroll } from '@/components/common/SmoothScrollProvider';
 import {
   ChevronLeft,
   ChevronRight,
@@ -44,6 +45,9 @@ export const CinematicStories: React.FC = () => {
   const pinWrapperRef = useRef<HTMLDivElement>(null);
   const activeIndexRef = useRef(0);
   const isManualNavRef = useRef(false);
+  const stRef = useRef<ScrollTrigger | null>(null);
+
+  const { lenis } = useSmoothScroll();
 
   // [pageIndex, direction]: 1 = forward (left-to-right), -1 = backward
   const [[page, direction], setPage] = useState([0, 1]);
@@ -68,25 +72,53 @@ export const CinematicStories: React.FC = () => {
       isManualNavRef.current = true;
       const nextIdx =
         (page + newDirection + CINEMATIC_STORIES.length) % CINEMATIC_STORIES.length;
+      activeIndexRef.current = nextIdx;
       setPage([nextIdx, newDirection]);
+
+      if (stRef.current) {
+        const st = stRef.current;
+        const totalStories = CINEMATIC_STORIES.length;
+        const scrollDistance = window.innerWidth < 768 ? 1200 : 1800;
+        const targetScroll = st.start + (nextIdx / Math.max(1, totalStories - 1)) * scrollDistance;
+        if (lenis) {
+          lenis.scrollTo(targetScroll, { duration: 0.5 });
+        } else {
+          window.scrollTo({ top: targetScroll, behavior: 'smooth' });
+        }
+      }
+
       setTimeout(() => {
         isManualNavRef.current = false;
-      }, 800);
+      }, 700);
     },
-    [page]
+    [page, lenis]
   );
 
   const handlePrev = useCallback(() => paginate(-1), [paginate]);
   const handleNext = useCallback(() => paginate(1), [paginate]);
 
   const selectStory = (idx: number) => {
-    if (idx === page) return;
+    if (idx === activeIndexRef.current) return;
     isManualNavRef.current = true;
-    const dir = idx > page ? 1 : -1;
+    const dir = idx > activeIndexRef.current ? 1 : -1;
+    activeIndexRef.current = idx;
     setPage([idx, dir]);
+
+    if (stRef.current) {
+      const st = stRef.current;
+      const totalStories = CINEMATIC_STORIES.length;
+      const scrollDistance = window.innerWidth < 768 ? 1200 : 1800;
+      const targetScroll = st.start + (idx / Math.max(1, totalStories - 1)) * scrollDistance;
+      if (lenis) {
+        lenis.scrollTo(targetScroll, { duration: 0.5 });
+      } else {
+        window.scrollTo({ top: targetScroll, behavior: 'smooth' });
+      }
+    }
+
     setTimeout(() => {
       isManualNavRef.current = false;
-    }, 800);
+    }, 700);
   };
 
   // Keyboard navigation support
@@ -118,6 +150,8 @@ export const CinematicStories: React.FC = () => {
 
   // ==========================================================================
   // GSAP SCROLLTRIGGER PIN: Section stops at top so visitor pauses & views
+  // Mounts strictly once with dependencies: [] to prevent destructive pin kills
+  // and scroll position shifting during state updates.
   // ==========================================================================
   useGSAP(
     () => {
@@ -151,11 +185,14 @@ export const CinematicStories: React.FC = () => {
         },
       });
 
+      stRef.current = st;
+
       return () => {
         st.kill();
+        stRef.current = null;
       };
     },
-    { scope: sectionRef }
+    { scope: sectionRef, dependencies: [] }
   );
 
   // Cinematic slow left-to-right slide variants with old image exit

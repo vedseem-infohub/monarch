@@ -31,7 +31,7 @@ export const AttentionAccordionCard: React.FC<AttentionAccordionCardProps> = ({
     <div
       onClick={onActivate}
       onMouseEnter={onActivate}
-      className={`group relative h-[460px] sm:h-[500px] lg:h-[540px] rounded-2xl overflow-hidden cursor-pointer select-none shrink-0 border transition-all duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-[width,filter] ${widthClass}`}
+      className={`group relative h-[460px] sm:h-[500px] lg:h-[540px] rounded-2xl overflow-hidden cursor-pointer select-none shrink-0 border bg-[#180A0E] transition-all duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-[width,filter] ${widthClass}`}
     >
       {/* Background Editorial Image: Dark in State 1, Full Color in State 2 */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -43,7 +43,7 @@ export const AttentionAccordionCard: React.FC<AttentionAccordionCardProps> = ({
             ? 'filter-none brightness-100 contrast-[1.02] scale-[1.02]'
             : 'grayscale brightness-[0.45] contrast-125 scale-100'
         }`}
-        loading={priority ? 'eager' : 'lazy'}
+        loading="eager"
         decoding="async"
       />
 

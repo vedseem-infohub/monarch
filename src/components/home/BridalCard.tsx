@@ -55,7 +55,7 @@ export const BridalCard: React.FC<BridalCardProps> = ({
           src={ensemble.image}
           alt={ensemble.name}
           className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-108 pointer-events-none"
-          loading={priority ? 'eager' : 'lazy'}
+          loading="eager"
           decoding="async"
         />
 

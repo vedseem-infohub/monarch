@@ -57,20 +57,24 @@ export const BridalCollection: React.FC = () => {
   // Scoped GSAP ScrollTrigger entrance animations using useGSAP
   useGSAP(
     () => {
-      gsap.from('.bridal-reveal', {
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top 85%',
-          toggleActions: 'play none none none',
-        },
-        y: 35,
-        opacity: 0,
-        duration: 0.85,
-        stagger: 0.1,
-        ease: 'power3.out',
-      });
+      gsap.fromTo(
+        '.bridal-reveal',
+        { opacity: 0.85, y: 16 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.5,
+          stagger: 0.05,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: 'top 95%',
+            toggleActions: 'play none none none',
+          },
+        }
+      );
     },
-    { scope: sectionRef }
+    { scope: sectionRef, dependencies: [] }
   );
 
   return (

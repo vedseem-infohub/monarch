@@ -76,6 +76,7 @@ export const WovenToBeRemembered: React.FC = () => {
         scrollTrigger: {
           trigger: pinWrapper,
           pin: true,
+          anticipatePin: 1,
           start: 'top 10%',
           end: '+=2500',
           scrub: 1,
@@ -89,7 +90,7 @@ export const WovenToBeRemembered: React.FC = () => {
         },
       });
     },
-    { scope: sectionRef }
+    { scope: sectionRef, dependencies: [] }
   );
 
   return (

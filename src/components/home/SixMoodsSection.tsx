@@ -116,7 +116,7 @@ export const SixMoodsSection: React.FC = () => {
                     src={mood.image}
                     alt={mood.title}
                     className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
-                    loading="lazy"
+                    loading="eager"
                     decoding="async"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent opacity-60 group-hover:opacity-30 transition-opacity" />

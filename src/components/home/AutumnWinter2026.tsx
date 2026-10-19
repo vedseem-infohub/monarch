@@ -26,32 +26,26 @@ export const AutumnWinter2026: React.FC = () => {
       // Ensure cards are never permanently invisible
       const ctx = gsap.fromTo(
         cards,
-        { opacity: 0.35, y: 30 },
+        { opacity: 0.85, y: 16 },
         {
           opacity: 1,
           y: 0,
-          duration: 0.85,
-          stagger: 0.12,
+          duration: 0.5,
+          stagger: 0.08,
           ease: 'power2.out',
           scrollTrigger: {
             trigger: sectionRef.current,
-            start: 'top 85%',
+            start: 'top 95%',
             toggleActions: 'play none none none',
           },
         }
       );
 
-      // Force recalculation of scroll triggers after other page elements mount
-      const timer = setTimeout(() => {
-        ScrollTrigger.refresh();
-      }, 500);
-
       return () => {
-        clearTimeout(timer);
         ctx.revert();
       };
     },
-    { scope: sectionRef }
+    { scope: sectionRef, dependencies: [] }
   );
 
   return (

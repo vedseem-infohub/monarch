@@ -45,16 +45,16 @@ export const LatestTrends: React.FC = () => {
 
       const ctx = gsap.fromTo(
         elements,
-        { opacity: 0, y: 30 },
+        { opacity: 0.85, y: 16 },
         {
           opacity: 1,
           y: 0,
-          duration: 0.9,
-          stagger: 0.12,
+          duration: 0.5,
+          stagger: 0.05,
           ease: 'power2.out',
           scrollTrigger: {
             trigger: sectionRef.current,
-            start: 'top 80%',
+            start: 'top 95%',
             toggleActions: 'play none none none',
           },
         }
@@ -62,7 +62,7 @@ export const LatestTrends: React.FC = () => {
 
       return () => ctx.revert();
     },
-    { scope: sectionRef }
+    { scope: sectionRef, dependencies: [] }
   );
 
   return (

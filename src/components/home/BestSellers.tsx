@@ -46,22 +46,26 @@ export const BestSellers: React.FC = () => {
   useGSAP(
     () => {
       if (trackRef.current) {
-        gsap.from(trackRef.current.querySelectorAll('.bestseller-card'), {
-          scrollTrigger: {
-            trigger: trackRef.current,
-            start: 'top 85%',
-            toggleActions: 'play none none none',
-          },
-          scale: 0.96,
-          y: 35,
-          opacity: 0,
-          duration: 0.9,
-          stagger: 0.08,
-          ease: 'power3.out',
-        });
+        gsap.fromTo(
+          trackRef.current.querySelectorAll('.bestseller-card'),
+          { opacity: 0.85, y: 16, scale: 0.99 },
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.5,
+            stagger: 0.05,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: trackRef.current,
+              start: 'top 95%',
+              toggleActions: 'play none none none',
+            },
+          }
+        );
       }
     },
-    { scope: containerRef }
+    { scope: containerRef, dependencies: [] }
   );
 
   useEffect(() => {
@@ -143,7 +147,7 @@ export const BestSellers: React.FC = () => {
                 key={product.id}
                 className="bestseller-card shrink-0 w-[270px] sm:w-[300px] lg:w-[325px] relative"
               >
-                <ProductCard product={productWithRank} priority={index < 3} />
+                <ProductCard product={productWithRank} priority={index < 5} />
               </div>
             );
           })}

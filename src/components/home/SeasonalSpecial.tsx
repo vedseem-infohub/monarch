@@ -48,19 +48,23 @@ export const SeasonalSpecial: React.FC = () => {
 
   useGSAP(
     () => {
-      gsap.from('.seasonal-header-reveal', {
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top 85%',
-          toggleActions: 'play none none none',
-        },
-        y: 20,
-        opacity: 0,
-        duration: 0.7,
-        ease: 'power3.out',
-      });
+      gsap.fromTo(
+        '.seasonal-header-reveal',
+        { opacity: 0.85, y: 12 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.5,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: 'top 95%',
+            toggleActions: 'play none none none',
+          },
+        }
+      );
     },
-    { scope: sectionRef }
+    { scope: sectionRef, dependencies: [] }
   );
 
   return (

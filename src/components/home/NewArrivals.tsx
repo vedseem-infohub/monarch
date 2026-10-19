@@ -45,21 +45,25 @@ export const NewArrivals: React.FC = () => {
   useGSAP(
     () => {
       if (trackRef.current) {
-        gsap.from(trackRef.current.querySelectorAll('.product-rail-card'), {
-          scrollTrigger: {
-            trigger: trackRef.current,
-            start: 'top 85%',
-            toggleActions: 'play none none none',
-          },
-          y: 40,
-          opacity: 0,
-          duration: 0.9,
-          stagger: 0.08,
-          ease: 'power3.out',
-        });
+        gsap.fromTo(
+          trackRef.current.querySelectorAll('.product-rail-card'),
+          { opacity: 0.85, y: 16 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.5,
+            stagger: 0.05,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: trackRef.current,
+              start: 'top 95%',
+              toggleActions: 'play none none none',
+            },
+          }
+        );
       }
     },
-    { scope: containerRef }
+    { scope: containerRef, dependencies: [] }
   );
 
   useEffect(() => {
@@ -133,7 +137,7 @@ export const NewArrivals: React.FC = () => {
               key={product.id}
               className="product-rail-card shrink-0 w-[270px] sm:w-[300px] lg:w-[325px]"
             >
-              <ProductCard product={product} priority={idx < 3} />
+              <ProductCard product={product} priority={idx < 5} />
             </div>
           ))}
         </div>

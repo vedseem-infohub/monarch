@@ -25,31 +25,26 @@ export const EditsForEveryOccasion: React.FC = () => {
 
       const ctx = gsap.fromTo(
         cards,
-        { opacity: 0.35, y: 28 },
+        { opacity: 0.85, y: 16 },
         {
           opacity: 1,
           y: 0,
-          duration: 0.8,
-          stagger: 0.1,
+          duration: 0.5,
+          stagger: 0.05,
           ease: 'power2.out',
           scrollTrigger: {
             trigger: sectionRef.current,
-            start: 'top 85%',
+            start: 'top 95%',
             toggleActions: 'play none none none',
           },
         }
       );
 
-      const timer = setTimeout(() => {
-        ScrollTrigger.refresh();
-      }, 500);
-
       return () => {
-        clearTimeout(timer);
         ctx.revert();
       };
     },
-    { scope: sectionRef }
+    { scope: sectionRef, dependencies: [] }
   );
 
   return (

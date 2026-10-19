@@ -159,23 +159,23 @@ export const AtelierSanctum: React.FC = () => {
       if (heroElements && heroElements.length > 0) {
         gsap.fromTo(
           heroElements,
-          { y: 24, opacity: 0.8 },
+          { y: 16, opacity: 0.88 },
           {
             y: 0,
             opacity: 1,
-            duration: 0.9,
-            stagger: 0.12,
-            ease: 'power3.out',
+            duration: 0.5,
+            stagger: 0.05,
+            ease: 'power2.out',
             scrollTrigger: {
               trigger: containerRef.current,
-              start: 'top 85%',
+              start: 'top 95%',
               toggleActions: 'play none none none',
             },
           }
         );
       }
     },
-    { scope: containerRef }
+    { scope: containerRef, dependencies: [] }
   );
 
   return (

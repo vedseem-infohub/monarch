@@ -67,6 +67,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
         <link rel="preload" href="/images/saree-pattern.jpg" as="image" fetchPriority="high" />
+        <link rel="preload" href="/hero-frames/frame_001.webp" as="image" type="image/webp" fetchPriority="high" />
       </head>
       <body
         suppressHydrationWarning
