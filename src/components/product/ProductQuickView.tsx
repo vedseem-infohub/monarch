@@ -272,7 +272,7 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
             </div>
           </div>
 
-          {/* Thumbnails Directly Under Big Photo (Hover or Click Instantly Changes Photo) */}
+          {/* Thumbnails Directly Under Big Photo (Click Instantly Changes Photo) */}
           {product.images.length > 1 && (
             <div className="mt-4 py-3.5 px-4 flex items-center justify-start sm:justify-center gap-3.5 overflow-x-auto no-scrollbar">
               {product.images.map((img, idx) => (
@@ -339,7 +339,7 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
         </div>
 
         {/* =========================================================================
-            INFO 2: HERITAGE COLOR SELECTION (HOVER OR CLICK CHANGES PHOTO)
+            INFO 2: HERITAGE COLOR SELECTION (CLICK TO SELECT SHADE)
         ========================================================================= */}
         <div className="bg-[#F4ECE1] rounded-2xl p-5 sm:p-6 border border-monarch-gold/30 shadow-sm space-y-3">
           <div className="flex items-center justify-between text-xs">
