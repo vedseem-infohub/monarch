@@ -23,6 +23,8 @@ import {
   Truck,
   RotateCcw,
   Award,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 interface ProductQuickViewProps {
@@ -49,12 +51,51 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
   const [isAdding, setIsAdding] = useState(false);
   const [showSizeGuide, setShowSizeGuide] = useState(false);
 
+  // Flipkart/Amazon interactive cursor-tracking zoom
+  const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50, active: false });
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = Math.max(0, Math.min(100, ((e.clientX - left) / width) * 100));
+    const y = Math.max(0, Math.min(100, ((e.clientY - top) / height) * 100));
+    setZoomPosition({ x, y, active: true });
+  };
+
+  const handleMouseLeave = () => {
+    setZoomPosition({ x: 50, y: 50, active: false });
+  };
+
+  // Previous and Next photo change handlers (Flipkart/Amazon style)
+  const handlePrevImage = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setActiveImageIndex((prev) => (prev - 1 + product.images.length) % product.images.length);
+  };
+
+  const handleNextImage = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setActiveImageIndex((prev) => (prev + 1) % product.images.length);
+  };
+
+  // Instant hover-to-change photo helper
+  const handleThumbnailHover = (idx: number) => {
+    setActiveImageIndex(idx);
+  };
+
+  // Instant hover-to-change color shade helper
+  const handleColorHover = (colorName: string, imageIndex?: number, fallbackIdx?: number) => {
+    setSelectedColor(colorName);
+    if (imageIndex !== undefined) {
+      setActiveImageIndex(imageIndex);
+    } else if (fallbackIdx !== undefined && fallbackIdx < product.images.length) {
+      setActiveImageIndex(fallbackIdx);
+    }
+  };
+
   const inWishlist = isInWishlist(product.id);
 
-  // Orchestrated "Add to Cart" with coordinated In/Out animation:
-  // 1. Instant checkmark feedback on button.
-  // 2. Animate Quick View drawer OUT (exit slide-out).
-  // 3. Simultaneously animate Cart Drawer IN (enter slide-in).
+  // Orchestrated "Add to Cart" with coordinated In/Out animation
   const handleAddToCart = () => {
     if (isAdding) return;
     setIsAdding(true);
@@ -79,9 +120,9 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
   return (
     <div className="flex flex-col h-full w-full overflow-hidden bg-[#FAF7F2] text-monarch-charcoal">
       {/* =========================================================================
-          FIXED TOP HEADER (LIGHT THEME)
+          FIXED TOP HEADER (LIGHT LUXURY THEME)
       ========================================================================= */}
-      <div className="p-4 sm:p-5 border-b border-monarch-gold/25 flex items-center justify-between bg-[#F4ECE1] shrink-0">
+      <div className="px-6 py-5 sm:px-8 border-b border-monarch-gold/25 flex items-center justify-between bg-[#F4ECE1] shrink-0">
         <div className="flex items-center gap-2.5">
           <span className="p-1.5 rounded-full bg-monarch-gold/20 text-[#8C682A] border border-monarch-gold/35">
             <Sparkles className="w-3.5 h-3.5 text-[#8C682A]" />
@@ -106,24 +147,35 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
       </div>
 
       {/* =========================================================================
-          SCROLLABLE BODY: MEDIUM IMAGE ON TOP OF INFO (INDEPENDENT SCROLL)
-          - data-lenis-prevent="true": Prevents smooth scroll from hijacking the page
-          - min-h-0 + overflow-y-auto: Guarantees internal scrollability in flex column
-          - overscroll-contain: Prevents scroll chaining to the background document
+          SCROLLABLE BODY WITH INCREASED PADDING (PREVENTS BORDER HIDING)
+          - Generous px-6 py-6 sm:px-8 sm:py-8 so all borders & shadows breathe freely
+          - data-lenis-prevent="true" for independent scrolling
+          - min-h-0 + overflow-y-auto + overscroll-contain
       ========================================================================= */}
       <div
         data-lenis-prevent="true"
-        className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-6 divide-y divide-monarch-gold/20 no-scrollbar touch-pan-y"
+        className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-6 py-6 sm:px-8 sm:py-8 space-y-6 no-scrollbar touch-pan-y"
       >
-        {/* MEDIUM IMAGE SHOWCASE (ON TOP OF INFO) */}
-        <div className="space-y-3">
-          <div className="relative w-full max-w-[310px] sm:max-w-[330px] mx-auto aspect-[3/3.8] rounded-2xl overflow-hidden border border-monarch-gold/30 bg-[#F0E6D8] shadow-lg group">
-            {/* Medium Model Image */}
+        {/* =========================================================================
+            BIG PHOTO GALLERY WITH FLIPKART & AMAZON PHOTO CHANGER & HOVER ZOOM
+        ========================================================================= */}
+        <div className="w-full">
+          {/* Main Big Photo Frame with Interactive Hover Zoom & Chevron Arrows */}
+          <div
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            className="relative w-full aspect-[3/3.8] rounded-2xl overflow-hidden bg-[#F0E6D8] border-2 border-monarch-gold/35 shadow-lg group select-none cursor-crosshair"
+          >
+            {/* Big Model Photo (Interactive Pan/Zoom on hover) */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={product.images[activeImageIndex] || product.images[0]}
               alt={product.name}
-              className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
+              className="w-full h-full object-cover object-top transition-transform duration-150 ease-out pointer-events-none"
+              style={{
+                transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`,
+                transform: zoomPosition.active ? 'scale(1.75)' : 'scale(1)',
+              }}
             />
 
             {/* Subtle Gradient Vignette */}
@@ -144,32 +196,74 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
                 </span>
               )}
             </div>
+
+            {/* Flipkart/Amazon Style Chevron Arrows to Change Big Photo */}
+            {product.images.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={handlePrevImage}
+                  aria-label="Previous photo"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/95 hover:bg-white text-monarch-charcoal hover:text-monarch-maroon shadow-lg border border-monarch-gold/40 flex items-center justify-center transition-all hover:scale-110 active:scale-95 z-20"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleNextImage}
+                  aria-label="Next photo"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/95 hover:bg-white text-monarch-charcoal hover:text-monarch-maroon shadow-lg border border-monarch-gold/40 flex items-center justify-center transition-all hover:scale-110 active:scale-95 z-20"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </>
+            )}
+
+            {/* Amazon/Flipkart Photo Index Counter Pill (e.g. 1 / 4) */}
+            {product.images.length > 1 && (
+              <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full bg-black/65 backdrop-blur-md text-white text-[10px] font-mono font-medium border border-white/20 z-10 pointer-events-none">
+                {activeImageIndex + 1} / {product.images.length}
+              </div>
+            )}
+
+            {/* Subtle Zoom Instruction */}
+            <div className="absolute bottom-3 left-3 hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/55 backdrop-blur-md text-monarch-gold-light text-[10px] font-nav uppercase tracking-wider border border-white/10 z-10 pointer-events-none opacity-85 group-hover:opacity-100 transition-opacity">
+              <Sparkles className="w-3 h-3 text-monarch-gold" />
+              <span>Hover to inspect weave</span>
+            </div>
           </div>
 
-          {/* Thumbnail Strip (Multi-Angle Gallery) */}
+          {/* Thumbnails Directly Under Big Photo (Hover or Click Instantly Changes Photo) */}
           {product.images.length > 1 && (
-            <div className="flex items-center justify-center gap-2 overflow-x-auto pt-1 no-scrollbar">
+            <div className="mt-4 py-3 px-3 flex items-center justify-center gap-3 overflow-x-auto no-scrollbar">
               {product.images.map((img, idx) => (
                 <button
                   key={idx}
-                  onClick={() => setActiveImageIndex(idx)}
-                  className={`relative shrink-0 w-11 h-14 sm:w-12 sm:h-15 rounded-lg overflow-hidden border-2 transition-all ${
+                  type="button"
+                  onClick={() => handleThumbnailHover(idx)}
+                  onMouseEnter={() => handleThumbnailHover(idx)}
+                  onMouseOver={() => handleThumbnailHover(idx)}
+                  onPointerEnter={() => handleThumbnailHover(idx)}
+                  className={`relative shrink-0 w-12 h-16 sm:w-14 sm:h-18 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
                     activeImageIndex === idx
-                      ? 'border-monarch-gold scale-105 shadow-md ring-2 ring-monarch-gold/40'
-                      : 'border-monarch-gold/25 opacity-70 hover:opacity-100 hover:border-monarch-gold/60'
+                      ? 'border-monarch-maroon ring-2 ring-monarch-gold scale-105 shadow-md'
+                      : 'border-monarch-gold/30 opacity-75 hover:opacity-100 hover:border-monarch-gold hover:scale-105'
                   }`}
-                  aria-label={`View angle ${idx + 1}`}
+                  aria-label={`Switch to photo ${idx + 1}`}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={img} alt="" className="w-full h-full object-cover object-top" />
+                  <img src={img} alt="" className="w-full h-full object-cover object-top pointer-events-none" />
                 </button>
               ))}
             </div>
           )}
         </div>
 
-        {/* INFO 1: TITLE, CATEGORY, RATING & PRICE */}
-        <div className="pt-5 space-y-2.5">
+        {/* =========================================================================
+            INFO 1: TITLE, CATEGORY, RATING & PRICE BLOCK
+        ========================================================================= */}
+        <div className="bg-[#F4ECE1] rounded-2xl p-5 sm:p-6 border border-monarch-gold/30 shadow-sm space-y-3">
           <div className="flex items-start justify-between gap-4">
             <div>
               <span className="text-[10px] font-nav uppercase tracking-[0.25em] text-[#8C682A] font-bold">
@@ -209,8 +303,10 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
           </div>
         </div>
 
-        {/* INFO 2: HERITAGE COLOR SELECTION */}
-        <div className="pt-5 space-y-2.5">
+        {/* =========================================================================
+            INFO 2: HERITAGE COLOR SELECTION (HOVER OR CLICK CHANGES PHOTO)
+        ========================================================================= */}
+        <div className="bg-[#F4ECE1] rounded-2xl p-5 sm:p-6 border border-monarch-gold/30 shadow-sm space-y-3">
           <div className="flex items-center justify-between text-xs">
             <span className="font-nav uppercase tracking-wider text-monarch-charcoal/80 font-medium">
               Heritage Shade: <strong className="text-monarch-charcoal">{selectedColor}</strong>
@@ -220,22 +316,18 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 py-2 px-1 overflow-x-auto no-scrollbar">
             {product.colors.map((color, idx) => (
               <button
                 key={color.name}
-                onClick={() => {
-                  setSelectedColor(color.name);
-                  if (color.imageIndex !== undefined) {
-                    setActiveImageIndex(color.imageIndex);
-                  } else if (idx < product.images.length) {
-                    setActiveImageIndex(idx);
-                  }
-                }}
-                className={`relative w-8 h-8 rounded-full border transition-all ${
+                onClick={() => handleColorHover(color.name, color.imageIndex, idx)}
+                onMouseEnter={() => handleColorHover(color.name, color.imageIndex, idx)}
+                onMouseOver={() => handleColorHover(color.name, color.imageIndex, idx)}
+                onPointerEnter={() => handleColorHover(color.name, color.imageIndex, idx)}
+                className={`relative w-8 h-8 rounded-full border transition-all cursor-pointer ${
                   selectedColor === color.name
                     ? 'ring-2 ring-monarch-gold ring-offset-2 ring-offset-[#FAF7F2] scale-110 border-white shadow-lg'
-                    : 'border-black/20 hover:scale-105 opacity-85 hover:opacity-100'
+                    : 'border-black/20 hover:scale-110 opacity-85 hover:opacity-100'
                 }`}
                 style={{ backgroundColor: color.hex }}
                 title={color.name}
@@ -250,8 +342,10 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
           </div>
         </div>
 
-        {/* INFO 3: SILHOUETTE SIZE & MEASUREMENT GUIDE */}
-        <div className="pt-5 space-y-2.5">
+        {/* =========================================================================
+            INFO 3: SILHOUETTE SIZE & MEASUREMENT GUIDE
+        ========================================================================= */}
+        <div className="bg-[#F4ECE1] rounded-2xl p-5 sm:p-6 border border-monarch-gold/30 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-nav uppercase tracking-wider text-monarch-charcoal/80 font-medium">
               Select Silhouette Size
@@ -267,7 +361,7 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
 
           {/* Interactive Royal Size Guide */}
           {showSizeGuide && (
-            <div className="p-3.5 rounded-xl bg-[#F4ECE1] border border-monarch-gold/30 text-xs text-monarch-charcoal space-y-2 animate-fadeIn shadow-inner">
+            <div className="p-3.5 rounded-xl bg-white border border-monarch-gold/30 text-xs text-monarch-charcoal space-y-2 animate-fadeIn shadow-sm">
               <p className="font-semibold text-monarch-maroon font-serif text-sm">
                 Monarch Royal Sizing Index (Inches):
               </p>
@@ -318,7 +412,7 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
                 className={`py-2 px-3 text-xs font-nav rounded-lg border transition-all ${
                   selectedSize === size
                     ? 'bg-monarch-burgundy text-monarch-gold-light font-bold border-monarch-burgundy shadow-sm scale-102'
-                    : 'bg-white text-monarch-charcoal border-monarch-gold/30 hover:border-monarch-gold hover:bg-[#F9F4EC]'
+                    : 'bg-white text-monarch-charcoal border-monarch-gold/30 hover:border-monarch-gold hover:bg-[#FAF7F2]'
                 }`}
               >
                 {size}
@@ -327,9 +421,11 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
           </div>
         </div>
 
-        {/* INFO 4: FABRIC WEAVE & SPECIFICATIONS */}
-        <div className="pt-5 space-y-3">
-          <div className="p-3.5 rounded-xl bg-[#F4ECE1] border border-monarch-gold/25 space-y-2 text-xs shadow-sm">
+        {/* =========================================================================
+            INFO 4: FABRIC WEAVE & SPECIFICATIONS
+        ========================================================================= */}
+        <div className="bg-[#F4ECE1] rounded-2xl p-5 sm:p-6 border border-monarch-gold/30 shadow-sm space-y-3">
+          <div className="space-y-2 text-xs">
             <div className="flex items-center justify-between">
               <span className="text-[#8C682A] font-semibold">Fabric Weave:</span>
               <span className="text-monarch-charcoal font-serif font-medium">{product.fabric}</span>
@@ -350,7 +446,7 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
           </div>
 
           {/* Authenticity Seals */}
-          <div className="space-y-1.5 px-1 text-[11px] text-monarch-charcoal/80">
+          <div className="pt-2 border-t border-monarch-gold/20 space-y-1.5 text-[11px] text-monarch-charcoal/80">
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-[#8C682A] shrink-0" />
               <span>100% Certified Silk Mark Guild · 24K Pure Gold Zari</span>
@@ -366,7 +462,7 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
       {/* =========================================================================
           STICKY BOTTOM ACTION FOOTER (LIGHT THEME)
       ========================================================================= */}
-      <div className="p-4 sm:p-5 border-t border-monarch-gold/25 bg-[#F4ECE1] shrink-0 space-y-2.5">
+      <div className="px-6 py-5 sm:px-8 border-t border-monarch-gold/25 bg-[#F4ECE1] shrink-0 space-y-2.5">
         <div className="flex items-center gap-3">
           {/* Main Add to Royal Bag Button */}
           <button

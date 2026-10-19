@@ -73,4 +73,21 @@ test('ProductQuickView Side Drawer & Motion Architecture Verification', async (t
     assert.match(content, /text-monarch-charcoal/, 'Text must be dark/charcoal on light background');
     assert.match(content, /text-monarch-maroon/, 'Price must be royal maroon on light theme');
   });
+
+  await t.test('ProductQuickView implements Flipkart/Amazon style big photo changer and hover zoom', () => {
+    const content = fs.readFileSync(QUICKVIEW_FILE, 'utf8');
+
+    // Big Photo navigation arrows (Flipkart/Amazon style)
+    assert.match(content, /handlePrevImage/, 'Must implement handlePrevImage');
+    assert.match(content, /handleNextImage/, 'Must implement handleNextImage');
+    assert.match(content, /ChevronLeft/, 'Must render ChevronLeft navigation button');
+    assert.match(content, /ChevronRight/, 'Must render ChevronRight navigation button');
+
+    // Interactive cursor-tracking zoom (Flipkart/Amazon style)
+    assert.match(content, /zoomPosition/, 'Must track zoom position');
+    assert.match(content, /handleMouseMove/, 'Must track mouse movement for pan/zoom');
+
+    // Clean seamless layout: no divide-y hr dividing the gallery
+    assert.ok(!content.includes('divide-y divide-monarch-gold/20'), 'Must remove divide-y hr border under gallery');
+  });
 });
