@@ -94,8 +94,8 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
     });
   };
 
-  // Instant hover-or-click to select thumbnail image
-  const handleThumbnailHover = (idx: number) => {
+  // Select thumbnail image strictly on click
+  const handleThumbnailClick = (idx: number) => {
     setCustomImageSrc(null);
     setActiveImageIndex(idx);
     const matchedColor = product.colors.find(
@@ -106,8 +106,8 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
     }
   };
 
-  // Instant hover-or-click to select color shade and update main photo
-  const handleColorHover = (colorName: string, imageIndex?: number, fallbackIdx?: number, colorImage?: string) => {
+  // Select color shade and update main photo strictly on click
+  const handleColorClick = (colorName: string, imageIndex?: number, fallbackIdx?: number, colorImage?: string) => {
     setSelectedColor(colorName);
     if (imageIndex !== undefined && imageIndex >= 0 && imageIndex < product.images.length) {
       setCustomImageSrc(null);
@@ -126,8 +126,8 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
     }
   };
 
-  // Instant hover-or-click to select silhouette size
-  const handleSizeHover = (size: string) => {
+  // Select silhouette size strictly on click
+  const handleSizeClick = (size: string) => {
     setSelectedSize(size);
   };
 
@@ -279,10 +279,7 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
                 <button
                   key={idx}
                   type="button"
-                  onClick={() => handleThumbnailHover(idx)}
-                  onMouseEnter={() => handleThumbnailHover(idx)}
-                  onMouseOver={() => handleThumbnailHover(idx)}
-                  onPointerEnter={() => handleThumbnailHover(idx)}
+                  onClick={() => handleThumbnailClick(idx)}
                   className={`relative shrink-0 w-12 h-16 sm:w-14 sm:h-18 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
                     activeImageIndex === idx && !customImageSrc
                       ? 'border-monarch-maroon ring-2 ring-monarch-gold ring-offset-2 ring-offset-[#FAF7F2] scale-105 shadow-md'
@@ -359,10 +356,7 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
               <button
                 key={color.name}
                 type="button"
-                onClick={() => handleColorHover(color.name, color.imageIndex, idx, color.image)}
-                onMouseEnter={() => handleColorHover(color.name, color.imageIndex, idx, color.image)}
-                onMouseOver={() => handleColorHover(color.name, color.imageIndex, idx, color.image)}
-                onPointerEnter={() => handleColorHover(color.name, color.imageIndex, idx, color.image)}
+                onClick={() => handleColorClick(color.name, color.imageIndex, idx, color.image)}
                 className={`relative w-8 h-8 rounded-full border transition-all cursor-pointer ${
                   selectedColor === color.name
                     ? 'ring-2 ring-monarch-gold ring-offset-2 ring-offset-[#FAF7F2] scale-110 border-white shadow-lg'
@@ -442,16 +436,13 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
             </div>
           )}
 
-          {/* Size Buttons (Hover or Click to Select) */}
+          {/* Size Buttons (Click to Select) */}
           <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
             {product.sizes.map((size) => (
               <button
                 key={size}
                 type="button"
-                onClick={() => handleSizeHover(size)}
-                onMouseEnter={() => handleSizeHover(size)}
-                onMouseOver={() => handleSizeHover(size)}
-                onPointerEnter={() => handleSizeHover(size)}
+                onClick={() => handleSizeClick(size)}
                 className={`py-2 px-3 text-xs font-nav rounded-lg border transition-all cursor-pointer ${
                   selectedSize === size
                     ? 'bg-monarch-burgundy text-monarch-gold-light font-bold border-monarch-burgundy shadow-sm scale-102 ring-1 ring-monarch-gold/50'

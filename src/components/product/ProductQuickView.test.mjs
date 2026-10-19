@@ -91,22 +91,29 @@ test('ProductQuickView Side Drawer & Motion Architecture Verification', async (t
     assert.ok(!content.includes('divide-y divide-monarch-gold/20'), 'Must remove divide-y hr border under gallery');
   });
 
-  await t.test('ProductQuickView and ProductCard implement hover image changes and increased padding', () => {
+  await t.test('ProductQuickView and ProductCard implement click-only selection and increased padding', () => {
     const quickViewContent = fs.readFileSync(QUICKVIEW_FILE, 'utf8');
     const productCardContent = fs.readFileSync(PRODUCTCARD_FILE, 'utf8');
 
-    // QuickView hover image change handlers
-    assert.match(quickViewContent, /handleThumbnailHover/, 'QuickView must support thumbnail hover handler');
-    assert.match(quickViewContent, /handleColorHover/, 'QuickView must support color swatch hover handler');
-    assert.match(quickViewContent, /onMouseEnter=\{\(\) => handleThumbnailHover/, 'Thumbnails must change big photo on mouse enter');
+    // QuickView click selection handlers (no onmouse selection)
+    assert.match(quickViewContent, /handleThumbnailClick/, 'QuickView must support thumbnail click handler');
+    assert.match(quickViewContent, /handleColorClick/, 'QuickView must support color swatch click handler');
+    assert.match(quickViewContent, /handleSizeClick/, 'QuickView must support size click handler');
+    assert.match(quickViewContent, /onClick=\{\(\) => handleThumbnailClick\(idx\)\}/, 'Thumbnails must change photo on click');
+    assert.match(quickViewContent, /onClick=\{\(\) => handleColorClick/, 'Color swatches must change color on click');
+    assert.match(quickViewContent, /onClick=\{\(\) => handleSizeClick\(size\)\}/, 'Size buttons must select size on click');
+    assert.ok(!quickViewContent.includes('onMouseEnter={() => handleThumbnailHover'), 'Must not use onmouse hover for thumbnail selection');
+    assert.ok(!quickViewContent.includes('onMouseEnter={() => handleColorHover'), 'Must not use onmouse hover for color selection');
+    assert.ok(!quickViewContent.includes('onMouseEnter={() => handleSizeHover'), 'Must not use onmouse hover for size selection');
 
     // QuickView padding & ring-offset preventing border hiding
     assert.match(quickViewContent, /ring-offset-2 ring-offset-\[#FAF7F2\]/, 'Active thumbnail and swatch must have ring offset so border is never hidden');
     assert.match(quickViewContent, /py-3\.5 px-4/, 'Thumbnails container must have generous padding to prevent border clipping');
 
-    // ProductCard hover image and swatches
+    // ProductCard click selection & hover image
     assert.match(productCardContent, /hoverImg/, 'ProductCard must calculate alternate hover image');
     assert.match(productCardContent, /opacity-0 group-hover:opacity-100/, 'ProductCard must crossfade to alternate image on hover');
-    assert.match(productCardContent, /setSelectedColorIdx/, 'ProductCard color swatches must update preview image on hover');
+    assert.match(productCardContent, /setSelectedColorIdx/, 'ProductCard color swatches must update on click');
+    assert.ok(!productCardContent.includes('onMouseEnter={() => setSelectedColorIdx'), 'Must not use onmouse hover for card swatch selection');
   });
 });
