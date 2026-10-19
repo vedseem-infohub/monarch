@@ -132,7 +132,6 @@ export const WorthYourAttention: React.FC = () => {
                 product={product}
                 index={idx}
                 isActive={hoveredIndex === idx}
-                isAnyActive={hoveredIndex !== null}
                 onActivate={() => setHoveredIndex(idx)}
                 priority={idx <= 1}
               />

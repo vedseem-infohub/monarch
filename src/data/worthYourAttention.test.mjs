@@ -1,26 +1,22 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-describe('WorthYourAttention Architecture & Geometry', () => {
-  it('validates idle increased width, expanded active width, and decreased sibling width', () => {
-    const idleDefaultWidth = 280; // approx px when not hovering (increased width)
-    const expandedWidth = 620; // approx px when active (expanded full story)
-    const decreasedSiblingWidth = 80; // approx px when sibling hovered (decreased slender slat)
+describe('WorthYourAttention Architecture & Geometry (Strictly 2 States)', () => {
+  it('validates strictly 2 geometry states: closed slender slat and expanded active card', () => {
+    const closedWidth = 94; // approx px when closed (slender slat)
+    const expandedWidth = 620; // approx px when hovered (expanded full story)
     const minHeight = 500;
 
-    assert.ok(idleDefaultWidth >= 220 && idleDefaultWidth <= 320, 'Idle default card has increased, comfortable width');
-    assert.ok(expandedWidth >= 500 && expandedWidth <= 680, 'Expanded card provides rich full story space');
-    assert.ok(decreasedSiblingWidth >= 60 && decreasedSiblingWidth <= 100, 'Decreased sibling compresses to slender slat');
+    assert.ok(closedWidth >= 70 && closedWidth <= 120, 'State 1 (Closed): card is a sleek slender slat');
+    assert.ok(expandedWidth >= 500 && expandedWidth <= 680, 'State 2 (Hovered): card expands to full rich width');
     assert.ok(minHeight >= 460, 'Card height ensures vertical editorial presence');
   });
 
-  it('validates state transitions between dark grayscale, idle moody, and colorful active', () => {
-    const idleFilter = 'grayscale-[45%] brightness-[0.72]';
-    const decreasedFilter = 'grayscale brightness-[0.38]';
-    const activeFilter = 'filter-none brightness-100';
+  it('validates visual transitions between State 1 (dark part) and State 2 (full color)', () => {
+    const state1Filter = 'grayscale brightness-[0.45]'; // dark part
+    const state2Filter = 'filter-none brightness-100'; // full colorful view
 
-    assert.ok(idleFilter.includes('grayscale-[45%]'), 'Idle card has subtle moody tone');
-    assert.ok(decreasedFilter.includes('brightness-[0.38]'), 'Decreased sibling card is dark and muted');
-    assert.ok(activeFilter.includes('brightness-100'), 'Active card is full radiant color');
+    assert.ok(state1Filter.includes('grayscale'), 'State 1 must be dark part with grayscale');
+    assert.ok(state2Filter.includes('brightness-100'), 'State 2 must be full radiant color');
   });
 });
