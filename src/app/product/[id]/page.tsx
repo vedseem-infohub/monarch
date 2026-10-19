@@ -1,12 +1,22 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import { PRODUCTS, getProductByIdOrSlug } from '@/data/products';
+import { PRODUCTS } from '@/data/products';
 import { ProductDetailView } from '@/components/product/ProductDetailView';
 
 interface PageProps {
   params: Promise<{
     id: string;
   }>;
+}
+
+function findProduct(id: string) {
+  if (!id) return undefined;
+  const normalized = id.trim().toLowerCase();
+  return PRODUCTS.find(
+    (p) =>
+      p.id.toLowerCase() === normalized ||
+      (p.slug && p.slug.toLowerCase() === normalized)
+  );
 }
 
 export async function generateStaticParams() {
@@ -20,7 +30,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps) {
   const { id } = await params;
-  const product = getProductByIdOrSlug(id);
+  const product = findProduct(id);
   if (!product) return { title: 'Product Not Found — MONARCH' };
 
   return {
@@ -34,7 +44,7 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function ProductPage({ params }: PageProps) {
   const { id } = await params;
-  const product = getProductByIdOrSlug(id);
+  const product = findProduct(id);
 
   if (!product) {
     notFound();
