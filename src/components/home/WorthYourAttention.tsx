@@ -2,6 +2,8 @@
 
 import React, { useState, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
+import { SectionHeader } from '@/components/home/shared/SectionHeader';
 import { WORTH_YOUR_ATTENTION_DATA } from '@/data/worthYourAttention';
 import { AttentionAccordionCard } from './AttentionAccordionCard';
 import gsap from 'gsap';
@@ -69,39 +71,53 @@ export const WorthYourAttention: React.FC = () => {
       className="py-14 sm:py-20 bg-[#FAF7F2] text-[#1A1A1A] relative overflow-hidden select-none border-t border-monarch-gold/15"
     >
       <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Minimalist Section Header: Matching Screenshot Exactly */}
-        <div className="flex items-center justify-between mb-7 sm:mb-9">
-          <h2 className="font-serif text-2xl sm:text-3xl lg:text-[38px] font-normal tracking-tight text-[#1A1A1A] leading-tight">
-            {WORTH_YOUR_ATTENTION_DATA.heading}
-          </h2>
+        {/* Full Section Header with Eyebrow, Title, Description, and Navigation */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 sm:mb-10">
+          <SectionHeader
+            eyebrow={WORTH_YOUR_ATTENTION_DATA.eyebrow}
+            title="Worth Your"
+            italicWord="Attention"
+            description={WORTH_YOUR_ATTENTION_DATA.description}
+            align="left"
+            className="mb-0"
+          />
 
-          {/* Minimalist Scroll Controls */}
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => handleScroll('left')}
-              className="w-8 h-8 rounded-full border border-black/15 hover:border-black text-black/70 hover:text-black flex items-center justify-center transition-colors cursor-pointer active:scale-95"
-              aria-label="Scroll left"
+          <div className="flex items-center gap-4 shrink-0">
+            <Link
+              href={WORTH_YOUR_ATTENTION_DATA.ctaHref}
+              className="text-xs font-nav uppercase tracking-[0.2em] font-semibold text-monarch-maroon hover:text-monarch-maroon-dark pb-0.5 border-b border-monarch-maroon/30 transition-colors"
             >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
+              {WORTH_YOUR_ATTENTION_DATA.ctaText}
+            </Link>
 
-            <button
-              type="button"
-              onClick={() => handleScroll('right')}
-              className="w-8 h-8 rounded-full border border-black/15 hover:border-black text-black/70 hover:text-black flex items-center justify-center transition-colors cursor-pointer active:scale-95"
-              aria-label="Scroll right"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
+            {/* Scroll Navigation Arrows */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleScroll('left')}
+                className="w-9 h-9 rounded-full border border-monarch-charcoal/20 hover:border-monarch-charcoal text-monarch-charcoal flex items-center justify-center transition-all hover:bg-black/5 active:scale-95 cursor-pointer"
+                aria-label="Scroll left"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleScroll('right')}
+                className="w-9 h-9 rounded-full border border-monarch-charcoal/20 hover:border-monarch-charcoal text-monarch-charcoal flex items-center justify-center transition-all hover:bg-black/5 active:scale-95 cursor-pointer"
+                aria-label="Scroll right"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
 
         {/* X-Direction Scrollable Accordion Track */}
         <div className="relative w-full">
           {/* Subtle Fade Edges */}
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-[#FAF7F2] to-transparent z-20 opacity-80" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-[#FAF7F2] to-transparent z-20 opacity-80" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-[#FAF7F2] to-transparent z-20 opacity-80" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-[#FAF7F2] to-transparent z-20 opacity-80" />
 
           {/* Smooth Scroll Container */}
           <div
@@ -116,9 +132,7 @@ export const WorthYourAttention: React.FC = () => {
                 product={product}
                 index={idx}
                 isActive={hoveredIndex === idx}
-                isAnyActive={hoveredIndex !== null}
                 onActivate={() => setHoveredIndex(idx)}
-                onDeactivate={() => setHoveredIndex(null)}
                 priority={idx <= 1}
               />
             ))}
