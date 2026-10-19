@@ -58,4 +58,19 @@ test('ProductQuickView Side Drawer & Motion Architecture Verification', async (t
     assert.match(content, /openQuickView/, 'Must support openQuickView');
     assert.match(content, /closeQuickView/, 'Must support closeQuickView');
   });
+
+  await t.test('ProductQuickView implements scroll fix and light luxury color palette', () => {
+    const content = fs.readFileSync(QUICKVIEW_FILE, 'utf8');
+
+    // Scroll protection: prevents Lenis from hijacking the background window
+    assert.match(content, /data-lenis-prevent/, 'Must declare data-lenis-prevent on drawer container');
+    assert.match(content, /overscroll-contain/, 'Must contain overscroll within the drawer');
+    assert.match(content, /min-h-0/, 'Must have min-h-0 for flex column scrolling');
+    assert.match(content, /pauseScroll/, 'Must pause Lenis window scroll when modal is active');
+
+    // Light luxury color scheme
+    assert.match(content, /bg-\[#FAF7F2\]/, 'Drawer panel must use warm light ivory background');
+    assert.match(content, /text-monarch-charcoal/, 'Text must be dark/charcoal on light background');
+    assert.match(content, /text-monarch-maroon/, 'Price must be royal maroon on light theme');
+  });
 });

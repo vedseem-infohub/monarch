@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Product } from '@/types';
@@ -8,6 +8,7 @@ import { formatINR } from '@/utils/formatters';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useQuickView } from '@/context/QuickViewContext';
+import { useSmoothScroll } from '@/components/common/SmoothScrollProvider';
 import {
   X,
   Heart,
@@ -51,7 +52,7 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
   const inWishlist = isInWishlist(product.id);
 
   // Orchestrated "Add to Cart" with coordinated In/Out animation:
-  // 1. Give patron instant visual checkmark feedback.
+  // 1. Instant checkmark feedback on button.
   // 2. Animate Quick View drawer OUT (exit slide-out).
   // 3. Simultaneously animate Cart Drawer IN (enter slide-in).
   const handleAddToCart = () => {
@@ -76,70 +77,86 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
   };
 
   return (
-    <div className="flex flex-col md:grid md:grid-cols-12 h-full w-full overflow-hidden">
+    <div className="flex flex-col h-full w-full overflow-hidden bg-[#FAF7F2] text-monarch-charcoal">
       {/* =========================================================================
-          LEFT COLUMN: FULL-HEIGHT EDITORIAL MODEL & GARMENT SHOWCASE
+          FIXED TOP HEADER (LIGHT THEME)
       ========================================================================= */}
-      <div className="relative md:col-span-6 lg:col-span-7 h-[45vh] md:h-full bg-[#12030A] flex flex-col justify-between overflow-hidden border-b md:border-b-0 md:border-r border-monarch-gold/25">
-        {/* Main Model Viewport */}
-        <div className="relative flex-1 w-full h-full overflow-hidden bg-[#100309] group">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={product.images[activeImageIndex] || product.images[0]}
-            alt={product.name}
-            className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
-          />
-
-          {/* Subtle Royal Vignette Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#12030A]/85 via-transparent to-black/30 pointer-events-none" />
-
-          {/* Top Left Couture Badges */}
-          <div className="absolute top-4 left-4 flex flex-col gap-2 z-10 pointer-events-none">
-            {product.badge && (
-              <span className="text-[10px] font-nav uppercase tracking-[0.22em] font-bold bg-[#2A0B15]/95 text-monarch-gold-light px-3.5 py-1.5 rounded-full border border-monarch-gold/50 shadow-xl backdrop-blur-md flex items-center gap-1.5">
-                <Award className="w-3.5 h-3.5 text-monarch-gold" />
-                <span>{product.badge}</span>
-              </span>
-            )}
-            {product.has3D && (
-              <span className="text-[10px] font-nav uppercase tracking-wider bg-monarch-maroon/90 text-monarch-ivory px-3 py-1 rounded-full border border-monarch-gold/40 shadow-md flex items-center gap-1.5 backdrop-blur-md">
-                <Box className="w-3.5 h-3.5 text-monarch-gold" />
-                <span>Interactive 3D View</span>
-              </span>
-            )}
-          </div>
-
-          {/* Mobile-only Close Button (Pinned Top Right) */}
-          <button
-            onClick={onClose}
-            className="md:hidden absolute top-4 right-4 z-20 text-monarch-beige hover:text-monarch-ivory p-2.5 rounded-full bg-[#2B0E17]/90 border border-monarch-gold/40 backdrop-blur-md transition-all"
-            aria-label="Close preview"
-          >
-            <X className="w-4 h-4" />
-          </button>
-
-          {/* Subtle Bottom Watermark on Model Image */}
-          <div className="absolute bottom-4 left-4 z-10 hidden sm:flex items-center gap-2 text-[10px] font-nav uppercase tracking-[0.2em] text-monarch-gold/80 bg-black/50 px-3 py-1 rounded-full backdrop-blur-md border border-monarch-gold/20">
-            <Sparkles className="w-3 h-3 text-monarch-gold" />
-            <span>Master Artisan Handloom · 24K Gold Zari</span>
+      <div className="p-4 sm:p-5 border-b border-monarch-gold/25 flex items-center justify-between bg-[#F4ECE1] shrink-0">
+        <div className="flex items-center gap-2.5">
+          <span className="p-1.5 rounded-full bg-monarch-gold/20 text-[#8C682A] border border-monarch-gold/35">
+            <Sparkles className="w-3.5 h-3.5 text-[#8C682A]" />
+          </span>
+          <div>
+            <span className="text-[10px] font-nav uppercase tracking-[0.25em] text-[#8C682A] font-bold block">
+              Couture Quick View
+            </span>
+            <p className="font-serif text-sm text-monarch-charcoal font-medium line-clamp-1">
+              {product.categoryName} · {product.name}
+            </p>
           </div>
         </div>
 
-        {/* Thumbnail Selector Strip (Multi-Angle Gallery) */}
-        {product.images.length > 1 && (
-          <div className="p-3 md:p-4 bg-[#18050E]/95 border-t border-monarch-gold/20 shrink-0">
-            <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar">
-              <span className="hidden lg:inline text-[9px] font-nav uppercase tracking-[0.2em] text-monarch-gold/70 mr-1 shrink-0">
-                Angles:
-              </span>
+        <button
+          onClick={onClose}
+          className="text-monarch-charcoal hover:text-monarch-maroon p-2 rounded-full border border-monarch-gold/35 hover:border-monarch-gold bg-white transition-all hover:scale-105 shadow-sm"
+          aria-label="Close preview"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* =========================================================================
+          SCROLLABLE BODY: MEDIUM IMAGE ON TOP OF INFO (INDEPENDENT SCROLL)
+          - data-lenis-prevent="true": Prevents smooth scroll from hijacking the page
+          - min-h-0 + overflow-y-auto: Guarantees internal scrollability in flex column
+          - overscroll-contain: Prevents scroll chaining to the background document
+      ========================================================================= */}
+      <div
+        data-lenis-prevent="true"
+        className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-6 divide-y divide-monarch-gold/20 no-scrollbar touch-pan-y"
+      >
+        {/* MEDIUM IMAGE SHOWCASE (ON TOP OF INFO) */}
+        <div className="space-y-3">
+          <div className="relative w-full max-w-[310px] sm:max-w-[330px] mx-auto aspect-[3/3.8] rounded-2xl overflow-hidden border border-monarch-gold/30 bg-[#F0E6D8] shadow-lg group">
+            {/* Medium Model Image */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={product.images[activeImageIndex] || product.images[0]}
+              alt={product.name}
+              className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
+            />
+
+            {/* Subtle Gradient Vignette */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10 pointer-events-none" />
+
+            {/* Badges on Image */}
+            <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10 pointer-events-none">
+              {product.badge && (
+                <span className="text-[9px] font-nav uppercase tracking-[0.2em] font-bold bg-monarch-burgundy/95 text-monarch-gold-light px-2.5 py-1 rounded-full border border-monarch-gold/40 shadow-md backdrop-blur-md flex items-center gap-1">
+                  <Award className="w-3 h-3 text-monarch-gold" />
+                  <span>{product.badge}</span>
+                </span>
+              )}
+              {product.has3D && (
+                <span className="text-[9px] font-nav uppercase tracking-wider bg-white/90 text-monarch-charcoal px-2 py-0.5 rounded-full border border-monarch-gold/30 shadow-md flex items-center gap-1 backdrop-blur-md font-medium">
+                  <Box className="w-3 h-3 text-monarch-gold" />
+                  <span>Interactive 3D</span>
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Thumbnail Strip (Multi-Angle Gallery) */}
+          {product.images.length > 1 && (
+            <div className="flex items-center justify-center gap-2 overflow-x-auto pt-1 no-scrollbar">
               {product.images.map((img, idx) => (
                 <button
                   key={idx}
                   onClick={() => setActiveImageIndex(idx)}
-                  className={`relative shrink-0 w-12 h-16 sm:w-14 sm:h-18 rounded-lg overflow-hidden border-2 transition-all ${
+                  className={`relative shrink-0 w-11 h-14 sm:w-12 sm:h-15 rounded-lg overflow-hidden border-2 transition-all ${
                     activeImageIndex === idx
-                      ? 'border-monarch-gold scale-105 shadow-lg ring-2 ring-monarch-gold/50'
-                      : 'border-monarch-gold/20 opacity-60 hover:opacity-100 hover:border-monarch-gold/50'
+                      ? 'border-monarch-gold scale-105 shadow-md ring-2 ring-monarch-gold/40'
+                      : 'border-monarch-gold/25 opacity-70 hover:opacity-100 hover:border-monarch-gold/60'
                   }`}
                   aria-label={`View angle ${idx + 1}`}
                 >
@@ -148,282 +165,251 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
                 </button>
               ))}
             </div>
+          )}
+        </div>
+
+        {/* INFO 1: TITLE, CATEGORY, RATING & PRICE */}
+        <div className="pt-5 space-y-2.5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <span className="text-[10px] font-nav uppercase tracking-[0.25em] text-[#8C682A] font-bold">
+                {product.categoryName}
+              </span>
+              <h2 className="font-serif text-2xl sm:text-3xl text-monarch-charcoal font-medium mt-1 tracking-tight leading-snug">
+                {product.name}
+              </h2>
+              <p className="text-xs text-monarch-charcoal/70 font-sans mt-1 leading-relaxed">
+                {product.tagline}
+              </p>
+            </div>
+
+            {/* Star Rating Badge */}
+            <div className="shrink-0 flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full border border-monarch-gold/30 text-xs shadow-sm">
+              <Star className="w-3.5 h-3.5 fill-monarch-gold text-monarch-gold" />
+              <span className="font-bold text-monarch-charcoal">{product.rating || 4.9}</span>
+              <span className="text-monarch-charcoal/50 text-[10px]">({product.reviewsCount || 48})</span>
+            </div>
           </div>
-        )}
+
+          {/* Price Display */}
+          <div className="flex items-baseline gap-3 pt-1">
+            <span className="font-serif text-2xl sm:text-3xl font-bold text-monarch-maroon tracking-tight">
+              {formatINR(product.price)}
+            </span>
+            {product.originalPrice && (
+              <span className="text-sm font-sans line-through text-monarch-charcoal/40">
+                {formatINR(product.originalPrice)}
+              </span>
+            )}
+            {product.discountPercent && (
+              <span className="text-[11px] font-nav uppercase tracking-wider text-emerald-800 bg-emerald-50 border border-emerald-300/80 px-2.5 py-0.5 rounded-full font-bold">
+                {product.discountPercent}% Privilege Off
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* INFO 2: HERITAGE COLOR SELECTION */}
+        <div className="pt-5 space-y-2.5">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-nav uppercase tracking-wider text-monarch-charcoal/80 font-medium">
+              Heritage Shade: <strong className="text-monarch-charcoal">{selectedColor}</strong>
+            </span>
+            <span className="text-[11px] text-[#8C682A] font-sans font-medium">
+              {product.colors.length} Curated Silks
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {product.colors.map((color, idx) => (
+              <button
+                key={color.name}
+                onClick={() => {
+                  setSelectedColor(color.name);
+                  if (color.imageIndex !== undefined) {
+                    setActiveImageIndex(color.imageIndex);
+                  } else if (idx < product.images.length) {
+                    setActiveImageIndex(idx);
+                  }
+                }}
+                className={`relative w-8 h-8 rounded-full border transition-all ${
+                  selectedColor === color.name
+                    ? 'ring-2 ring-monarch-gold ring-offset-2 ring-offset-[#FAF7F2] scale-110 border-white shadow-lg'
+                    : 'border-black/20 hover:scale-105 opacity-85 hover:opacity-100'
+                }`}
+                style={{ backgroundColor: color.hex }}
+                title={color.name}
+              >
+                {selectedColor === color.name && (
+                  <span className="absolute inset-0 flex items-center justify-center text-white text-[10px] font-bold drop-shadow">
+                    ✓
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* INFO 3: SILHOUETTE SIZE & MEASUREMENT GUIDE */}
+        <div className="pt-5 space-y-2.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-nav uppercase tracking-wider text-monarch-charcoal/80 font-medium">
+              Select Silhouette Size
+            </span>
+            <button
+              onClick={() => setShowSizeGuide(!showSizeGuide)}
+              className="text-[11px] text-[#8C682A] hover:text-monarch-maroon font-nav flex items-center gap-1.5 underline underline-offset-2 transition-colors font-semibold"
+            >
+              <Ruler className="w-3.5 h-3.5" />
+              <span>{showSizeGuide ? 'Hide Measurements' : 'Royal Size Guide'}</span>
+            </button>
+          </div>
+
+          {/* Interactive Royal Size Guide */}
+          {showSizeGuide && (
+            <div className="p-3.5 rounded-xl bg-[#F4ECE1] border border-monarch-gold/30 text-xs text-monarch-charcoal space-y-2 animate-fadeIn shadow-inner">
+              <p className="font-semibold text-monarch-maroon font-serif text-sm">
+                Monarch Royal Sizing Index (Inches):
+              </p>
+              <div className="grid grid-cols-4 gap-2 text-center text-[10px] font-nav uppercase tracking-wider py-1 border-y border-monarch-gold/25 text-[#8C682A] font-bold">
+                <span>Size</span>
+                <span>Bust</span>
+                <span>Waist</span>
+                <span>Hip</span>
+              </div>
+              <div className="space-y-1 text-[11px] font-sans">
+                <div className="grid grid-cols-4 gap-2 text-center text-monarch-charcoal">
+                  <span className="font-semibold">36 (S)</span>
+                  <span>34-35&quot;</span>
+                  <span>28&quot;</span>
+                  <span>38&quot;</span>
+                </div>
+                <div className="grid grid-cols-4 gap-2 text-center text-monarch-charcoal">
+                  <span className="font-semibold">38 (M)</span>
+                  <span>36-37&quot;</span>
+                  <span>30&quot;</span>
+                  <span>40&quot;</span>
+                </div>
+                <div className="grid grid-cols-4 gap-2 text-center text-monarch-charcoal">
+                  <span className="font-semibold">40 (L)</span>
+                  <span>38-39&quot;</span>
+                  <span>32&quot;</span>
+                  <span>42&quot;</span>
+                </div>
+                <div className="grid grid-cols-4 gap-2 text-center text-monarch-charcoal">
+                  <span className="font-semibold">42 (XL)</span>
+                  <span>40-41&quot;</span>
+                  <span>34&quot;</span>
+                  <span>44&quot;</span>
+                </div>
+              </div>
+              <p className="text-[10px] text-monarch-charcoal/70 italic pt-1 border-t border-monarch-gold/20">
+                Bespoke bridal &amp; imperial custom sizing is also available upon salon appointment.
+              </p>
+            </div>
+          )}
+
+          {/* Size Buttons */}
+          <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+            {product.sizes.map((size) => (
+              <button
+                key={size}
+                onClick={() => setSelectedSize(size)}
+                className={`py-2 px-3 text-xs font-nav rounded-lg border transition-all ${
+                  selectedSize === size
+                    ? 'bg-monarch-burgundy text-monarch-gold-light font-bold border-monarch-burgundy shadow-sm scale-102'
+                    : 'bg-white text-monarch-charcoal border-monarch-gold/30 hover:border-monarch-gold hover:bg-[#F9F4EC]'
+                }`}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* INFO 4: FABRIC WEAVE & SPECIFICATIONS */}
+        <div className="pt-5 space-y-3">
+          <div className="p-3.5 rounded-xl bg-[#F4ECE1] border border-monarch-gold/25 space-y-2 text-xs shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-[#8C682A] font-semibold">Fabric Weave:</span>
+              <span className="text-monarch-charcoal font-serif font-medium">{product.fabric}</span>
+            </div>
+            {product.embroidery && (
+              <div className="flex items-center justify-between">
+                <span className="text-[#8C682A] font-semibold">Craft Technique:</span>
+                <span className="text-monarch-charcoal">{product.embroidery}</span>
+              </div>
+            )}
+            <div className="flex items-center justify-between">
+              <span className="text-[#8C682A] font-semibold">Estimated Delivery:</span>
+              <span className="text-monarch-charcoal flex items-center gap-1.5 font-medium">
+                <Truck className="w-3.5 h-3.5 text-monarch-maroon" />
+                <span>{product.deliveryDays || 3}-5 Business Days (Insured)</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Authenticity Seals */}
+          <div className="space-y-1.5 px-1 text-[11px] text-monarch-charcoal/80">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-[#8C682A] shrink-0" />
+              <span>100% Certified Silk Mark Guild · 24K Pure Gold Zari</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <RotateCcw className="w-4 h-4 text-[#8C682A] shrink-0" />
+              <span>Complimentary 7-Day Royal Concierge Exchange</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* =========================================================================
-          RIGHT COLUMN: ROYAL COUTURE SPECIFICATIONS & ORDER SUITE
+          STICKY BOTTOM ACTION FOOTER (LIGHT THEME)
       ========================================================================= */}
-      <div className="md:col-span-6 lg:col-span-5 h-[55vh] md:h-full flex flex-col justify-between bg-[#1E0A12] text-monarch-ivory">
-        {/* Desktop Header */}
-        <div className="p-5 sm:p-6 border-b border-monarch-gold/25 flex items-center justify-between bg-[#17060E] shrink-0">
-          <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-full bg-monarch-gold/15 text-monarch-gold border border-monarch-gold/30">
-              <Sparkles className="w-3.5 h-3.5" />
-            </span>
-            <div>
-              <span className="text-[10px] font-nav uppercase tracking-[0.28em] text-monarch-gold font-semibold block">
-                MONARCH ROYAL ATELIER
-              </span>
-              <p className="font-serif text-sm text-monarch-beige/80 line-clamp-1">
-                {product.categoryName} · Haute Couture
-              </p>
-            </div>
-          </div>
-
+      <div className="p-4 sm:p-5 border-t border-monarch-gold/25 bg-[#F4ECE1] shrink-0 space-y-2.5">
+        <div className="flex items-center gap-3">
+          {/* Main Add to Royal Bag Button */}
           <button
-            onClick={onClose}
-            className="hidden md:flex text-monarch-beige hover:text-monarch-ivory p-2 rounded-full border border-monarch-gold/30 hover:border-monarch-gold bg-[#2B0E17] transition-all hover:scale-105 shadow-sm"
-            aria-label="Close preview"
+            onClick={handleAddToCart}
+            disabled={isAdding}
+            className="flex-1 py-3.5 px-6 rounded-full bg-gradient-to-r from-monarch-gold via-[#E5C178] to-monarch-gold hover:brightness-105 text-monarch-burgundy font-nav text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-md disabled:opacity-80 active:scale-98"
           >
-            <X className="w-4 h-4" />
+            {isAdding ? (
+              <>
+                <Check className="w-4 h-4 text-monarch-burgundy" />
+                <span>Added to Royal Bag</span>
+              </>
+            ) : (
+              <>
+                <ShoppingBag className="w-4 h-4" />
+                <span>Add to Royal Bag · {formatINR(product.price)}</span>
+              </>
+            )}
+          </button>
+
+          {/* Wishlist Button */}
+          <button
+            onClick={() => toggleWishlist(product.id)}
+            className={`p-3.5 rounded-full border transition-all shadow-sm ${
+              inWishlist
+                ? 'bg-monarch-maroon text-monarch-gold border-monarch-maroon'
+                : 'bg-white text-monarch-charcoal border-monarch-gold/35 hover:text-monarch-maroon hover:border-monarch-gold'
+            }`}
+            aria-label="Toggle wishlist"
+          >
+            <Heart className={`w-4 h-4 ${inWishlist ? 'fill-monarch-gold' : ''}`} />
           </button>
         </div>
 
-        {/* Scrollable Information Body */}
-        <div className="flex-1 overflow-y-auto p-5 sm:p-6 lg:p-7 space-y-6 divide-y divide-monarch-gold/15 no-scrollbar">
-          {/* Section 1: Title, Category, Rating & Price */}
-          <div className="space-y-3">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <span className="text-[10px] font-nav uppercase tracking-[0.22em] text-monarch-gold font-semibold">
-                  {product.categoryName}
-                </span>
-                <h2 className="font-serif text-2xl sm:text-3xl text-monarch-ivory font-medium mt-1 tracking-tight leading-snug">
-                  {product.name}
-                </h2>
-                <p className="text-xs text-monarch-beige/75 font-sans mt-1.5 leading-relaxed">
-                  {product.tagline}
-                </p>
-              </div>
-
-              {/* Star Rating Badge */}
-              <div className="shrink-0 flex items-center gap-1.5 bg-[#2B0E17] px-3 py-1.5 rounded-full border border-monarch-gold/30 text-xs shadow-sm">
-                <Star className="w-3.5 h-3.5 fill-monarch-gold text-monarch-gold" />
-                <span className="font-semibold text-monarch-gold-light">{product.rating || 4.9}</span>
-                <span className="text-monarch-beige/50 text-[10px]">({product.reviewsCount || 48})</span>
-              </div>
-            </div>
-
-            {/* Price Display */}
-            <div className="flex items-baseline gap-3 pt-2">
-              <span className="font-serif text-2xl sm:text-3xl font-bold text-monarch-gold-light tracking-tight">
-                {formatINR(product.price)}
-              </span>
-              {product.originalPrice && (
-                <span className="text-sm font-sans line-through text-monarch-beige/45">
-                  {formatINR(product.originalPrice)}
-                </span>
-              )}
-              {product.discountPercent && (
-                <span className="text-[11px] font-nav uppercase tracking-wider text-emerald-400 bg-emerald-950/70 border border-emerald-500/35 px-2.5 py-0.5 rounded-full font-semibold">
-                  {product.discountPercent}% Privilege Off
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Section 2: Heritage Color Shades */}
-          <div className="pt-5 space-y-3">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-nav uppercase tracking-wider text-monarch-beige">
-                Heritage Shade: <strong className="text-monarch-ivory">{selectedColor}</strong>
-              </span>
-              <span className="text-[11px] text-monarch-gold/80 font-sans">
-                {product.colors.length} Curated Silks
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              {product.colors.map((color, idx) => (
-                <button
-                  key={color.name}
-                  onClick={() => {
-                    setSelectedColor(color.name);
-                    if (color.imageIndex !== undefined) {
-                      setActiveImageIndex(color.imageIndex);
-                    } else if (idx < product.images.length) {
-                      setActiveImageIndex(idx);
-                    }
-                  }}
-                  className={`relative w-8 h-8 rounded-full border transition-all ${
-                    selectedColor === color.name
-                      ? 'ring-2 ring-monarch-gold scale-110 border-white shadow-xl'
-                      : 'border-monarch-gold/40 hover:scale-105 opacity-80 hover:opacity-100'
-                  }`}
-                  style={{ backgroundColor: color.hex }}
-                  title={color.name}
-                >
-                  {selectedColor === color.name && (
-                    <span className="absolute inset-0 flex items-center justify-center text-white text-[10px] font-bold">
-                      ✓
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Section 3: Silhouette Sizing & Measurement Index */}
-          <div className="pt-5 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-nav uppercase tracking-wider text-monarch-beige">
-                Select Silhouette Size
-              </span>
-              <button
-                onClick={() => setShowSizeGuide(!showSizeGuide)}
-                className="text-[11px] text-monarch-gold hover:text-monarch-gold-light font-nav flex items-center gap-1.5 underline underline-offset-2 transition-colors"
-              >
-                <Ruler className="w-3.5 h-3.5" />
-                <span>{showSizeGuide ? 'Hide Measurements' : 'Royal Size Guide'}</span>
-              </button>
-            </div>
-
-            {/* Interactive Size Guide Table */}
-            {showSizeGuide && (
-              <div className="p-3.5 rounded-xl bg-[#280D16] border border-monarch-gold/30 text-xs text-monarch-beige space-y-2 animate-fadeIn">
-                <p className="font-semibold text-monarch-gold-light font-serif text-sm">
-                  Monarch Royal Sizing Index (Inches):
-                </p>
-                <div className="grid grid-cols-4 gap-2 text-center text-[10px] font-nav uppercase tracking-wider py-1 border-y border-monarch-gold/20 text-monarch-gold">
-                  <span>Size</span>
-                  <span>Bust</span>
-                  <span>Waist</span>
-                  <span>Hip</span>
-                </div>
-                <div className="space-y-1 text-[11px] font-sans">
-                  <div className="grid grid-cols-4 gap-2 text-center text-monarch-ivory">
-                    <span className="font-semibold">36 (S)</span>
-                    <span>34-35&quot;</span>
-                    <span>28&quot;</span>
-                    <span>38&quot;</span>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2 text-center text-monarch-ivory">
-                    <span className="font-semibold">38 (M)</span>
-                    <span>36-37&quot;</span>
-                    <span>30&quot;</span>
-                    <span>40&quot;</span>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2 text-center text-monarch-ivory">
-                    <span className="font-semibold">40 (L)</span>
-                    <span>38-39&quot;</span>
-                    <span>32&quot;</span>
-                    <span>42&quot;</span>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2 text-center text-monarch-ivory">
-                    <span className="font-semibold">42 (XL)</span>
-                    <span>40-41&quot;</span>
-                    <span>34&quot;</span>
-                    <span>44&quot;</span>
-                  </div>
-                </div>
-                <p className="text-[10px] text-monarch-gold/80 italic pt-1 border-t border-monarch-gold/15">
-                  Bespoke bridal &amp; imperial custom sizing is also available upon salon appointment.
-                </p>
-              </div>
-            )}
-
-            {/* Size Buttons */}
-            <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-              {product.sizes.map((size) => (
-                <button
-                  key={size}
-                  onClick={() => setSelectedSize(size)}
-                  className={`py-2.5 px-3 text-xs font-nav rounded-lg border transition-all ${
-                    selectedSize === size
-                      ? 'bg-monarch-gold text-monarch-burgundy font-bold border-monarch-gold shadow-md scale-102'
-                      : 'bg-[#290E17] text-monarch-beige border-monarch-gold/30 hover:border-monarch-gold hover:text-monarch-ivory'
-                  }`}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Section 4: Master Karigari & Weave Specifications */}
-          <div className="pt-5 space-y-3">
-            <div className="p-4 rounded-xl bg-[#260C15] border border-monarch-gold/25 space-y-2.5 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-monarch-gold font-medium">Fabric Weave:</span>
-                <span className="text-monarch-ivory font-serif font-medium">{product.fabric}</span>
-              </div>
-              {product.embroidery && (
-                <div className="flex items-center justify-between">
-                  <span className="text-monarch-gold font-medium">Craft Technique:</span>
-                  <span className="text-monarch-beige">{product.embroidery}</span>
-                </div>
-              )}
-              <div className="flex items-center justify-between">
-                <span className="text-monarch-gold font-medium">Estimated Delivery:</span>
-                <span className="text-monarch-beige flex items-center gap-1.5">
-                  <Truck className="w-3.5 h-3.5 text-monarch-gold" />
-                  <span>{product.deliveryDays || 3}-5 Business Days (Insured)</span>
-                </span>
-              </div>
-            </div>
-
-            {/* Triple Royal Authenticity Seals */}
-            <div className="space-y-1.5 px-1 text-[11px] text-monarch-beige/85">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-monarch-gold shrink-0" />
-                <span>100% Certified Silk Mark Guild · 24K Pure Gold Zari</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <RotateCcw className="w-4 h-4 text-monarch-gold shrink-0" />
-                <span>Complimentary 7-Day Royal Concierge Exchange</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Sticky Action Footer */}
-        <div className="p-5 sm:p-6 border-t border-monarch-gold/25 bg-[#17060B] shrink-0 space-y-3">
-          <div className="flex items-center gap-3">
-            {/* Main Add to Royal Bag Button */}
-            <button
-              onClick={handleAddToCart}
-              disabled={isAdding}
-              className="flex-1 py-3.5 px-6 rounded-full bg-gradient-to-r from-monarch-gold via-[#E5C178] to-monarch-gold hover:brightness-110 text-monarch-burgundy font-nav text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-xl disabled:opacity-80"
-            >
-              {isAdding ? (
-                <>
-                  <Check className="w-4 h-4 text-monarch-burgundy" />
-                  <span>Added to Royal Bag</span>
-                </>
-              ) : (
-                <>
-                  <ShoppingBag className="w-4 h-4" />
-                  <span>Add to Royal Bag · {formatINR(product.price)}</span>
-                </>
-              )}
-            </button>
-
-            {/* Wishlist Button */}
-            <button
-              onClick={() => toggleWishlist(product.id)}
-              className={`p-3.5 rounded-full border transition-all ${
-                inWishlist
-                  ? 'bg-monarch-maroon text-monarch-gold border-monarch-gold shadow-md'
-                  : 'bg-[#290E17] text-monarch-beige border-monarch-gold/30 hover:text-monarch-gold hover:border-monarch-gold'
-              }`}
-              aria-label="Toggle wishlist"
-            >
-              <Heart className={`w-4 h-4 ${inWishlist ? 'fill-monarch-gold' : ''}`} />
-            </button>
-          </div>
-
-          {/* View Complete Details Link */}
-          <Link
-            href={`/product/${product.id}`}
-            onClick={onClose}
-            className="flex items-center justify-center gap-1.5 text-xs font-nav uppercase tracking-widest text-monarch-gold hover:text-monarch-gold-light hover:underline pt-1 transition-colors"
-          >
-            <span>View Complete Couture Portfolio &amp; Story</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
+        {/* View Complete Details Link */}
+        <Link
+          href={`/product/${product.id}`}
+          onClick={onClose}
+          className="flex items-center justify-center gap-1.5 text-xs font-nav uppercase tracking-widest text-[#8C682A] hover:text-monarch-maroon hover:underline pt-0.5 transition-colors font-bold"
+        >
+          <span>View Complete Couture Portfolio &amp; Story</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
       </div>
     </div>
   );
@@ -434,15 +420,32 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({
   onClose: propOnClose,
 }) => {
   const { quickViewProduct, closeQuickView } = useQuickView();
+  const { pauseScroll, resumeScroll } = useSmoothScroll();
 
   // Support both controlled props and global QuickViewContext
   const activeProduct = propProduct !== undefined ? propProduct : quickViewProduct;
   const handleClose = propOnClose !== undefined ? propOnClose : closeQuickView;
 
+  // Lock background window scroll and pause Lenis smooth scroll while modal is open
+  useEffect(() => {
+    if (activeProduct) {
+      pauseScroll();
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prevOverflow;
+        resumeScroll();
+      };
+    }
+  }, [activeProduct, pauseScroll, resumeScroll]);
+
   return (
     <AnimatePresence>
       {activeProduct && (
-        <div className="fixed inset-0 z-50 overflow-hidden flex justify-end">
+        <div
+          data-lenis-prevent="true"
+          className="fixed inset-0 z-50 overflow-hidden flex justify-end"
+        >
           {/* Backdrop Fade */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -450,16 +453,17 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.32, ease: 'easeOut' }}
             onClick={handleClose}
-            className="fixed inset-0 bg-black/75 backdrop-blur-md"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
           />
 
-          {/* Full-width / Expansive 2-Column Couture Side Drawer */}
+          {/* Clean Scrollable Light-Themed Side Drawer */}
           <motion.div
+            data-lenis-prevent="true"
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
-            transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
-            className="relative z-10 w-full sm:w-[94vw] md:w-[88vw] lg:w-[82vw] xl:w-[78vw] max-w-6xl bg-[#1E0A12] text-monarch-ivory border-l border-monarch-gold/35 shadow-[0_0_80px_rgba(0,0,0,0.92)] flex flex-col h-full overflow-hidden"
+            transition={{ duration: 0.38, ease: [0.32, 0.72, 0, 1] }}
+            className="relative z-10 w-full max-w-md sm:max-w-lg bg-[#FAF7F2] text-monarch-charcoal border-l border-monarch-gold/30 shadow-[0_0_60px_rgba(0,0,0,0.35)] flex flex-col h-full max-h-screen overflow-hidden overscroll-contain"
           >
             <QuickViewContent
               key={activeProduct.id}
