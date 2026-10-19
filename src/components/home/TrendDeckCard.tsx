@@ -16,19 +16,19 @@ interface TrendDeckCardProps {
 
 const cardVariants: Variants = {
   enter: (dir: number) => ({
-    // If navigating forward, next card emerges from the underneath stack
-    // If navigating backward, previous card slides in gently from the side
-    x: dir >= 0 ? 0 : -200,
-    y: dir >= 0 ? 14 : -10,
-    rotate: dir >= 0 ? -2.8 : -10,
-    scale: dir >= 0 ? 0.94 : 0.96,
-    opacity: dir >= 0 ? 0.9 : 0,
+    // Dynamic IN animation: card sweeps in smoothly from the opposite side
+    x: dir >= 0 ? 200 : -200,
+    y: 12,
+    rotate: dir >= 0 ? 10 : -10,
+    scale: 0.93,
+    opacity: 0,
     zIndex: 20,
     transition: {
-      type: 'spring' as const,
-      stiffness: 260,
-      damping: 24,
-      mass: 0.8,
+      x: { type: 'spring' as const, stiffness: 260, damping: 24, mass: 0.8 },
+      y: { type: 'spring' as const, stiffness: 260, damping: 24, mass: 0.8 },
+      rotate: { type: 'spring' as const, stiffness: 260, damping: 24, mass: 0.8 },
+      scale: { duration: 0.38, ease: [0.16, 1, 0.3, 1] },
+      opacity: { duration: 0.32, ease: 'easeOut' },
     },
   }),
   center: {
@@ -46,22 +46,19 @@ const cardVariants: Variants = {
     },
   },
   exit: (dir: number) => ({
-    // Compact, elegant card deal flick:
-    // 1. Contained distance (±220px, never flies across adjacent columns)
-    // 2. Tactile upward wrist tilt (y: -18, rotate: ±12°)
-    // 3. Faded then gone: holds visibility during initial peel, then fades out smoothly to 0
+    // OUT animation: compact deal flick that fades out and is gone
     zIndex: 35,
     x: dir >= 0 ? -220 : 220,
     y: -18,
     rotate: dir >= 0 ? -12 : 12,
     scale: 0.96,
-    opacity: [1, 0.85, 0],
+    opacity: 0,
     transition: {
-      x: { duration: 0.44, ease: [0.22, 1, 0.36, 1] },
-      y: { duration: 0.44, ease: [0.22, 1, 0.36, 1] },
-      rotate: { duration: 0.44, ease: [0.22, 1, 0.36, 1] },
-      scale: { duration: 0.4, ease: 'easeOut' },
-      opacity: { duration: 0.44, times: [0, 0.35, 1], ease: 'easeInOut' },
+      x: { duration: 0.42, ease: [0.22, 1, 0.36, 1] },
+      y: { duration: 0.42, ease: [0.22, 1, 0.36, 1] },
+      rotate: { duration: 0.42, ease: [0.22, 1, 0.36, 1] },
+      scale: { duration: 0.38, ease: 'easeOut' },
+      opacity: { duration: 0.38, ease: [0.45, 0, 0.75, 0] },
     },
   }),
 };
