@@ -15,6 +15,7 @@ test('NewArrivals and BestSellers Architecture & GSAP Verification', async (t) =
     assert.match(content, /scope:\s*containerRef/, 'NewArrivals must scope useGSAP to containerRef');
     assert.match(content, /ProductCard/, 'NewArrivals must render ProductCard');
     assert.match(content, /handleScroll/, 'NewArrivals must support manual scroll navigation');
+    assert.match(content, /NEW_ARRIVALS_DATA/, 'NewArrivals must import from dedicated newArrivals data file');
   });
 
   await t.test('BestSellers complies with Rule 2 using useGSAP and dynamic ranking badges', () => {
@@ -26,5 +27,6 @@ test('NewArrivals and BestSellers Architecture & GSAP Verification', async (t) =
     assert.match(content, /ProductCard/, 'BestSellers must render ProductCard');
     assert.match(content, /#\$\{index \+ 1\} Best Seller/, 'BestSellers must dynamically assign ranking badge');
     assert.match(content, /handleScroll/, 'BestSellers must support manual scroll navigation');
+    assert.match(content, /BEST_SELLERS_DATA/, 'BestSellers must import from dedicated bestSellers data file');
   });
 });

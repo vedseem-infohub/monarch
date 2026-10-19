@@ -9,6 +9,8 @@ import { LATEST_TRENDS_DATA } from '@/data/latestTrends';
 import { CINEMATIC_STORIES } from '@/data/cinematicStories';
 import { CHANGE_LOOK_PRODUCTS } from '@/data/changeLook';
 import { CRAFT_SANCTUM_PILLARS } from '@/data/atelier';
+import { NEW_ARRIVALS_PRODUCTS } from '@/data/newArrivals';
+import { BEST_SELLERS_PRODUCTS } from '@/data/bestSellers';
 import { PRODUCTS } from '@/data/products';
 
 /**
@@ -81,7 +83,17 @@ export function getAllSectionImageUrls(): string[] {
     if (p.macroImage) urls.push(p.macroImage);
   });
 
-  // First 8 Catalog Products (New Arrivals & Best Sellers)
+  // New Arrivals (Section 3)
+  NEW_ARRIVALS_PRODUCTS.forEach((p) => {
+    if (p.images?.[0]) urls.push(p.images[0]);
+  });
+
+  // Best Sellers (Section 4)
+  BEST_SELLERS_PRODUCTS.forEach((p) => {
+    if (p.images?.[0]) urls.push(p.images[0]);
+  });
+
+  // Catalog Products Fallback
   PRODUCTS.slice(0, 8).forEach((p) => {
     if (p.images?.[0]) urls.push(p.images[0]);
   });

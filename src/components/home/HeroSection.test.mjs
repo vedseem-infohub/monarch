@@ -101,6 +101,19 @@ test('HeroSection Component & Data Architecture Verification', async (t) => {
       !heroContent.includes('currentFrameRef.current += diff * 0.2'),
       'Sluggish secondary LERP loop must be replaced by direct ScrollTrigger synchronization'
     );
+    // Ensure responsive low-latency scrub and crisp single-frame rendering
+    assert.ok(
+      heroContent.includes('scrub: 0.08'),
+      'ScrollTrigger must feature responsive scrub (0.08s) to eliminate rubber-band delay'
+    );
+    assert.ok(
+      heroContent.includes("ctx.imageSmoothingQuality = 'medium'"),
+      'HeroSection must feature fast hardware-accelerated smoothing for 120fps fluid playback'
+    );
+    assert.ok(
+      heroContent.includes('ctx.globalAlpha = 1.0') && !heroContent.includes('ctx.globalAlpha = blend'),
+      'HeroSection must render pure single frames without ghosting or blur when stopped'
+    );
   });
 
   await t.test('verifies decoupled data architecture per Rule 4', () => {

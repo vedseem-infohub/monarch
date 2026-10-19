@@ -75,7 +75,7 @@ test('Header & Modal Menus Glossy Architecture Verification', async (t) => {
     );
   });
 
-  await t.test('verifies MegaMenu uses dark blur gradient with increased blur and no border in either state', () => {
+  await t.test('verifies MegaMenu uses dark blur gradient with frosted blur and no border in either state', () => {
     assert.ok(
       megaMenuContent.includes('isGlossy?: boolean'),
       'MegaMenuProps must declare optional isGlossy prop'
@@ -85,12 +85,27 @@ test('Header & Modal Menus Glossy Architecture Verification', async (t) => {
       'MegaMenu must use dark blur gradient and no border when isGlossy is true'
     );
     assert.ok(
-      megaMenuContent.includes('backdrop-blur-md'),
-      'MegaMenu must feature frosted blur (backdrop-blur-md) when isGlossy is true'
+      megaMenuContent.includes('backdrop-blur-xl'),
+      'MegaMenu must feature luxury frosted blur (backdrop-blur-xl) when isGlossy is true'
     );
     assert.ok(
       !megaMenuContent.includes('border-b border-monarch-gold/30 shadow-2xl'),
       'MegaMenu must not show border-b when scrolled'
+    );
+    assert.ok(
+      megaMenuContent.includes('[text-shadow:_0_1px_4px_rgba(0,0,0,0.85)]'),
+      'MegaMenu titles must feature text-shadow for high visibility'
+    );
+  });
+
+  await t.test('verifies Header synchronizes gradient seamlessly when MegaMenu is open', () => {
+    assert.ok(
+      headerContent.includes('isMenuOpen'),
+      'Header must detect isMenuOpen state from activeMenu'
+    );
+    assert.ok(
+      headerContent.includes('from-black/95 via-black/92 to-black/90'),
+      'Header must adapt gradient to fuse continuously with MegaMenu when open'
     );
   });
 

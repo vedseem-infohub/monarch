@@ -34,7 +34,7 @@ export interface HeroConfig {
 
 export const HERO_CONFIG: HeroConfig = {
   totalFrames: 79,
-  scrollDistanceVh: 400,
+  scrollDistanceVh: 220,
   framePathPrefix: '/hero-frames/frame_',
   initialPosterPath: '/hero-frames/frame_001.webp',
   pillBadgeText: 'Royal Haute Couture · Festive 2026',

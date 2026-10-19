@@ -9,6 +9,8 @@ import { ATTENTION_PRODUCTS } from '@/data/worthYourAttention';
 import { LATEST_TRENDS_PRODUCTS } from '@/data/latestTrends';
 import { CINEMATIC_STORIES } from '@/data/cinematicStories';
 import { ROYAL_CLIENT_DIARIES } from '@/data/atelier';
+import { NEW_ARRIVALS_PRODUCTS } from '@/data/newArrivals';
+import { BEST_SELLERS_PRODUCTS } from '@/data/bestSellers';
 
 const BASE_PRODUCTS: Product[] = [
   {
@@ -494,6 +496,8 @@ const DEDUPED_CATALOG: Product[] = [
   ...LATEST_TRENDS_PRODUCTS,
   ...CINEMATIC_STORIES,
   ...ROYAL_CLIENT_DIARIES.map((d) => d.ensemble),
+  ...NEW_ARRIVALS_PRODUCTS,
+  ...BEST_SELLERS_PRODUCTS,
 ].filter((p, index, self) => index === self.findIndex((item) => item.id === p.id));
 
 export const ALL_PRODUCTS: Product[] = DEDUPED_CATALOG;

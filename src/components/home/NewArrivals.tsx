@@ -2,7 +2,7 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
-import { PRODUCTS } from '@/data/products';
+import { NEW_ARRIVALS_DATA } from '@/data/newArrivals';
 import { ProductCard } from '@/components/product/ProductCard';
 import { SectionHeader } from '@/components/home/shared/SectionHeader';
 import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
@@ -20,12 +20,8 @@ export const NewArrivals: React.FC = () => {
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
-  // Filter or sort for genuine new arrivals:
-  // Products with 'New Arrival' badge or latest in the catalog
-  const newArrivalProducts = [
-    ...PRODUCTS.filter((p) => p.badge === 'New Arrival'),
-    ...PRODUCTS.filter((p) => p.badge !== 'New Arrival'),
-  ].slice(0, 8);
+  // Authentically provisioned from dedicated data file per Rule 4
+  const newArrivalProducts = NEW_ARRIVALS_DATA.products;
 
   const updateScrollState = () => {
     if (!trackRef.current) return;
@@ -88,13 +84,13 @@ export const NewArrivals: React.FC = () => {
           <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-monarch-gold/15 border border-monarch-gold/30 text-[11px] font-nav uppercase tracking-[0.25em] text-monarch-gold-dark font-medium mb-3">
               <Sparkles className="w-3.5 h-3.5 text-monarch-gold" />
-              <span>The Fresh Palette</span>
+              <span>{NEW_ARRIVALS_DATA.eyebrow}</span>
             </div>
             <SectionHeader
               eyebrow=""
-              title="New"
-              italicWord="Arrivals"
-              description="Contemporary royal silhouettes woven with heirloom sensibilities for the upcoming festive calendar."
+              title={NEW_ARRIVALS_DATA.title}
+              italicWord={NEW_ARRIVALS_DATA.italicWord}
+              description={NEW_ARRIVALS_DATA.description}
               align="left"
               className="mb-0"
             />
@@ -102,7 +98,7 @@ export const NewArrivals: React.FC = () => {
 
           <div className="flex items-center gap-3 shrink-0">
             <Link
-              href="/collections/all?filter=new"
+              href={NEW_ARRIVALS_DATA.viewAllHref}
               className="text-xs font-nav uppercase tracking-[0.2em] font-semibold text-monarch-maroon hover:text-monarch-maroon-dark pb-0.5 border-b border-monarch-maroon/30 transition-colors mr-2"
             >
               View All

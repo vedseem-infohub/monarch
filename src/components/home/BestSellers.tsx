@@ -2,7 +2,7 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
-import { PRODUCTS } from '@/data/products';
+import { BEST_SELLERS_DATA } from '@/data/bestSellers';
 import { ProductCard } from '@/components/product/ProductCard';
 import { ChevronLeft, ChevronRight, Award } from 'lucide-react';
 import gsap from 'gsap';
@@ -19,14 +19,8 @@ export const BestSellers: React.FC = () => {
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
-  // Authentically rank bestsellers based on review rating, review count, and bestseller badge
-  const bestSellerProducts = [...PRODUCTS]
-    .sort((a, b) => {
-      const aScore = (a.badge === 'Bestseller' ? 100 : 0) + (a.rating || 0) * 10 + (a.reviewsCount || 0);
-      const bScore = (b.badge === 'Bestseller' ? 100 : 0) + (b.rating || 0) * 10 + (b.reviewsCount || 0);
-      return bScore - aScore;
-    })
-    .slice(0, 8);
+  // Authentically provisioned from dedicated data file per Rule 4
+  const bestSellerProducts = BEST_SELLERS_DATA.products;
 
   const updateScrollState = () => {
     if (!trackRef.current) return;
@@ -90,22 +84,22 @@ export const BestSellers: React.FC = () => {
           <div className="space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-monarch-gold/15 border border-monarch-gold/30 text-[11px] font-nav uppercase tracking-[0.25em] text-monarch-gold-dark font-medium">
               <Award className="w-3.5 h-3.5 text-monarch-gold" />
-              <span>Patron Favorites</span>
+              <span>{BEST_SELLERS_DATA.eyebrow}</span>
             </div>
             <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-medium tracking-tight text-monarch-charcoal">
-              Best{' '}
+              {BEST_SELLERS_DATA.title}{' '}
               <span className="font-serif italic font-light text-monarch-gold-dark">
-                Sellers
+                {BEST_SELLERS_DATA.italicWord}
               </span>
             </h2>
             <p className="text-xs sm:text-sm text-monarch-charcoal/75 font-sans leading-relaxed max-w-xl">
-              Our most celebrated creations, adorned with 24K pure gold-dipped dabka, Kashi zari, and certified silks.
+              {BEST_SELLERS_DATA.description}
             </p>
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
             <Link
-              href="/collections/all"
+              href={BEST_SELLERS_DATA.viewAllHref}
               className="text-xs font-nav uppercase tracking-[0.2em] font-semibold text-monarch-maroon hover:text-monarch-maroon-dark pb-0.5 border-b border-monarch-maroon/30 transition-colors mr-2"
             >
               Explore Collection

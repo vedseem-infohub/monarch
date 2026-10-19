@@ -34,22 +34,36 @@ export const Header: React.FC = () => {
   }, []);
 
   // Header background logic:
-  // When starting (at top): dark gradient with decreasing blur from bottom, zero border
-  // When scrolling: smoothly transitions to default solid deep burgundy (#240E14) with zero border
+  // 1. When MegaMenu is OPEN: Header adapts its gradient and blur to fuse with the MegaMenu as one continuous glossy panel
+  // 2. When starting (at top, menu closed): dark gradient with decreasing blur from bottom to merge into hero frames
+  // 3. When scrolling: smoothly transitions to default solid deep burgundy (#240E14) with zero border
+  const isMenuOpen = activeMenu !== null;
   const isGlossy = !isScrolled;
 
   const headerBgClass = isGlossy
     ? 'border-none text-monarch-ivory py-4'
     : 'border-none text-monarch-ivory py-3.5';
 
-  const backdropBgClass = isGlossy
-    ? 'bg-gradient-to-b from-black/90 via-black/50 to-transparent backdrop-blur-md [mask-image:linear-gradient(to_bottom,black_0%,black_35%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_35%,transparent_100%)] border-none'
-    : 'bg-[#240E14]/95 backdrop-blur-md border-none shadow-xl';
+  const backdropBgClass = isMenuOpen
+    ? isGlossy
+      ? 'bg-gradient-to-b from-black/95 via-black/92 to-black/90 backdrop-blur-xl border-none shadow-none'
+      : 'bg-[#240E14]/98 backdrop-blur-xl border-none shadow-none'
+    : isGlossy
+      ? 'bg-gradient-to-b from-black/90 via-black/50 to-transparent backdrop-blur-md [mask-image:linear-gradient(to_bottom,black_0%,black_35%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_35%,transparent_100%)] border-none'
+      : 'bg-[#240E14]/95 backdrop-blur-md border-none shadow-xl';
 
   return (
     <>
-      <header className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${headerBgClass}`}>
-        {/* Dynamic Progressive Blur & Dark Gradient Backdrop (decreases blur from bottom to seamlessly merge with frames) */}
+      <header
+        onMouseLeave={(e) => {
+          const related = e.relatedTarget as Node | null;
+          if (!related || !(e.currentTarget.contains(related))) {
+            setActiveMenu(null);
+          }
+        }}
+        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${headerBgClass}`}
+      >
+        {/* Dynamic Progressive Blur & Dark Gradient Backdrop (fuses with MegaMenu when open, fades into frames when closed) */}
         <div
           className={`absolute inset-0 pointer-events-none -z-10 transition-all duration-500 ${backdropBgClass}`}
         />
