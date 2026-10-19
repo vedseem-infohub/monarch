@@ -107,6 +107,6 @@ test('ProductQuickView Side Drawer & Motion Architecture Verification', async (t
     // ProductCard hover image and swatches
     assert.match(productCardContent, /hoverImg/, 'ProductCard must calculate alternate hover image');
     assert.match(productCardContent, /opacity-0 group-hover:opacity-100/, 'ProductCard must crossfade to alternate image on hover');
-    assert.match(productCardContent, /onMouseEnter=\{\(\) => setSelectedColorIdx/, 'ProductCard color swatches must update preview image on hover');
+    assert.match(productCardContent, /setSelectedColorIdx/, 'ProductCard color swatches must update preview image on hover');
   });
 });

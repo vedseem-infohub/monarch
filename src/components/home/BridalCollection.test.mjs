@@ -10,8 +10,8 @@ describe('BridalCollection Curved Layers Architecture', () => {
   const compContent = fs.readFileSync(compPath, 'utf-8');
   const dividerContent = fs.readFileSync(dividerPath, 'utf-8');
 
-  it('verifies BridalCollection uses authentic #291116 dark brown background', () => {
-    assert.ok(compContent.includes('bg-[#291116]'), 'Section must use authentic dark brown #291116');
+  it('verifies BridalCollection uses authentic rich dark brown #3D1A12 background', () => {
+    assert.ok(compContent.includes('bg-[#3D1A12]'), 'Section must use authentic rich dark brown #3D1A12');
     assert.ok(compContent.includes('CurvedDivider'), 'Must import and mount CurvedDivider');
   });
 
@@ -22,11 +22,12 @@ describe('BridalCollection Curved Layers Architecture', () => {
     assert.ok(dividerContent.includes('hasGoldBorder'), 'Must render gold border on curved layers');
     assert.ok(dividerContent.includes('vectorEffect="non-scaling-stroke"'), 'Must use non-scaling stroke for razor-sharp hairline');
     assert.ok(dividerContent.includes('clampedStrokeWidth'), 'Must clamp stroke width strictly to 1px-2px');
+    assert.ok(dividerContent.includes('strokeWidth = 1'), 'Must default stroke width to 1px hairline');
   });
 
   it('verifies top and bottom curved transitions connect light ivory and dark brown', () => {
-    assert.ok(compContent.includes('lightBrownColor="#8C6036"'), 'Must pass light brown #8C6036 to CurvedDivider');
-    assert.ok(compContent.includes('darkBrownColor="#291116"'), 'Must pass authentic dark brown #291116 to CurvedDivider');
+    assert.ok(compContent.includes('lightBrownColor="#966035"'), 'Must pass warm light brown #966035 to CurvedDivider');
+    assert.ok(compContent.includes('darkBrownColor="#3D1A12"'), 'Must pass rich dark brown #3D1A12 to CurvedDivider');
     assert.ok(compContent.includes('direction="toDark"'), 'Must have top toDark transition');
     assert.ok(compContent.includes('direction="toLight"'), 'Must have bottom toLight transition');
   });

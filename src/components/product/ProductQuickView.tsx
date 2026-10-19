@@ -48,8 +48,12 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
     product.sizes[0] || 'M'
   );
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
+  const [customImageSrc, setCustomImageSrc] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [showSizeGuide, setShowSizeGuide] = useState(false);
+
+  // Active display image (supports custom color image or catalog gallery index)
+  const displayImage = customImageSrc || product.images[activeImageIndex] || product.images[0];
 
   // Flipkart/Amazon interactive cursor-tracking zoom
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50, active: false });
@@ -69,28 +73,62 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
   const handlePrevImage = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setActiveImageIndex((prev) => (prev - 1 + product.images.length) % product.images.length);
+    setCustomImageSrc(null);
+    setActiveImageIndex((prev) => {
+      const nextIdx = (prev - 1 + product.images.length) % product.images.length;
+      const matchedColor = product.colors.find((c, cIdx) => c.imageIndex === nextIdx || cIdx === nextIdx);
+      if (matchedColor) setSelectedColor(matchedColor.name);
+      return nextIdx;
+    });
   };
 
   const handleNextImage = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setActiveImageIndex((prev) => (prev + 1) % product.images.length);
+    setCustomImageSrc(null);
+    setActiveImageIndex((prev) => {
+      const nextIdx = (prev + 1) % product.images.length;
+      const matchedColor = product.colors.find((c, cIdx) => c.imageIndex === nextIdx || cIdx === nextIdx);
+      if (matchedColor) setSelectedColor(matchedColor.name);
+      return nextIdx;
+    });
   };
 
-  // Instant hover-to-change photo helper
+  // Instant hover-or-click to select thumbnail image
   const handleThumbnailHover = (idx: number) => {
+    setCustomImageSrc(null);
     setActiveImageIndex(idx);
+    const matchedColor = product.colors.find(
+      (c, cIdx) => c.imageIndex === idx || c.image === product.images[idx] || (c.imageIndex === undefined && cIdx === idx)
+    );
+    if (matchedColor) {
+      setSelectedColor(matchedColor.name);
+    }
   };
 
-  // Instant hover-to-change color shade helper
-  const handleColorHover = (colorName: string, imageIndex?: number, fallbackIdx?: number) => {
+  // Instant hover-or-click to select color shade and update main photo
+  const handleColorHover = (colorName: string, imageIndex?: number, fallbackIdx?: number, colorImage?: string) => {
     setSelectedColor(colorName);
-    if (imageIndex !== undefined) {
+    if (imageIndex !== undefined && imageIndex >= 0 && imageIndex < product.images.length) {
+      setCustomImageSrc(null);
       setActiveImageIndex(imageIndex);
+    } else if (colorImage) {
+      const foundIdx = product.images.indexOf(colorImage);
+      if (foundIdx !== -1) {
+        setCustomImageSrc(null);
+        setActiveImageIndex(foundIdx);
+      } else {
+        setCustomImageSrc(colorImage);
+      }
     } else if (fallbackIdx !== undefined && fallbackIdx < product.images.length) {
+      setCustomImageSrc(null);
       setActiveImageIndex(fallbackIdx);
     }
+  };
+
+  // Instant hover-or-click to select silhouette size
+  const handleSizeHover = (size: string) => {
+    setSelectedSize(size);
   };
 
   const inWishlist = isInWishlist(product.id);
@@ -169,7 +207,7 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
             {/* Big Model Photo (Interactive Pan/Zoom on hover) */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={product.images[activeImageIndex] || product.images[0]}
+              src={displayImage}
               alt={product.name}
               className="w-full h-full object-cover object-top transition-transform duration-150 ease-out pointer-events-none"
               style={{
@@ -246,7 +284,7 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
                   onMouseOver={() => handleThumbnailHover(idx)}
                   onPointerEnter={() => handleThumbnailHover(idx)}
                   className={`relative shrink-0 w-12 h-16 sm:w-14 sm:h-18 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
-                    activeImageIndex === idx
+                    activeImageIndex === idx && !customImageSrc
                       ? 'border-monarch-maroon ring-2 ring-monarch-gold ring-offset-2 ring-offset-[#FAF7F2] scale-105 shadow-md'
                       : 'border-monarch-gold/35 opacity-75 hover:opacity-100 hover:border-monarch-gold hover:scale-105'
                   }`}
@@ -320,10 +358,11 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
             {product.colors.map((color, idx) => (
               <button
                 key={color.name}
-                onClick={() => handleColorHover(color.name, color.imageIndex, idx)}
-                onMouseEnter={() => handleColorHover(color.name, color.imageIndex, idx)}
-                onMouseOver={() => handleColorHover(color.name, color.imageIndex, idx)}
-                onPointerEnter={() => handleColorHover(color.name, color.imageIndex, idx)}
+                type="button"
+                onClick={() => handleColorHover(color.name, color.imageIndex, idx, color.image)}
+                onMouseEnter={() => handleColorHover(color.name, color.imageIndex, idx, color.image)}
+                onMouseOver={() => handleColorHover(color.name, color.imageIndex, idx, color.image)}
+                onPointerEnter={() => handleColorHover(color.name, color.imageIndex, idx, color.image)}
                 className={`relative w-8 h-8 rounded-full border transition-all cursor-pointer ${
                   selectedColor === color.name
                     ? 'ring-2 ring-monarch-gold ring-offset-2 ring-offset-[#FAF7F2] scale-110 border-white shadow-lg'
@@ -403,15 +442,19 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
             </div>
           )}
 
-          {/* Size Buttons */}
+          {/* Size Buttons (Hover or Click to Select) */}
           <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
             {product.sizes.map((size) => (
               <button
                 key={size}
-                onClick={() => setSelectedSize(size)}
-                className={`py-2 px-3 text-xs font-nav rounded-lg border transition-all ${
+                type="button"
+                onClick={() => handleSizeHover(size)}
+                onMouseEnter={() => handleSizeHover(size)}
+                onMouseOver={() => handleSizeHover(size)}
+                onPointerEnter={() => handleSizeHover(size)}
+                className={`py-2 px-3 text-xs font-nav rounded-lg border transition-all cursor-pointer ${
                   selectedSize === size
-                    ? 'bg-monarch-burgundy text-monarch-gold-light font-bold border-monarch-burgundy shadow-sm scale-102'
+                    ? 'bg-monarch-burgundy text-monarch-gold-light font-bold border-monarch-burgundy shadow-sm scale-102 ring-1 ring-monarch-gold/50'
                     : 'bg-white text-monarch-charcoal border-monarch-gold/30 hover:border-monarch-gold hover:bg-[#FAF7F2]'
                 }`}
               >

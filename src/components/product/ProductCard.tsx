@@ -20,14 +20,32 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, priority = fa
   const { openQuickView } = useQuickView();
 
   const [selectedColorIdx, setSelectedColorIdx] = useState(0);
+  const [hoveredColorIdx, setHoveredColorIdx] = useState<number | null>(null);
   const [isQuickAdded, setIsQuickAdded] = useState(false);
 
   const inWishlist = isInWishlist(product.id);
 
-  // Active primary image and secondary hover crossfade image
-  const primaryImg = product.images[selectedColorIdx] || product.images[0];
+  // Active color index (hover reacts immediately like select, fallback to selected)
+  const activeColorIdx = hoveredColorIdx !== null ? hoveredColorIdx : selectedColorIdx;
+
+  // Resolve color image with support for imageIndex, color.image, or array index
+  const resolveColorImg = (idx: number) => {
+    const color = product.colors[idx];
+    if (color?.imageIndex !== undefined && color.imageIndex >= 0 && color.imageIndex < product.images.length) {
+      return product.images[color.imageIndex];
+    }
+    if (color?.image) {
+      return color.image;
+    }
+    return product.images[idx] || product.images[0];
+  };
+
+  const primaryImg = resolveColorImg(activeColorIdx);
   // Determine an alternate image that is genuinely different from primaryImg for instant hover
   const hoverImg = product.images.find((img) => img !== primaryImg) || (product.images.length > 1 ? product.images[1] : null);
+
+  // When hovering on a color swatch, show that color's image directly without group-hover hiding it
+  const isInspectingColor = hoveredColorIdx !== null;
 
   // Prefetch alternate hover image during idle time
   React.useEffect(() => {
@@ -40,7 +58,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, priority = fa
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const defaultColor = product.colors[selectedColorIdx]?.name || product.colors[0]?.name || 'Standard';
+    const defaultColor = product.colors[activeColorIdx]?.name || product.colors[0]?.name || 'Standard';
     const defaultSize = product.sizes[0] || 'M';
     addToCart(product, defaultColor, defaultSize, 1);
     setIsQuickAdded(true);
@@ -66,14 +84,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, priority = fa
             src={primaryImg}
             alt={product.name}
             className={`w-full h-full object-cover object-top transition-all duration-700 ease-out group-hover:scale-105 ${
-              hoverImg ? 'opacity-100 group-hover:opacity-0' : 'opacity-100'
+              hoverImg && !isInspectingColor ? 'opacity-100 group-hover:opacity-0' : 'opacity-100'
             }`}
             loading={priority ? 'eager' : 'lazy'}
             decoding="async"
           />
 
-          {/* Secondary Editorial Alternate Angle Crossfade */}
-          {hoverImg && (
+          {/* Secondary Editorial Alternate Angle Crossfade (only when not inspecting specific color) */}
+          {hoverImg && !isInspectingColor && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={hoverImg}
@@ -184,10 +202,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, priority = fa
             )}
           </div>
 
-          {/* Color Swatches (Hover or Click to Preview Shade) */}
-          <div className="flex items-center gap-1.5 py-1 px-1">
+          {/* Color Swatches (Hover or Click to Select Shade) */}
+          <div
+            className="flex items-center gap-1.5 py-1 px-1"
+            onMouseLeave={() => setHoveredColorIdx(null)}
+          >
             {product.colors.slice(0, 3).map((color, idx) => {
-              const targetIdx = color.imageIndex ?? idx;
+              const isSelected = activeColorIdx === idx;
               return (
                 <button
                   key={color.name}
@@ -195,19 +216,29 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, priority = fa
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    setSelectedColorIdx(targetIdx);
+                    setSelectedColorIdx(idx);
+                    setHoveredColorIdx(idx);
                   }}
-                  onMouseEnter={() => setSelectedColorIdx(targetIdx)}
-                  onMouseOver={() => setSelectedColorIdx(targetIdx)}
-                  onPointerEnter={() => setSelectedColorIdx(targetIdx)}
+                  onMouseEnter={() => {
+                    setSelectedColorIdx(idx);
+                    setHoveredColorIdx(idx);
+                  }}
+                  onMouseOver={() => {
+                    setSelectedColorIdx(idx);
+                    setHoveredColorIdx(idx);
+                  }}
+                  onPointerEnter={() => {
+                    setSelectedColorIdx(idx);
+                    setHoveredColorIdx(idx);
+                  }}
                   className={`w-3.5 h-3.5 rounded-full border transition-all cursor-pointer ${
-                    selectedColorIdx === targetIdx
+                    isSelected
                       ? 'ring-2 ring-monarch-gold ring-offset-2 ring-offset-[#FAF7F2] scale-115 border-white shadow-sm'
                       : 'border-black/20 hover:scale-110 opacity-80 hover:opacity-100'
                   }`}
                   style={{ backgroundColor: color.hex }}
                   title={color.name}
-                  aria-label={`Preview ${color.name} shade`}
+                  aria-label={`Select ${color.name} shade`}
                 />
               );
             })}
