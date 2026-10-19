@@ -12,6 +12,7 @@ import { AutumnWinter2026 } from '@/components/home/AutumnWinter2026';
 import { ChangeYourLook } from '@/components/home/ChangeYourLook';
 import { EditsForEveryOccasion } from '@/components/home/EditsForEveryOccasion';
 import { WorthYourAttention } from '@/components/home/WorthYourAttention';
+import { CinematicStories } from '@/components/home/CinematicStories';
 import { LatestTrends } from '@/components/home/LatestTrends';
 import { CraftsmanshipSection } from '@/components/home/CraftsmanshipSection';
 import { TestimonialCarousel } from '@/components/home/TestimonialCarousel';
@@ -58,7 +59,10 @@ export default function HomePage() {
       {/* SECTION 10: Worth Your Attention */}
       <WorthYourAttention />
 
-      {/* SECTION 9: Latest Trends */}
+      {/* SECTION 11: Cinematic Stories (Moments in Silk & Two-Phase Storyboard) */}
+      <CinematicStories />
+
+      {/* SECTION 12: Latest Trends */}
       <LatestTrends />
 
       {/* Interactive 3D Fabric & Brocade Craftsmanship Sanctum */}

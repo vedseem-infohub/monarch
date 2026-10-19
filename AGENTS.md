@@ -184,6 +184,42 @@ model SpotlightCollection {
   isActive    Boolean        @default(true)
   products    Product[]      // Curated spotlight products with accordion metadata
 }
+
+// Editorial Cinematic Stories: Moments in Silk (Full-Screen Canvas Showcase)
+model CinematicStory {
+  id                 String    @id @default(cuid())
+  productId          String    @unique
+  product            Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  storyTitleLine1    String    // e.g. "First"
+  storyTitleLine2    String    // e.g. "Light"
+  storyCategoryTag   String    // e.g. "DAILY", "HERITAGE", "ROMANCE"
+  storySubtitle      String    // e.g. "THE CELEBRATION VAULT"
+  storyDescription   String    @db.Text
+  bgImage            String    // CloudFront / S3 CDN URL
+  cardThumbnail      String    // CloudFront / S3 CDN URL
+  displayOrder       Int       @default(0)
+  isActive           Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([isActive, displayOrder])
+}
+
+// Latest Trends Deck Studio: Card Deck Stack (Taas Ke Paate)
+model LatestTrendsDeck {
+  id               String         @id // e.g. "latest-trends-2026"
+  eyebrow          String         // "Explore Collection"
+  headingPrimary   String         // "LATEST"
+  headingSecondary String         // "TRENDS"
+  ctaText          String         // "Discover Now"
+  ctaHref          String         // "/collections/all"
+  storyHeading     String         // "Stories Behind The Drape"
+  storyDescription String         @db.Text
+  rangeHeading     String         // "Explore The Range"
+  rangeCategories  Json           // Array of { id, name, slug, count, href }
+  isActive         Boolean        @default(true)
+  products         Product[]      // Curated trend deck ensembles
+}
 ```
 
 ---
@@ -204,7 +240,8 @@ model SpotlightCollection {
 | **8** | **Seasonal Special** | `src/data/seasonal.ts` | `products` (seasonal) | `Product[]` | `seasonTag`, left-to-right reverse marquee track. |
 | **9** | **New Arrivals / Best Sellers** | `src/data/products.ts` | `products` (sorted) | `Product[]` | `badge: 'New Arrival' \| 'Bestseller'`. |
 | **10**| **Worth Your Attention** | `src/data/worthYourAttention.ts` | `products` via `spotlight` | `Product[]` | `verticalText`, `attentionHeadline`, `spotlightTag`, `offerBadge`. |
-| **11**| **Latest Trends** | `src/data/trends.ts` | `products` (featured) | `Product[]` | `badge`, trending engagement score. |
+| **11**| **Cinematic Stories** | `src/data/cinematicStories.ts` | `products` via `cinematic_stories` | `Product[]` | `storyTitleLine1`, `storyTitleLine2`, `storySubtitle`, `bgImage` in full-screen pinned dock. |
+| **12**| **Latest Trends** | `src/data/latestTrends.ts` | `products` via `trendsDeck` | `Product[]` | `trendVelocity`, `badge`, `storyBehindDrape`, `rangeCategory`, `rangeCategorySlug`. |
 
 ---
 
@@ -226,7 +263,8 @@ Every homepage section connects to a dedicated data model and API endpoint:
 | **9** | **Change Your Look** | `ChangeYourLook.tsx` | `changeLook.ts` | `GET /api/v1/studio/looks` | `LookStyleProduct[]`: interactive center model, sizes, color chips, and audio pill. |
 | **10**| **Edits for Every Occasion** | `EditsForEveryOccasion.tsx` | `editsForOccasion.ts` | `GET /api/v1/collections/occasions` | `OccasionCollection`: 4 portals (`The Wedding Edit`, `Heritage Weaves`, `The New Drape`, `Private Atelier`). |
 | **11**| **Worth Your Attention** | `WorthYourAttention.tsx` | `worthYourAttention.ts` | `GET /api/v1/spotlight/worth-your-attention` | `SpotlightCollection`: 6 expanding accordion cards with dark-to-colorful hover morph and horizontal scroll track. |
-| **12**| **Latest Trends** | `LatestTrends.tsx` | `trends.ts` | `GET /api/v1/trends/latest` | `Product[]`: high-engagement trending pieces. |
+| **11.5**| **Cinematic Stories** | `CinematicStories.tsx` | `cinematicStories.ts` | `GET /api/v1/stories/cinematic` | `CinematicStory[]`: 4 pinned daily moments in silk with two-phase dock cards & slow left-to-right motion. |
+| **12**| **Latest Trends** | `LatestTrends.tsx` | `latestTrends.ts` | `GET /api/v1/trends/deck` | `LatestTrendsDeck`: 3-column editorial layout with card deck stack ("taas ke paate"), swipe physics, and range navigation. |
 | **13**| **Craftsmanship Sanctum** | `CraftsmanshipSection.tsx`| `craftsmanship.ts` | `GET /api/v1/craftsmanship` | `CraftPillar[]`: Kashi pitlooms, Awadhi zardozi, Tilla embroidery, bespoke canvas. |
 | **14**| **Royal Client Diary** | `TestimonialCarousel.tsx`| `craftsmanship.ts` | `GET /api/v1/testimonials` | `Testimonial[]`: verified client reviews, wedding locations, quotes. |
 

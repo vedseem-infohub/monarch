@@ -34,7 +34,10 @@ export interface SectionMetadata {
 
   // Seasonal & Trending Drops
   seasonTag?: string;         // e.g. "Winter Festive 2026"
-  trendVelocity?: string;     // e.g. "High Demand"
+  trendVelocity?: string | number; // e.g. "High Demand" | 99
+  rangeCategory?: string;     // e.g. "Banarasi" | "Bridal"
+  rangeCategorySlug?: string; // e.g. "banarasi-silk" | "bridal-lehengas"
+  storyBehindDrape?: string;  // e.g. "Every piece carries a story woven into its silk..."
 
   // Worth Your Attention (Spotlight & Offers)
   verticalText?: string;      // e.g. "CURRENT OFFERS"
@@ -42,6 +45,9 @@ export interface SectionMetadata {
   spotlightTag?: string;      // e.g. "ROYAL ARCHIVE · 15% PRIVILEGE"
   offerBadge?: string;        // e.g. "LIMITED PRIVILEGE"
   href?: string;
+
+  // Open Section Metadata Index for area-specific reflections
+  [key: string]: unknown;
 }
 
 export interface Model3DConfig {
