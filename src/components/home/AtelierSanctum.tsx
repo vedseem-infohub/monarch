@@ -468,6 +468,29 @@ export const AtelierSanctum: React.FC = () => {
                     ✦
                   </div>
 
+                  {/* 
+                    ROYAL SANCTUARY CROWN BADGE: 
+                    Positioned OUTSIDE the overflow-hidden clipping container with z-30,
+                    so it layers gracefully OVER the rounded arch without being cut or clipped.
+                  */}
+                  <div className="absolute top-6 sm:top-8 inset-x-0 flex items-center justify-center z-30 pointer-events-none px-2">
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={currentSalon.slug}
+                        initial={{ opacity: 0, y: -4, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 4, scale: 0.96 }}
+                        transition={{ duration: 0.35, ease: 'easeOut' }}
+                        className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 rounded-full bg-black/85 backdrop-blur-md border border-[#C7A15B]/70 shadow-[0_10px_30px_rgba(0,0,0,0.5)] text-[10px] sm:text-[11px] font-nav uppercase tracking-[0.22em] text-[#FAF8F5] whitespace-nowrap"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-[#C7A15B] animate-pulse shrink-0" />
+                        <span>
+                          {currentSalon.city} Sanctuary · {currentSalon.suitesCount || 'Private Suites'}
+                        </span>
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
+
                   <div className="relative w-full h-full rounded-t-[130px] sm:rounded-t-[170px] rounded-b-2xl overflow-hidden group">
                     <AnimatePresence mode="wait">
                       <motion.div
@@ -487,20 +510,6 @@ export const AtelierSanctum: React.FC = () => {
                           priority={false}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
-
-                        {/* 
-                          FIXED BADGE POSITION: Centered Crown Medallion 
-                          Positioned safely beneath the arch apex (away from the rounded top corners)
-                          to guarantee 100% full visibility and zero clipping.
-                        */}
-                        <div className="absolute top-8 sm:top-10 inset-x-0 flex items-center justify-center z-20 pointer-events-none px-4">
-                          <div className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 rounded-full bg-black/75 backdrop-blur-md border border-[#C7A15B]/50 shadow-2xl text-[10px] sm:text-[11px] font-nav uppercase tracking-[0.24em] text-[#FAF8F5]">
-                            <Sparkles className="w-3.5 h-3.5 text-[#C7A15B]" />
-                            <span>
-                              {currentSalon.city} Sanctuary · {currentSalon.suitesCount || 'Private Suites'}
-                            </span>
-                          </div>
-                        </div>
 
                         {/* Bottom Arch Caption (Inside safe rectangular bottom zone) */}
                         <div className="absolute bottom-6 sm:bottom-7 left-6 sm:left-7 right-6 sm:right-7 text-white space-y-1.5 z-20">

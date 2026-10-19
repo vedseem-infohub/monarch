@@ -19,7 +19,7 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({ activeMenu, onClose, isGloss
       onMouseLeave={onClose}
       className={`absolute top-full left-0 right-0 shadow-2xl z-40 animate-fadeIn transition-colors duration-500 border-none ${
         isGlossy
-          ? 'bg-gradient-to-b from-white/30 via-white/15 to-transparent backdrop-blur-md shadow-[0_25px_50px_rgba(0,0,0,0.3)]'
+          ? 'bg-gradient-to-b from-black/95 via-black/85 to-black/75 backdrop-blur-md shadow-[0_25px_50px_rgba(0,0,0,0.6)]'
           : 'bg-[#240E14]/98 backdrop-blur-xl shadow-2xl'
       }`}
     >

@@ -26,4 +26,15 @@ describe('AtelierSanctum Component Verification', () => {
     assert.ok(content.includes('addToCart('), 'Must invoke addToCart on commission');
     assert.ok(content.includes('toggleWishlist('), 'Must invoke toggleWishlist on heart click');
   });
+
+  it('guarantees Flagship Salon badge layers over curved arch without overflow clipping', () => {
+    assert.ok(
+      content.includes('ROYAL SANCTUARY CROWN BADGE'),
+      'Must have royal crown badge layered over curved arch'
+    );
+    assert.ok(
+      content.includes('z-30 pointer-events-none'),
+      'Badge must use z-30 layering outside overflow-hidden'
+    );
+  });
 });

@@ -27,18 +27,22 @@ test('Header & Modal Menus Glossy Architecture Verification', async (t) => {
     );
   });
 
-  await t.test('verifies Header uses increased blur, white gradient, and zero border in both starting and scrolled states', () => {
+  await t.test('verifies Header uses increased blur, dark gradient, decreasing blur from bottom, and zero border in both starting and scrolled states', () => {
     assert.ok(
       headerContent.includes('const isGlossy = !isScrolled;'),
       'Header must determine isGlossy state from scroll position'
     );
     assert.ok(
-      headerContent.includes('from-white/'),
-      'Header must use white gradient for starting state'
+      headerContent.includes('from-black/'),
+      'Header must use dark gradient for starting state'
     );
     assert.ok(
       headerContent.includes('backdrop-blur-md'),
-      'Header must feature increased frosted blur (backdrop-blur-md)'
+      'Header must feature frosted blur (backdrop-blur-md)'
+    );
+    assert.ok(
+      headerContent.includes('mask-image:linear-gradient(to_bottom'),
+      'Header must decrease blur from bottom via mask-image linear gradient'
     );
     // Ensure header has border-none in both states so no border line shows on scroll
     assert.ok(
@@ -46,7 +50,7 @@ test('Header & Modal Menus Glossy Architecture Verification', async (t) => {
       'Starting header must have border-none'
     );
     assert.ok(
-      headerContent.includes('border-none shadow-xl text-monarch-ivory py-3.5'),
+      headerContent.includes('border-none shadow-xl'),
       'Scrolled header must have border-none with smooth shadow-xl instead of hard border line'
     );
     // Ensure no border-b is used on the header
@@ -71,18 +75,18 @@ test('Header & Modal Menus Glossy Architecture Verification', async (t) => {
     );
   });
 
-  await t.test('verifies MegaMenu uses white blur gradient with increased blur and no border in either state', () => {
+  await t.test('verifies MegaMenu uses dark blur gradient with increased blur and no border in either state', () => {
     assert.ok(
       megaMenuContent.includes('isGlossy?: boolean'),
       'MegaMenuProps must declare optional isGlossy prop'
     );
     assert.ok(
-      megaMenuContent.includes('from-white/') && megaMenuContent.includes('border-none'),
-      'MegaMenu must use white blur gradient and no border when isGlossy is true'
+      megaMenuContent.includes('from-black/') && megaMenuContent.includes('border-none'),
+      'MegaMenu must use dark blur gradient and no border when isGlossy is true'
     );
     assert.ok(
       megaMenuContent.includes('backdrop-blur-md'),
-      'MegaMenu must feature increased frosted blur (backdrop-blur-md) when isGlossy is true'
+      'MegaMenu must feature frosted blur (backdrop-blur-md) when isGlossy is true'
     );
     assert.ok(
       !megaMenuContent.includes('border-b border-monarch-gold/30 shadow-2xl'),

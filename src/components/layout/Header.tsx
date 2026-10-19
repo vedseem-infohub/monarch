@@ -34,24 +34,33 @@ export const Header: React.FC = () => {
   }, []);
 
   // Header background logic:
-  // When starting (at top): pure white blur gradient with increased frosted blur, zero border
+  // When starting (at top): dark gradient with decreasing blur from bottom, zero border
   // When scrolling: smoothly transitions to default solid deep burgundy (#240E14) with zero border
   const isGlossy = !isScrolled;
 
   const headerBgClass = isGlossy
-    ? 'bg-gradient-to-b from-white/30 via-white/15 to-transparent backdrop-blur-md border-none text-monarch-ivory py-4'
-    : 'bg-[#240E14]/95 backdrop-blur-md border-none shadow-xl text-monarch-ivory py-3.5';
+    ? 'border-none text-monarch-ivory py-4'
+    : 'border-none text-monarch-ivory py-3.5';
+
+  const backdropBgClass = isGlossy
+    ? 'bg-gradient-to-b from-black/90 via-black/50 to-transparent backdrop-blur-md [mask-image:linear-gradient(to_bottom,black_0%,black_35%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_35%,transparent_100%)] border-none'
+    : 'bg-[#240E14]/95 backdrop-blur-md border-none shadow-xl';
 
   return (
     <>
       <header className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${headerBgClass}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Dynamic Progressive Blur & Dark Gradient Backdrop (decreases blur from bottom to seamlessly merge with frames) */}
+        <div
+          className={`absolute inset-0 pointer-events-none -z-10 transition-all duration-500 ${backdropBgClass}`}
+        />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="flex items-center justify-between">
             {/* Left: Mobile Menu Trigger & Main Desktop Nav */}
             <div className="flex items-center gap-6">
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
-                className="lg:hidden text-monarch-ivory hover:text-monarch-gold p-1"
+                className="lg:hidden text-monarch-ivory/95 hover:text-monarch-gold p-1 transition-colors [filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.85))]"
                 aria-label="Open menu"
               >
                 <Menu className="w-6 h-6" />
@@ -65,10 +74,10 @@ export const Header: React.FC = () => {
                 >
                   <Link
                     href="/collections/women"
-                    className="font-nav text-xs tracking-widest uppercase hover:text-monarch-gold-light transition-colors flex items-center gap-1"
+                    className="font-nav text-xs tracking-widest uppercase text-monarch-ivory/95 hover:text-monarch-gold-light transition-colors flex items-center gap-1.5 [text-shadow:_0_1px_4px_rgba(0,0,0,0.85)]"
                   >
                     <span>Women</span>
-                    <ChevronDown className="w-3 h-3 text-monarch-gold opacity-70 group-hover:rotate-180 transition-transform" />
+                    <ChevronDown className="w-3 h-3 text-monarch-gold opacity-80 group-hover:rotate-180 transition-transform" />
                   </Link>
                 </div>
 
@@ -79,10 +88,10 @@ export const Header: React.FC = () => {
                 >
                   <Link
                     href="/collections/men"
-                    className="font-nav text-xs tracking-widest uppercase hover:text-monarch-gold-light transition-colors flex items-center gap-1"
+                    className="font-nav text-xs tracking-widest uppercase text-monarch-ivory/95 hover:text-monarch-gold-light transition-colors flex items-center gap-1.5 [text-shadow:_0_1px_4px_rgba(0,0,0,0.85)]"
                   >
                     <span>Men</span>
-                    <ChevronDown className="w-3 h-3 text-monarch-gold opacity-70 group-hover:rotate-180 transition-transform" />
+                    <ChevronDown className="w-3 h-3 text-monarch-gold opacity-80 group-hover:rotate-180 transition-transform" />
                   </Link>
                 </div>
 
@@ -93,17 +102,17 @@ export const Header: React.FC = () => {
                 >
                   <Link
                     href="/collections/wedding-edit"
-                    className="font-nav text-xs tracking-widest uppercase hover:text-monarch-gold-light transition-colors flex items-center gap-1"
+                    className="font-nav text-xs tracking-widest uppercase text-monarch-ivory/95 hover:text-monarch-gold-light transition-colors flex items-center gap-1.5 [text-shadow:_0_1px_4px_rgba(0,0,0,0.85)]"
                   >
                     <span>Wedding Edit</span>
-                    <ChevronDown className="w-3 h-3 text-monarch-gold opacity-70 group-hover:rotate-180 transition-transform" />
+                    <ChevronDown className="w-3 h-3 text-monarch-gold opacity-80 group-hover:rotate-180 transition-transform" />
                   </Link>
                 </div>
 
                 <Link
                   href="/collections/all?filter=new"
                   onMouseEnter={() => setActiveMenu(null)}
-                  className="font-nav text-xs tracking-widest uppercase hover:text-monarch-gold-light transition-colors"
+                  className="font-nav text-xs tracking-widest uppercase text-monarch-ivory/95 hover:text-monarch-gold-light transition-colors [text-shadow:_0_1px_4px_rgba(0,0,0,0.85)]"
                 >
                   New Arrivals
                 </Link>
@@ -111,7 +120,7 @@ export const Header: React.FC = () => {
                 <Link
                   href="/collections/all"
                   onMouseEnter={() => setActiveMenu(null)}
-                  className="font-nav text-xs tracking-widest uppercase hover:text-monarch-gold-light transition-colors"
+                  className="font-nav text-xs tracking-widest uppercase text-monarch-ivory/95 hover:text-monarch-gold-light transition-colors [text-shadow:_0_1px_4px_rgba(0,0,0,0.85)]"
                 >
                   Collections
                 </Link>
@@ -119,7 +128,7 @@ export const Header: React.FC = () => {
                 <Link
                   href="/our-craft"
                   onMouseEnter={() => setActiveMenu(null)}
-                  className="font-nav text-xs tracking-widest uppercase hover:text-monarch-gold-light transition-colors"
+                  className="font-nav text-xs tracking-widest uppercase text-monarch-ivory/95 hover:text-monarch-gold-light transition-colors [text-shadow:_0_1px_4px_rgba(0,0,0,0.85)]"
                 >
                   Our Craft
                 </Link>
@@ -130,7 +139,7 @@ export const Header: React.FC = () => {
             <div className="flex flex-col items-center">
               <Link href="/" className="group text-center">
                 <div className="flex items-center justify-center gap-2">
-                  <span className="font-serif text-2xl sm:text-3xl tracking-[0.22em] text-monarch-ivory group-hover:text-monarch-gold-light transition-colors uppercase font-medium [text-shadow:_0_2px_8px_rgba(0,0,0,0.85)]">
+                  <span className="font-serif text-2xl sm:text-3xl tracking-[0.22em] text-monarch-ivory group-hover:text-monarch-gold-light transition-colors uppercase font-medium [text-shadow:_0_2px_8px_rgba(0,0,0,0.9)]">
                     MONARCH
                   </span>
                 </div>
@@ -144,7 +153,7 @@ export const Header: React.FC = () => {
             <div className="flex items-center space-x-3 sm:space-x-5">
               <button
                 onClick={() => setIsSearchOpen(true)}
-                className="text-monarch-ivory hover:text-monarch-gold p-1.5 transition-colors"
+                className="text-monarch-ivory/95 hover:text-monarch-gold p-1.5 transition-colors [filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.85))]"
                 aria-label="Search collection"
               >
                 <Search className="w-5 h-5" />
@@ -152,7 +161,7 @@ export const Header: React.FC = () => {
 
               <Link
                 href="/account"
-                className="hidden sm:block text-monarch-ivory hover:text-monarch-gold p-1.5 transition-colors"
+                className="hidden sm:block text-monarch-ivory/95 hover:text-monarch-gold p-1.5 transition-colors [filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.85))]"
                 aria-label="Royal concierge and account"
               >
                 <User className="w-5 h-5" />
@@ -160,7 +169,7 @@ export const Header: React.FC = () => {
 
               <Link
                 href="/wishlist"
-                className="relative text-monarch-ivory hover:text-monarch-gold p-1.5 transition-colors"
+                className="relative text-monarch-ivory/95 hover:text-monarch-gold p-1.5 transition-colors [filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.85))]"
                 aria-label="Wishlist"
               >
                 <Heart className="w-5 h-5" />
@@ -173,7 +182,7 @@ export const Header: React.FC = () => {
 
               <button
                 onClick={() => setIsCartOpen(true)}
-                className="relative text-monarch-ivory hover:text-monarch-gold p-1.5 transition-colors"
+                className="relative text-monarch-ivory/95 hover:text-monarch-gold p-1.5 transition-colors [filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.85))]"
                 aria-label="Shopping bag"
               >
                 <ShoppingBag className="w-5 h-5" />
