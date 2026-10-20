@@ -97,6 +97,21 @@ describe('WovenToBeRemembered Responsive Architecture & Card Shape Verification'
     );
   });
 
+  it('guarantees Card 0 is strictly centered at zenith on first reach using initialTrackX and fromTo', () => {
+    assert.ok(
+      componentContent.includes('initialTrackX'),
+      'Component must compute exact initialTrackX so Card 0 starts centered at zenith'
+    );
+    assert.ok(
+      componentContent.includes('gsap.fromTo'),
+      'Component must use gsap.fromTo to guarantee track starts at initialTrackX without offsets'
+    );
+    assert.ok(
+      componentContent.includes('anticipatePin: 0'),
+      'anticipatePin must be 0 to eliminate premature pinning and position jump glitches'
+    );
+  });
+
   it('verifies unified ScrollTrigger scrolling animation operates on mobile and desktop', () => {
     assert.ok(
       componentContent.includes("id: 'woven-scroll'"),
@@ -107,8 +122,8 @@ describe('WovenToBeRemembered Responsive Architecture & Card Shape Verification'
       'Desktop and mobile ScrollTrigger must start at top top for seamless position pinning'
     );
     assert.ok(
-      componentContent.includes('pin: true'),
-      'pin: true must be active for smooth horizontal walkthrough during page scroll'
+      componentContent.includes('pin: pinWrapper'),
+      'pin: pinWrapper inside section must be used for rock-solid document flow'
     );
     assert.ok(
       componentContent.includes('applyCurvature()'),

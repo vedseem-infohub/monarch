@@ -21,6 +21,7 @@ export const WovenToBeRemembered: React.FC = () => {
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const [activeIndex, setActiveIndex] = useState(0);
+  const activeIndexRef = useRef(0);
 
   /**
    * Responsive circular arc geometry: ACTIVE ACROSS ALL SCREENS (Mobile, Tablet & Desktop).
@@ -82,12 +83,12 @@ export const WovenToBeRemembered: React.FC = () => {
       const targetY = st.start + progress * (st.end - st.start);
       window.scrollTo({ top: targetY, behavior: 'smooth' });
     }
+    activeIndexRef.current = idx;
     setActiveIndex(idx);
   }, []);
 
-  // Ensure curvature is initialized on mount and updated on window resize
+  // Ensure curvature is recalculated on window resize
   useEffect(() => {
-    applyCurvature();
     const handleResize = () => {
       applyCurvature();
     };
@@ -98,62 +99,70 @@ export const WovenToBeRemembered: React.FC = () => {
   // Unified GSAP ScrollTrigger scrolling animation across Mobile, Tablet, and Desktop
   useGSAP(
     () => {
+      const section = sectionRef.current;
       const pinWrapper = pinWrapperRef.current;
       const track = trackRef.current;
       const cards = cardRefs.current.filter((c): c is HTMLDivElement => Boolean(c));
-      if (!pinWrapper || !track || cards.length === 0) return;
+      if (!section || !pinWrapper || !track || cards.length === 0) return;
 
       const width = window.innerWidth;
       const isMobile = width < 640;
       const isTablet = width >= 640 && width < 1024;
 
-      const getTravel = () => {
-        const containerWidth = pinWrapper.clientWidth;
-        const lastCard = cards[cards.length - 1];
-        if (!lastCard) return track.scrollWidth - containerWidth;
-        const minimalGap = isMobile ? 24 : 32;
-        return Math.max(0, lastCard.offsetLeft + lastCard.offsetWidth - (containerWidth - minimalGap));
-      };
-
-      // Set initial curve state on mount
-      applyCurvature();
+      // Exact track positions so Card 0 is centered at start (zenith) and Card N-1 is centered at end
+      const firstCard = cards[0];
+      const lastCard = cards[cards.length - 1];
+      const initialTrackX = width / 2 - (firstCard.offsetLeft + firstCard.offsetWidth / 2);
+      const finalTrackX = width / 2 - (lastCard.offsetLeft + lastCard.offsetWidth / 2);
+      const travelDistance = Math.abs(initialTrackX - finalTrackX);
 
       // Scroll distance scaled for responsive device travel
       const scrollDistance = isMobile
-        ? Math.max(1000, Math.round(getTravel() * 1.15))
+        ? Math.max(1000, Math.round(travelDistance * 1.15))
         : isTablet
-          ? Math.max(1300, Math.round(getTravel() * 1.25))
-          : Math.max(1600, Math.round(getTravel() * 1.35));
+          ? Math.max(1300, Math.round(travelDistance * 1.25))
+          : Math.max(1600, Math.round(travelDistance * 1.35));
+
+      // Strictly position track at Card 0 initially
+      gsap.set(track, { x: initialTrackX });
+      applyCurvature();
 
       // ScrollTrigger pins section while page scroll drives horizontal circular walkthrough
-      const scrollTween = gsap.to(track, {
-        x: () => -getTravel(),
-        ease: 'none',
-        scrollTrigger: {
-          id: 'woven-scroll',
-          trigger: pinWrapper,
-          pin: true,
-          anticipatePin: 1,
-          start: 'top top',
-          end: () => '+=' + scrollDistance,
-          scrub: 0.6,
-          invalidateOnRefresh: true,
-          pinSpacing: true,
-          onUpdate: (self) => {
-            applyCurvature();
-            // Dynamically synchronize active index with scroll progress
-            const cardCount = SIGNATURE_ENSEMBLES.length;
-            const currentIdx = Math.min(
-              cardCount - 1,
-              Math.max(0, Math.round(self.progress * (cardCount - 1)))
-            );
-            setActiveIndex(currentIdx);
+      const scrollTween = gsap.fromTo(
+        track,
+        { x: initialTrackX },
+        {
+          x: finalTrackX,
+          ease: 'none',
+          scrollTrigger: {
+            id: 'woven-scroll',
+            trigger: section,
+            pin: pinWrapper,
+            anticipatePin: 0, // Eliminate premature pinning jump
+            start: 'top top',
+            end: () => '+=' + scrollDistance,
+            scrub: 0.5,
+            invalidateOnRefresh: true,
+            pinSpacing: true,
+            onUpdate: (self) => {
+              applyCurvature();
+              // Synchronize active index ONLY when index changes (avoids 60fps React re-render thrashing)
+              const cardCount = SIGNATURE_ENSEMBLES.length;
+              const currentIdx = Math.min(
+                cardCount - 1,
+                Math.max(0, Math.round(self.progress * (cardCount - 1)))
+              );
+              if (currentIdx !== activeIndexRef.current) {
+                activeIndexRef.current = currentIdx;
+                setActiveIndex(currentIdx);
+              }
+            },
+            onRefresh: () => {
+              applyCurvature();
+            },
           },
-          onRefresh: () => {
-            applyCurvature();
-          },
-        },
-      });
+        }
+      );
 
       return () => {
         scrollTween.kill();
@@ -172,7 +181,7 @@ export const WovenToBeRemembered: React.FC = () => {
       {/* Viewport Container: Pinned during scrolling animation with header clearance */}
       <div
         ref={pinWrapperRef}
-        className="w-full min-h-screen flex flex-col justify-between pt-16 sm:pt-20 lg:pt-14 pb-6 sm:pb-8 lg:pb-10 relative bg-[#FAF6F0]"
+        className="w-full min-h-screen flex flex-col justify-between pt-16 sm:pt-20 lg:pt-14 pb-4 sm:pb-6 lg:pb-8 relative bg-[#FAF6F0]"
       >
         {/* Header Row: THE VAULT SIGNATURES / Woven to Be Remembered */}
         <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 shrink-0">
@@ -204,11 +213,11 @@ export const WovenToBeRemembered: React.FC = () => {
         </div>
 
         {/* Circular Panoramic Strip: Pinned horizontal scrolling walkthrough with arched jharokha card silhouette on mobile */}
-        <div className="relative w-full select-none my-auto pt-2 pb-14 sm:pb-18 lg:pb-20 overflow-hidden">
+        <div className="relative w-full select-none my-auto pt-2 pb-12 sm:pb-16 lg:pb-18 overflow-hidden">
           {/* Horizontal Track Container */}
           <div
             ref={trackRef}
-            className="flex gap-3 sm:gap-4 lg:gap-3.5 items-start pl-4 sm:pl-8 lg:pl-12 pr-4 sm:pr-8 w-max will-change-transform"
+            className="flex gap-3 sm:gap-4 lg:gap-3.5 items-start w-max will-change-transform"
           >
             {SIGNATURE_ENSEMBLES.map((item, index) => (
               <div
