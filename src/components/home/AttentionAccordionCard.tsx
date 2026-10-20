@@ -1,15 +1,17 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { AttentionProduct } from '@/data/worthYourAttention';
 
-interface AttentionAccordionCardProps {
+export interface AttentionAccordionCardProps {
   product: AttentionProduct;
   index: number;
   isActive: boolean;
-  onActivate: () => void;
+  onActivate?: () => void;
+  onToggle?: (el?: HTMLDivElement | null) => void;
+  onMouseEnter?: () => void;
   priority?: boolean;
 }
 
@@ -18,20 +20,64 @@ export const AttentionAccordionCard: React.FC<AttentionAccordionCardProps> = ({
   index,
   isActive,
   onActivate,
+  onToggle,
+  onMouseEnter,
   priority = false,
 }) => {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
   // STRICTLY 2 STATES:
-  // State 1: Not active (dark card) -> Substantial increased width (~220-240px)
-  // State 2: Active (hovered)        -> Expands into full colorful view (~460-500px)
+  // State 1: Inactive (compact dark card) -> 130-140px on mobile, 180px tablet, 220px desktop, 240px xl
+  // State 2: Active (expanded)            -> 290-320px on mobile, 380px tablet, 460px desktop, 500px xl
   const widthClass = isActive
-    ? 'w-[280px] sm:w-[380px] lg:w-[460px] xl:w-[500px] shadow-2xl border-monarch-gold/50 z-20'
-    : 'w-[140px] sm:w-[180px] lg:w-[220px] xl:w-[240px] border-black/10 shadow-sm hover:border-black/30 z-10';
+    ? 'w-[290px] xs:w-[320px] sm:w-[380px] lg:w-[460px] xl:w-[500px] shadow-2xl border-monarch-gold/50 z-20'
+    : 'w-[130px] xs:w-[140px] sm:w-[180px] lg:w-[220px] xl:w-[240px] border-black/10 shadow-sm hover:border-black/30 z-10';
+
+  const triggerToggle = () => {
+    if (onToggle) {
+      onToggle(cardRef.current);
+    } else if (onActivate) {
+      onActivate();
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    const touch = e.changedTouches[0];
+    const dx = Math.abs(touch.clientX - touchStartRef.current.x);
+    const dy = Math.abs(touch.clientY - touchStartRef.current.y);
+    touchStartRef.current = null;
+    // If finger moved > 12px, user was swiping/scrolling horizontally, so don't toggle
+    if (dx > 12 || dy > 12) return;
+    triggerToggle();
+  };
+
+  const handleClick = () => {
+    triggerToggle();
+  };
+
+  const handleMouseEnter = () => {
+    if (onMouseEnter) {
+      onMouseEnter();
+    } else if (onActivate) {
+      onActivate();
+    }
+  };
 
   return (
     <div
-      onClick={onActivate}
-      onMouseEnter={onActivate}
-      className={`group relative h-[460px] sm:h-[500px] lg:h-[540px] rounded-2xl overflow-hidden cursor-pointer select-none shrink-0 border bg-[#180A0E] transition-all duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-[width,filter] ${widthClass}`}
+      ref={cardRef}
+      onClick={handleClick}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onMouseEnter={handleMouseEnter}
+      className={`group relative h-[440px] xs:h-[460px] sm:h-[500px] lg:h-[540px] rounded-2xl overflow-hidden cursor-pointer select-none shrink-0 border bg-[#180A0E] transition-all duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-[width,filter] ${widthClass}`}
     >
       {/* Background Editorial Image: Dark in State 1, Full Color in State 2 */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -87,7 +133,7 @@ export const AttentionAccordionCard: React.FC<AttentionAccordionCardProps> = ({
       </div>
 
       {/* ======================================================== */}
-      {/* STATE 2: HOVERED (ACTIVE) - FULL COLORFUL EXPANDED VIEW  */}
+      {/* STATE 2: HOVERED / ACTIVE - FULL COLORFUL EXPANDED VIEW  */}
       {/* ======================================================== */}
       <div
         className={`absolute inset-x-0 bottom-0 p-6 sm:p-8 lg:p-10 flex flex-col justify-end space-y-2 z-20 transition-all duration-700 ease-out ${
@@ -104,13 +150,14 @@ export const AttentionAccordionCard: React.FC<AttentionAccordionCardProps> = ({
           {product.attentionHeadline}
         </h3>
 
-        <p className="text-xs sm:text-sm text-white/80 font-sans line-clamp-1 max-w-md">
+        <p className="text-xs sm:text-sm text-white/80 font-sans line-clamp-2 max-w-md">
           {product.tagline}
         </p>
 
         <div className="pt-2">
           <Link
             href={product.actionHref}
+            onClick={(e) => e.stopPropagation()}
             className="inline-flex items-center gap-2 text-xs font-nav uppercase tracking-[0.2em] text-white hover:text-monarch-gold-light font-medium transition-colors group/link w-fit"
           >
             <span className="border-b border-white/60 group-hover/link:border-monarch-gold-light pb-0.5 transition-colors">

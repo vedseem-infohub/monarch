@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { SectionHeader } from '@/components/home/shared/SectionHeader';
@@ -18,8 +18,50 @@ export const WorthYourAttention: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Default state is null: when not hovering, all cards remain in the quiet dark closed state
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  // Desktop: null indicates quiet dark resting state until hover.
+  // Mobile / touch screen: card 0 starts active so it's immediately attractive and informative.
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [isTouchDevice, setIsTouchDevice] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const isTouch =
+      window.matchMedia('(hover: none) and (pointer: coarse)').matches ||
+      window.innerWidth < 768;
+    setIsTouchDevice(isTouch);
+    if (isTouch) {
+      setActiveIndex(0); // Card 0 starts open on mobile!
+    }
+  }, []);
+
+  // Tap to expand / toggle handler
+  const handleCardToggle = (idx: number, element?: HTMLDivElement | null) => {
+    setActiveIndex((prev) => {
+      const next = prev === idx ? null : idx;
+      // When expanding a card on touch, smoothly center it in the scroll container
+      if (next !== null && element && scrollContainerRef.current) {
+        const container = scrollContainerRef.current;
+        const cardLeft = element.offsetLeft;
+        const cardWidth = element.offsetWidth || 320;
+        const containerWidth = container.clientWidth;
+        const targetScroll = Math.max(0, cardLeft - (containerWidth - cardWidth) / 2);
+        container.scrollTo({ left: targetScroll, behavior: 'smooth' });
+      }
+      return next;
+    });
+  };
+
+  const handleMouseEnter = (idx: number) => {
+    if (!isTouchDevice) {
+      setActiveIndex(idx);
+    }
+  };
+
+  const handleContainerMouseLeave = () => {
+    if (!isTouchDevice) {
+      setActiveIndex(null);
+    }
+  };
 
   useGSAP(
     () => {
@@ -118,7 +160,7 @@ export const WorthYourAttention: React.FC = () => {
           {/* Smooth Scroll Container */}
           <div
             ref={scrollContainerRef}
-            onMouseLeave={() => setHoveredIndex(null)}
+            onMouseLeave={handleContainerMouseLeave}
             className="overflow-x-auto scroll-smooth pb-4 pt-1 scrollbar-none flex items-center gap-3 sm:gap-4 w-full"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
@@ -127,8 +169,10 @@ export const WorthYourAttention: React.FC = () => {
                 key={product.id}
                 product={product}
                 index={idx}
-                isActive={hoveredIndex === idx}
-                onActivate={() => setHoveredIndex(idx)}
+                isActive={activeIndex === idx}
+                onToggle={(el) => handleCardToggle(idx, el)}
+                onMouseEnter={() => handleMouseEnter(idx)}
+                onActivate={() => handleCardToggle(idx)}
                 priority={idx <= 1}
               />
             ))}
