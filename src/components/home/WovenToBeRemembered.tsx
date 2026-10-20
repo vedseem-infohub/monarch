@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import gsap from 'gsap';
@@ -9,6 +9,7 @@ import { useGSAP } from '@gsap/react';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
+  ScrollTrigger.config({ ignoreMobileResize: true });
 }
 
 import { SIGNATURE_ENSEMBLES } from '@/data/bridal';
@@ -22,8 +23,61 @@ export const WovenToBeRemembered: React.FC = () => {
 
   const [activeMobileIndex, setActiveMobileIndex] = useState(0);
 
-  // Mobile scroll handler to update active indicator
-  const handleMobileScroll = () => {
+  /**
+   * Responsive circular arc geometry: ACTIVE ACROSS ALL SCREENS (Mobile, Tablet & Desktop).
+   * Cards follow the circumference of a giant concentric circle:
+   * - Center card sits at the zenith (top of the arch, y = 0, rotZ = 0deg)
+   * - Side cards curve downward along the circular rim (y = R * (1 - cos(theta)))
+   * - Tangent angles (rotZ) dynamically rotate cards to follow the crest
+   */
+  const applyCurvature = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    const track = trackRef.current;
+    const cards = cardRefs.current.filter((c): c is HTMLDivElement => Boolean(c));
+    if (!track || cards.length === 0) return;
+
+    const width = window.innerWidth;
+    const isDesktop = width >= 1024;
+    const isTablet = width >= 640 && width < 1024;
+
+    // Responsive circle radius and rotation tuning
+    const radius = isDesktop
+      ? Math.max(2000, width * 1.7)
+      : isTablet
+        ? Math.max(1200, width * 1.6)
+        : Math.max(650, width * 1.5);
+
+    const tiltFactor = isDesktop ? 0.85 : isTablet ? 0.70 : 0.55;
+    const maxRot = isDesktop ? 14.5 : isTablet ? 13.0 : 12.0;
+
+    const viewportCenter = width / 2;
+
+    cards.forEach((card) => {
+      // Calculate true visual screen-space horizontal center of the card
+      const cardRect = card.getBoundingClientRect();
+      const cardCenterOnScreen = cardRect.left + cardRect.width / 2;
+      const dist = cardCenterOnScreen - viewportCenter;
+
+      // Central angle theta along the circular circumference
+      const theta = dist / radius;
+
+      // Parametric circle equations:
+      // 1. Horizontal arc correction for uniform circular spacing
+      const deltaX = radius * Math.sin(theta) - dist;
+      // 2. Vertical circular drop from zenith: y = R * (1 - cos(theta))
+      const y = radius * (1 - Math.cos(theta));
+      // 3. Tangent rotation angle along the top rim
+      const rawRot = theta * (180 / Math.PI) * tiltFactor;
+      const rotZ = Math.max(-maxRot, Math.min(maxRot, rawRot));
+
+      card.style.transform = `translate3d(${deltaX.toFixed(2)}px, ${y.toFixed(2)}px, 0) rotate(${rotZ.toFixed(2)}deg)`;
+    });
+  }, []);
+
+  // Update active index and circular curvature on horizontal scroll (mobile / tablet gestures)
+  const handleScroll = useCallback(() => {
+    applyCurvature();
+
     const container = scrollContainerRef.current;
     if (!container || (typeof window !== 'undefined' && window.innerWidth >= 1024)) return;
 
@@ -43,9 +97,9 @@ export const WovenToBeRemembered: React.FC = () => {
     });
 
     setActiveMobileIndex(closestIndex);
-  };
+  }, [applyCurvature]);
 
-  const scrollToIndex = (index: number) => {
+  const scrollToIndex = useCallback((index: number) => {
     const targetIdx = Math.max(0, Math.min(index, SIGNATURE_ENSEMBLES.length - 1));
     const container = scrollContainerRef.current;
     const card = cardRefs.current[targetIdx];
@@ -59,9 +113,19 @@ export const WovenToBeRemembered: React.FC = () => {
       behavior: 'smooth',
     });
     setActiveMobileIndex(targetIdx);
-  };
+  }, []);
 
-  // Dynamic viewport-centered curved arc animation on desktop with matchMedia
+  // Ensure curvature is initialized on mount and updated on window resize
+  useEffect(() => {
+    applyCurvature();
+    const handleResize = () => {
+      applyCurvature();
+    };
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => window.removeEventListener('resize', handleResize);
+  }, [applyCurvature]);
+
+  // Desktop pinned horizontal walkthrough with ScrollTrigger + useGSAP
   useGSAP(
     () => {
       const pinWrapper = pinWrapperRef.current;
@@ -71,63 +135,32 @@ export const WovenToBeRemembered: React.FC = () => {
 
       const mm = gsap.matchMedia();
 
-      // Only desktop (>= 1024px) receives the top-circle arc curvature and ScrollTrigger pin
+      // Desktop (>= 1024px): ScrollTrigger pins the section and scrubs the track
       mm.add('(min-width: 1024px)', () => {
-        const applyCurvature = () => {
-          const viewportCenter = window.innerWidth / 2;
-          const trackLeft = track.getBoundingClientRect().left;
-          // Radius of the circle: ~2.2x viewport width gives a true, majestic top-circle arc
-          const radius = Math.max(2800, window.innerWidth * 2.2);
-
-          cards.forEach((card) => {
-            // Untransformed linear horizontal center of the card
-            const cardBaseX = trackLeft + card.offsetLeft + card.offsetWidth / 2;
-            const dist = cardBaseX - viewportCenter;
-
-            // Central angle theta along the circular circumference
-            const theta = dist / radius;
-
-            // Pure circle parametric math:
-            // 1. Horizontal arc correction so spacing along the arc remains perfectly uniform
-            const deltaX = radius * Math.sin(theta) - dist;
-            // 2. Vertical circular drop from zenith: y = R * (1 - cos(theta))
-            const y = radius * (1 - Math.cos(theta));
-            // 3. Refined rotation angle along the top rim:
-            // Previous raw angle reached ±23°, which caused severe lopsided tilting and hard-to-read text.
-            // We apply a luxury subtleness damping factor (0.30) and clamp to ±4.2°,
-            // creating a poised, aristocratic crown arc that matches the editorial design reference.
-            const rawAngle = theta * (180 / Math.PI) * 0.30;
-            const maxAngle = 4.2; // max degrees tilt
-            const rotZ = Math.max(-maxAngle, Math.min(maxAngle, rawAngle));
-
-            card.style.transform = `translate3d(${deltaX.toFixed(2)}px, ${y.toFixed(2)}px, 0) rotate(${rotZ.toFixed(2)}deg)`;
-          });
-        };
-
-        // Measure exact travel distance so the last card finishes with a minimal 20px gap from right edge
         const getTravel = () => {
           const containerWidth = pinWrapper.clientWidth;
           const lastCard = cards[cards.length - 1];
           if (!lastCard) return track.scrollWidth - containerWidth;
-          const minimalGap = 20;
+          const minimalGap = 32;
           return Math.max(0, lastCard.offsetLeft + lastCard.offsetWidth - (containerWidth - minimalGap));
         };
 
-        // Set initial curve state on mount
+        // Initialize curvature
         applyCurvature();
 
-        // Clean GSAP ScrollTrigger with start: 'top 10%'
-        gsap.to(track, {
+        // Smooth desktop pinned horizontal scroll
+        const scrollTween = gsap.to(track, {
           x: () => -getTravel(),
           ease: 'none',
           scrollTrigger: {
             trigger: pinWrapper,
             pin: true,
             anticipatePin: 1,
-            start: 'top 10%',
-            end: '+=2500',
-            scrub: 1,
+            start: 'top top',
+            end: () => '+=' + Math.max(1200, Math.round(getTravel() * 1.35)),
+            scrub: 0.8,
             invalidateOnRefresh: true,
+            pinSpacing: true,
             onUpdate: () => {
               applyCurvature();
             },
@@ -138,32 +171,34 @@ export const WovenToBeRemembered: React.FC = () => {
         });
 
         return () => {
-          // Revert transforms when leaving desktop breakpoint so mobile CSS layout is untouched
-          cards.forEach((card) => {
-            card.style.transform = '';
-          });
+          scrollTween.kill();
           track.style.transform = '';
         };
       });
 
+      // Mobile / tablet (< 1024px): curvature is active during horizontal swipe/scroll
+      mm.add('(max-width: 1023px)', () => {
+        applyCurvature();
+      });
+
       return () => mm.revert();
     },
-    { scope: sectionRef, dependencies: [] }
+    { scope: sectionRef, dependencies: [applyCurvature] }
   );
 
   return (
     <section
       id="woven-to-be-remembered"
       ref={sectionRef}
-      className="relative w-full bg-[#FAF6F0] text-monarch-charcoal overflow-hidden pt-6 pb-12 sm:pt-8 sm:pb-16 lg:pt-10 lg:pb-20"
+      className="relative w-full bg-[#FAF6F0] text-monarch-charcoal overflow-hidden pt-6 pb-14 sm:pt-8 sm:pb-18 lg:pt-10 lg:pb-24"
     >
-      {/* Pinned Viewport Container (start: top 10% on desktop) */}
+      {/* Viewport Container (pinned on desktop with start: 'top top') */}
       <div
         ref={pinWrapperRef}
-        className="w-full flex flex-col justify-center py-6 sm:py-8 lg:py-10 relative bg-[#FAF6F0]"
+        className="w-full flex flex-col justify-center py-4 sm:py-6 lg:py-8 relative bg-[#FAF6F0]"
       >
         {/* Header Row: THE VAULT SIGNATURES / Woven to Be Remembered */}
-        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-4 sm:mb-6 lg:mb-10">
+        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-3 sm:mb-6 lg:mb-8">
           <div>
             <div className="text-[10px] sm:text-[11px] font-nav uppercase tracking-[0.28em] text-monarch-charcoal/70 font-semibold mb-1.5">
               THE VAULT SIGNATURES
@@ -191,16 +226,16 @@ export const WovenToBeRemembered: React.FC = () => {
           </div>
         </div>
 
-        {/* Scrollable Panoramic Strip: 84vw centered single-card coverage on mobile, curved arc track on desktop */}
+        {/* Scrollable Panoramic Strip: circular arc active on mobile (swipe) and desktop (scrub) */}
         <div
           ref={scrollContainerRef}
-          onScroll={handleMobileScroll}
-          className="relative w-full select-none my-auto pt-4 pb-6 sm:pt-6 sm:pb-8 lg:pt-6 lg:pb-8 overflow-x-auto lg:overflow-visible no-scrollbar snap-x snap-mandatory lg:snap-none scroll-smooth touch-pan-x"
+          onScroll={handleScroll}
+          className="relative w-full select-none my-auto pt-4 pb-16 sm:pt-6 sm:pb-20 lg:pt-6 lg:pb-24 overflow-x-auto lg:overflow-visible no-scrollbar snap-x snap-mandatory lg:snap-none scroll-smooth touch-pan-x"
         >
           {/* Horizontal Track Container */}
           <div
             ref={trackRef}
-            className="flex gap-4 sm:gap-5 lg:gap-3.5 items-start px-[8vw] sm:px-8 lg:pl-12 lg:pr-8 w-max lg:no-scrollbar"
+            className="flex gap-4 sm:gap-5 lg:gap-3.5 items-start px-[9vw] sm:px-8 lg:pl-12 lg:pr-8 w-max lg:no-scrollbar"
           >
             {SIGNATURE_ENSEMBLES.map((item, index) => (
               <div
@@ -208,7 +243,7 @@ export const WovenToBeRemembered: React.FC = () => {
                 ref={(el) => {
                   cardRefs.current[index] = el;
                 }}
-                className="relative z-10 shrink-0 w-[84vw] max-w-[340px] sm:w-[320px] lg:w-[290px] h-[480px] sm:h-[490px] lg:h-[455px] snap-center lg:snap-align-none will-change-transform transform-gpu select-none hover:z-50"
+                className="relative z-10 shrink-0 w-[82vw] max-w-[340px] sm:w-[320px] lg:w-[290px] h-[460px] sm:h-[480px] lg:h-[455px] snap-center lg:snap-align-none will-change-transform transform-gpu select-none hover:z-50"
                 style={{
                   transformOrigin: '50% 50%',
                 }}
@@ -268,7 +303,7 @@ export const WovenToBeRemembered: React.FC = () => {
         </div>
 
         {/* Mobile Interactive Controls: Chevrons + Pagination Dots */}
-        <div className="flex lg:hidden flex-col items-center gap-3 mt-2 mb-4 px-4">
+        <div className="flex lg:hidden flex-col items-center gap-2.5 -mt-8 mb-4 px-4 relative z-20">
           <div className="flex items-center justify-between w-full max-w-[340px]">
             {/* Left Chevron */}
             <button
@@ -276,7 +311,7 @@ export const WovenToBeRemembered: React.FC = () => {
               onClick={() => scrollToIndex(activeMobileIndex - 1)}
               disabled={activeMobileIndex === 0}
               aria-label="Previous signature ensemble"
-              className="w-9 h-9 rounded-full border border-monarch-gold/40 bg-monarch-charcoal/5 flex items-center justify-center text-monarch-charcoal hover:bg-monarch-gold/20 active:scale-95 transition-all disabled:opacity-25 disabled:pointer-events-none cursor-pointer"
+              className="w-9 h-9 rounded-full border border-monarch-gold/40 bg-[#FAF6F0]/90 backdrop-blur-md flex items-center justify-center text-monarch-charcoal hover:bg-monarch-gold/20 active:scale-95 transition-all disabled:opacity-25 disabled:pointer-events-none cursor-pointer shadow-sm"
             >
               <ChevronLeft className="w-4 h-4 text-monarch-charcoal" />
             </button>
@@ -312,7 +347,7 @@ export const WovenToBeRemembered: React.FC = () => {
               onClick={() => scrollToIndex(activeMobileIndex + 1)}
               disabled={activeMobileIndex === SIGNATURE_ENSEMBLES.length - 1}
               aria-label="Next signature ensemble"
-              className="w-9 h-9 rounded-full border border-monarch-gold/40 bg-monarch-charcoal/5 flex items-center justify-center text-monarch-charcoal hover:bg-monarch-gold/20 active:scale-95 transition-all disabled:opacity-25 disabled:pointer-events-none cursor-pointer"
+              className="w-9 h-9 rounded-full border border-monarch-gold/40 bg-[#FAF6F0]/90 backdrop-blur-md flex items-center justify-center text-monarch-charcoal hover:bg-monarch-gold/20 active:scale-95 transition-all disabled:opacity-25 disabled:pointer-events-none cursor-pointer shadow-sm"
             >
               <ChevronRight className="w-4 h-4 text-monarch-charcoal" />
             </button>

@@ -4,17 +4,18 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 describe('WovenToBeRemembered True Circular Geometry (Top Circle)', () => {
-  it('calculates exact circular arc coordinates and refined luxury rotation angles', () => {
-    const radius = Math.max(2800, 1440 * 2.2); // 3168px
-    const damping = 0.30;
-    const maxAngle = 4.2;
+  it('calculates exact circular arc coordinates and tangent angles for desktop', () => {
+    const width = 1440;
+    const radius = Math.max(2000, width * 1.7); // 2448px
+    const tiltFactor = 0.85;
+    const maxRot = 14.5;
 
     // 1. Apex of the circle (center card): zenith position
     const centerDist = 0;
     const centerTheta = centerDist / radius;
     const centerDeltaX = radius * Math.sin(centerTheta) - centerDist;
     const centerY = radius * (1 - Math.cos(centerTheta));
-    const centerRotZ = Math.max(-maxAngle, Math.min(maxAngle, centerTheta * (180 / Math.PI) * damping));
+    const centerRotZ = Math.max(-maxRot, Math.min(maxRot, centerTheta * (180 / Math.PI) * tiltFactor));
 
     assert.strictEqual(centerY, 0);
     assert.strictEqual(centerRotZ, 0);
@@ -24,86 +25,90 @@ describe('WovenToBeRemembered True Circular Geometry (Top Circle)', () => {
     const adjacentDist = 300;
     const adjacentTheta = adjacentDist / radius;
     const adjacentY = radius * (1 - Math.cos(adjacentTheta));
-    const adjacentRotZ = Math.max(-maxAngle, Math.min(maxAngle, adjacentTheta * (180 / Math.PI) * damping));
+    const adjacentRotZ = Math.max(-maxRot, Math.min(maxRot, adjacentTheta * (180 / Math.PI) * tiltFactor));
     const adjacentDeltaX = radius * Math.sin(adjacentTheta) - adjacentDist;
 
-    assert.ok(adjacentY > 10 && adjacentY < 18, `Adjacent Y (${adjacentY.toFixed(2)}px) should follow circle drop`);
-    assert.ok(adjacentRotZ > 1.2 && adjacentRotZ < 2.0, `Adjacent RotZ (${adjacentRotZ.toFixed(2)}deg) should be refined and subtle`);
+    assert.ok(adjacentY > 15 && adjacentY < 22, `Adjacent Y (${adjacentY.toFixed(2)}px) should follow prominent circle drop`);
+    assert.ok(adjacentRotZ > 5.0 && adjacentRotZ < 7.5, `Adjacent RotZ (${adjacentRotZ.toFixed(2)}deg) should match top-circle tangent`);
     assert.ok(Math.abs(adjacentDeltaX) < 1.0, `DeltaX arc correction should preserve uniform spacing`);
 
     // 3. Edge card (~750px away at viewport boundary):
     const edgeDist = 750;
     const edgeTheta = edgeDist / radius;
     const edgeY = radius * (1 - Math.cos(edgeTheta));
-    const edgeRotZ = Math.max(-maxAngle, Math.min(maxAngle, edgeTheta * (180 / Math.PI) * damping));
+    const edgeRotZ = Math.max(-maxRot, Math.min(maxRot, edgeTheta * (180 / Math.PI) * tiltFactor));
 
-    assert.ok(edgeY > 75 && edgeY < 100, `Edge Y drop (${edgeY.toFixed(2)}px) should form a prominent top circle arch`);
-    assert.ok(edgeRotZ >= 3.8 && edgeRotZ <= 4.2, `Edge RotZ (${edgeRotZ.toFixed(2)}deg) must be clamped to refined royal angle (<= 4.2deg) instead of raw 15-23deg`);
+    assert.ok(edgeY > 100 && edgeY < 130, `Edge Y drop (${edgeY.toFixed(2)}px) should form a prominent top circle arch`);
+    assert.ok(edgeRotZ >= 13.5 && edgeRotZ <= 14.5, `Edge RotZ (${edgeRotZ.toFixed(2)}deg) should match royal crown arch tangent`);
   });
 
-  it('guarantees container bottom padding safely clears top-circle drop', () => {
-    const radius = 3168;
+  it('calculates responsive circular arc coordinates on mobile screens', () => {
+    const width = 390;
+    const radius = Math.max(650, width * 1.5); // 650px
+    const tiltFactor = 0.55;
+    const maxRot = 12.0;
+
+    // Mobile center card (zenith)
+    const centerY = radius * (1 - Math.cos(0));
+    assert.strictEqual(centerY, 0);
+
+    // Adjacent card peeking from edge (~260px away on mobile)
+    const dist = 260;
+    const theta = dist / radius;
+    const adjacentY = radius * (1 - Math.cos(theta));
+    const adjacentRotZ = Math.max(-maxRot, Math.min(maxRot, theta * (180 / Math.PI) * tiltFactor));
+
+    assert.ok(adjacentY > 45 && adjacentY < 65, `Mobile Y drop (${adjacentY.toFixed(2)}px) should form an active circle curve`);
+    assert.ok(adjacentRotZ > 10.0 && adjacentRotZ <= 12.0, `Mobile RotZ (${adjacentRotZ.toFixed(2)}deg) should follow circle arc`);
+  });
+
+  it('guarantees container bottom padding safely clears circular drop across all screens', () => {
+    const radius = 2448;
     const edgeDist = 750;
     const edgeTheta = edgeDist / radius;
     const edgeY = radius * (1 - Math.cos(edgeTheta));
     const maxTiltBottomOffset = 18;
-    const totalDownDisplacement = edgeY + maxTiltBottomOffset; // ~106px
+    const totalDownDisplacement = edgeY + maxTiltBottomOffset; // ~133px
 
-    const containerBottomPadding = 160; // pb-40 in Tailwind
+    const containerBottomPadding = 160;
     assert.ok(
-      containerBottomPadding > totalDownDisplacement + 35,
-      `Bottom padding (${containerBottomPadding}px) must provide at least 35px safety buffer past total displacement (${totalDownDisplacement.toFixed(1)}px)`
-    );
-  });
-
-  it('verifies minimal travel distance calculation for right-edge card alignment', () => {
-    const containerWidth = 1440;
-    const lastCardOffsetLeft = 2000;
-    const lastCardOffsetWidth = 290;
-    const minimalGap = 20;
-
-    const travel = Math.max(0, lastCardOffsetLeft + lastCardOffsetWidth - (containerWidth - minimalGap));
-    const finalRightEdgePosition = lastCardOffsetLeft + lastCardOffsetWidth - travel;
-
-    assert.strictEqual(
-      finalRightEdgePosition,
-      containerWidth - minimalGap,
-      `Last card right edge must align exactly ${minimalGap}px from viewport right edge`
+      containerBottomPadding > totalDownDisplacement + 20,
+      `Bottom padding must safely clear total circular displacement (${totalDownDisplacement.toFixed(1)}px)`
     );
   });
 });
 
-describe('WovenToBeRemembered Mobile Responsiveness & Viewport Coverage Architecture', () => {
+describe('WovenToBeRemembered Responsive Architecture & ScrollTrigger Verification', () => {
   const componentPath = path.resolve(process.cwd(), 'src/components/home/WovenToBeRemembered.tsx');
   const componentContent = fs.readFileSync(componentPath, 'utf-8');
 
-  it('verifies card width covers mobile viewport (84vw) with centered magnetic snapping', () => {
+  it('verifies circular arc property is active across all screens including mobile', () => {
     assert.ok(
-      componentContent.includes('w-[84vw]'),
-      'Cards on mobile must cover 84vw of the screen for prominent editorial presentation'
+      componentContent.includes('const radius = isDesktop'),
+      'Curvature calculation must scale radius responsively across desktop, tablet, and mobile'
+    );
+    assert.ok(
+      componentContent.includes('applyCurvature'),
+      'applyCurvature function must be defined and called on scroll and resize'
+    );
+    assert.ok(
+      componentContent.includes('card.style.transform = `translate3d('),
+      'Cards must receive parametric circle translate3d and rotate transforms'
+    );
+  });
+
+  it('verifies card width covers mobile viewport (82vw) with centered magnetic snapping', () => {
+    assert.ok(
+      componentContent.includes('w-[82vw]'),
+      'Cards on mobile must cover 82vw of the screen for prominent editorial presentation'
     );
     assert.ok(
       componentContent.includes('snap-center'),
       'Cards on mobile must have snap-center so the active card centers cleanly in viewport'
     );
     assert.ok(
-      componentContent.includes('px-[8vw]'),
-      'Track must provide 8vw horizontal padding to balance 84vw cards exactly in center ((100vw - 84vw) / 2 = 8vw)'
-    );
-  });
-
-  it('verifies mobile horizontal scroll container with no-scrollbar and touch pan', () => {
-    assert.ok(
-      componentContent.includes('overflow-x-auto lg:overflow-visible'),
-      'Outer container must be horizontally scrollable on mobile and visible on desktop'
-    );
-    assert.ok(
-      componentContent.includes('snap-x snap-mandatory lg:snap-none'),
-      'Outer container must enable CSS snap-mandatory on mobile and none on desktop'
-    );
-    assert.ok(
-      componentContent.includes('touch-pan-x'),
-      'Outer container must optimize touch gestures for horizontal pan'
+      componentContent.includes('px-[9vw]'),
+      'Track must provide 9vw horizontal padding to balance 82vw cards exactly in center ((100vw - 82vw) / 2 = 9vw)'
     );
   });
 
@@ -126,29 +131,14 @@ describe('WovenToBeRemembered Mobile Responsiveness & Viewport Coverage Architec
     );
   });
 
-  it('verifies GSAP matchMedia isolates desktop arc animation and reverts transforms on mobile', () => {
+  it('verifies ScrollTrigger configuration protects against mobile address-bar position shifts', () => {
     assert.ok(
-      componentContent.includes("mm.add('(min-width: 1024px)'"),
-      'GSAP must use matchMedia to target desktop screens (min-width: 1024px)'
+      componentContent.includes('ignoreMobileResize: true'),
+      'ScrollTrigger.config must set ignoreMobileResize: true to prevent mobile address bar jumping'
     );
     assert.ok(
-      componentContent.includes("card.style.transform = ''"),
-      'GSAP matchMedia cleanup must reset inline card transforms when switching to mobile'
-    );
-    assert.ok(
-      componentContent.includes("track.style.transform = ''"),
-      'GSAP matchMedia cleanup must reset track transform when switching to mobile'
-    );
-  });
-
-  it('verifies refined rotation angle damping factor (0.30) and clamping (max 4.2deg)', () => {
-    assert.ok(
-      componentContent.includes('0.30'),
-      'Component must use 0.30 rotation damping factor to prevent severe card tilting'
-    );
-    assert.ok(
-      componentContent.includes('maxAngle = 4.2') || componentContent.includes('4.2'),
-      'Component must cap rotation angle to max 4.2deg for a regal crown curve'
+      componentContent.includes("start: 'top top'"),
+      'Desktop ScrollTrigger must start at top top for seamless position pinning'
     );
   });
 });

@@ -8,6 +8,11 @@ import 'lenis/dist/lenis.css';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
+  // Prevent mobile address-bar resize jumps & optimize ScrollTrigger responsiveness
+  ScrollTrigger.config({
+    ignoreMobileResize: true,
+    autoRefreshEvents: 'visibilitychange,DOMContentLoaded,load,resize',
+  });
 }
 
 interface SmoothScrollContextType {
