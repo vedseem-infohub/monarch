@@ -13,32 +13,54 @@ import { ProductQuickView } from '@/components/product/ProductQuickView';
 import { WOMEN_CATEGORIES, MEN_CATEGORIES } from '@/data/categories';
 
 export const Header: React.FC = () => {
+  const pathname = usePathname();
+  const isHomePage = pathname === '/';
+
+  const [isInHero, setIsInHero] = useState(isHomePage);
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeMenu, setActiveMenu] = useState<'women' | 'men' | 'wedding' | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState<'women' | 'men' | null>(null);
 
-  const pathname = usePathname();
-  const isHomePage = pathname === '/';
-
   const { totalCount, setIsCartOpen } = useCart();
   const { wishlistCount } = useWishlist();
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 40);
+      const scrollY = window.scrollY;
+      setIsScrolled(scrollY > 40);
+
+      if (isHomePage) {
+        const heroEl = document.getElementById('hero-section');
+        if (heroEl) {
+          const rect = heroEl.getBoundingClientRect();
+          // Hero section is active while its bottom hasn't scrolled past the header
+          setIsInHero(rect.bottom > 80);
+        } else {
+          // Fallback based on typical 320vh scroll distance
+          setIsInHero(scrollY < window.innerHeight * 3.0);
+        }
+      } else {
+        setIsInHero(false);
+      }
     };
+
+    handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    window.addEventListener('resize', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
+  }, [isHomePage]);
 
   // Header background logic:
-  // 1. When MegaMenu is OPEN: Header adapts its gradient and blur to fuse with the MegaMenu as one continuous glossy panel
-  // 2. When starting (at top, menu closed): dark gradient with decreasing blur from bottom to merge into hero frames
-  // 3. When scrolling: smoothly transitions to default solid deep burgundy (#240E14) with zero border
+  // 1. Glossy gradient overlay: ONLY active when on the homepage Hero section.
+  // 2. Normal pages or past Hero section: FULL DARK background (#12070A) with backdrop blur and zero border.
+  // 3. When MegaMenu is OPEN: fuses seamlessly with the full dark or glossy panel.
   const isMenuOpen = activeMenu !== null;
-  const isGlossy = !isScrolled;
+  const isGlossy = isHomePage && isInHero;
 
   const headerBgClass = isGlossy
     ? 'border-none text-monarch-ivory py-4'
@@ -47,17 +69,21 @@ export const Header: React.FC = () => {
   const backdropBgClass = isMenuOpen
     ? isGlossy
       ? 'bg-gradient-to-b from-black/95 via-black/92 to-black/90 backdrop-blur-xl border-none shadow-none'
-      : 'bg-[#240E14]/98 backdrop-blur-xl border-none shadow-none'
+      : 'bg-[#12070A]/98 backdrop-blur-xl border-none shadow-none'
     : isGlossy
       ? 'bg-gradient-to-b from-black/90 via-black/50 to-transparent backdrop-blur-md [mask-image:linear-gradient(to_bottom,black_0%,black_35%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_35%,transparent_100%)] border-none'
-      : 'bg-[#240E14]/95 backdrop-blur-md border-none shadow-xl';
+      : 'bg-[#12070A]/98 backdrop-blur-md border-none shadow-xl';
 
   return (
     <>
       <header
         onMouseLeave={(e) => {
-          const related = e.relatedTarget as Node | null;
-          if (!related || !(e.currentTarget.contains(related))) {
+          const related = e.relatedTarget;
+          if (
+            typeof Node === 'undefined' ||
+            !(related instanceof Node) ||
+            !e.currentTarget.contains(related)
+          ) {
             setActiveMenu(null);
           }
         }}
@@ -235,7 +261,7 @@ export const Header: React.FC = () => {
             className={`absolute inset-y-0 left-0 w-4/5 max-w-sm text-monarch-ivory p-6 flex flex-col justify-between overflow-y-auto transition-colors duration-500 ${
               isGlossy
                 ? 'bg-gradient-to-b from-black/85 via-black/75 to-black/60 backdrop-blur-md border-none'
-                : 'bg-[#240E14] border-r border-monarch-gold/30'
+                : 'bg-[#12070A] border-r border-monarch-gold/30'
             }`}
           >
             <div>

@@ -443,6 +443,7 @@ export const HeroSection: React.FC = () => {
   return (
     <section
       ref={containerRef}
+      id="hero-section"
       className="relative w-full bg-[#1A0A0E] text-monarch-ivory"
       style={{ height: isReducedMotion ? '100vh' : `${HERO_CONFIG.scrollDistanceVh}vh` }}
     >

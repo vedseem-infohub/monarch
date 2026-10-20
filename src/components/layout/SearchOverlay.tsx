@@ -69,7 +69,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose, i
       className={`fixed inset-0 z-50 flex flex-col text-monarch-ivory animate-fadeIn transition-colors duration-500 border-none ${
         isGlossy
           ? 'bg-gradient-to-b from-black/90 via-black/80 to-black/65 backdrop-blur-md'
-          : 'bg-monarch-burgundy/95 backdrop-blur-xl'
+          : 'bg-[#12070A]/98 backdrop-blur-xl'
       }`}
     >
       {/* Top Bar */}

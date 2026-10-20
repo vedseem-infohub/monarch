@@ -27,14 +27,22 @@ test('Header & Modal Menus Glossy Architecture Verification', async (t) => {
     );
   });
 
-  await t.test('verifies Header uses increased blur, dark gradient, decreasing blur from bottom, and zero border in both starting and scrolled states', () => {
+  await t.test('verifies Header uses glossy gradient overlay strictly on homepage hero section and full dark on normal pages', () => {
     assert.ok(
-      headerContent.includes('const isGlossy = !isScrolled;'),
-      'Header must determine isGlossy state from scroll position'
+      headerContent.includes('isHomePage && isInHero'),
+      'Header must determine isGlossy state from homepage hero section presence'
+    );
+    assert.ok(
+      headerContent.includes('hero-section'),
+      'Header must monitor hero-section element bounds to deactivate glossy overlay past hero'
+    );
+    assert.ok(
+      headerContent.includes('#12070A') || headerContent.includes('#1A0A0E'),
+      'Header must use solid full dark background for normal pages'
     );
     assert.ok(
       headerContent.includes('from-black/'),
-      'Header must use dark gradient for starting state'
+      'Header must use dark gradient for hero section state'
     );
     assert.ok(
       headerContent.includes('backdrop-blur-md'),
@@ -42,7 +50,7 @@ test('Header & Modal Menus Glossy Architecture Verification', async (t) => {
     );
     assert.ok(
       headerContent.includes('mask-image:linear-gradient(to_bottom'),
-      'Header must decrease blur from bottom via mask-image linear gradient'
+      'Header must decrease blur from bottom via mask-image linear gradient in hero section'
     );
     // Ensure header has border-none in both states so no border line shows on scroll
     assert.ok(
@@ -51,7 +59,7 @@ test('Header & Modal Menus Glossy Architecture Verification', async (t) => {
     );
     assert.ok(
       headerContent.includes('border-none shadow-xl'),
-      'Scrolled header must have border-none with smooth shadow-xl instead of hard border line'
+      'Full dark header must have border-none with smooth shadow-xl instead of hard border line'
     );
     // Ensure no border-b is used on the header
     assert.ok(
@@ -117,6 +125,13 @@ test('Header & Modal Menus Glossy Architecture Verification', async (t) => {
     assert.ok(
       searchOverlayContent.includes('backdrop-blur-md'),
       'SearchOverlay must feature increased blur (backdrop-blur-md)'
+    );
+  });
+
+  await t.test('verifies onMouseLeave guards against non-Node relatedTarget (Window/null) before calling Node.contains', () => {
+    assert.ok(
+      headerContent.includes('related instanceof Node'),
+      'Header onMouseLeave must verify relatedTarget instanceof Node to avoid TypeError when moving mouse outside window'
     );
   });
 });
