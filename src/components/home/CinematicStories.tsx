@@ -157,19 +157,25 @@ export const CinematicStories: React.FC = () => {
     () => {
       if (typeof window === 'undefined') return;
       const pinWrapper = pinWrapperRef.current;
-      if (!pinWrapper) return;
+      const section = sectionRef.current;
+      if (!pinWrapper || !section) return;
 
       const totalStories = CINEMATIC_STORIES.length;
-      const scrollDistance = window.innerWidth < 768 ? 1200 : 1800;
+
+      // Functional responsive scroll distance: 1200px on mobile, 1800px on tablet/desktop
+      const getScrollDistance = () => (window.innerWidth < 768 ? 1200 : 1800);
 
       const st = ScrollTrigger.create({
-        trigger: pinWrapper,
-        pin: true,
+        id: 'cinematic-scroll',
+        trigger: section,
+        pin: pinWrapper,
         start: 'top top',
-        end: `+=${scrollDistance}`,
+        end: () => '+=' + getScrollDistance(),
         scrub: 0.5,
-        anticipatePin: 1,
+        anticipatePin: 0, // Eliminate premature pin snap which covered WorthYourAttention
+        refreshPriority: 6, // Priority 6: Second pinned section; refreshes strictly AFTER WovenToBeRemembered pinSpacing
         invalidateOnRefresh: true,
+        pinSpacing: true,
         onUpdate: (self) => {
           if (isManualNavRef.current) return;
           // Progress is 0..1 over the pinned scroll duration

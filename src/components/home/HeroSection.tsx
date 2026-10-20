@@ -344,7 +344,8 @@ export const HeroSection: React.FC = () => {
         start: 'top top',
         end: 'bottom bottom',
         scrub: 0.08,
-        anticipatePin: 1,
+        anticipatePin: 0,
+        refreshPriority: 10, // Priority 10: Top of document spans 0 to 400vh; refresh first
         invalidateOnRefresh: true,
         onUpdate: (self) => {
           updateHeroProgress(self.progress);

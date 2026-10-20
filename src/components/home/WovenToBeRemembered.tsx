@@ -159,6 +159,7 @@ export const WovenToBeRemembered: React.FC = () => {
                 trigger: section,
                 pin: pinWrapper,
                 anticipatePin: 0,
+                refreshPriority: 8, // Priority 8: First pinned section; must inject spacing before lower sections calculate
                 start: 'top top',
                 end: () => '+=' + getScrollDistance(),
                 scrub: 0.5,

@@ -15,7 +15,7 @@ export const SareeLoader: React.FC<SareeLoaderProps> = ({ onComplete }) => {
   const pleatsRef = useRef<HTMLDivElement>(null);
 
   const [isMounted, setIsMounted] = useState<boolean>(true);
-  const { pauseScroll, resumeScroll } = useSmoothScroll();
+  const { pauseScroll, resumeScroll, refreshScroll } = useSmoothScroll();
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
 
   // Lock scroll immediately on mount
@@ -35,7 +35,11 @@ export const SareeLoader: React.FC<SareeLoaderProps> = ({ onComplete }) => {
     resumeScroll();
     setIsMounted(false);
     if (onComplete) onComplete();
-  }, [resumeScroll, onComplete]);
+    // Calibrate ScrollTrigger positions after curtain unmount
+    setTimeout(() => {
+      refreshScroll();
+    }, 60);
+  }, [resumeScroll, refreshScroll, onComplete]);
 
   // 100% GPU-Accelerated Saree Curtain Reveal (60-120 FPS, Zero CPU Overhead, Never Hangs)
   useGSAP(

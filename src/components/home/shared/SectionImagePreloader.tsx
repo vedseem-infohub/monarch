@@ -1,6 +1,12 @@
 'use client';
 
 import { useEffect } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
+}
 import { AUTUMN_WINTER_DATA } from '@/data/autumnWinter';
 import { EDITS_FOR_OCCASION_DATA } from '@/data/editsForOccasion';
 import { WORTH_YOUR_ATTENTION_DATA } from '@/data/worthYourAttention';
@@ -155,17 +161,17 @@ export const SectionImagePreloader: React.FC = () => {
 
     const urls = getAllSectionImageUrls();
 
-    // Priority 1: Decode the next 6 immediately visible section cards in parallel
+    // Priority 1: Decode the next 8 immediately visible section cards in parallel
     const immediateBatch = urls.slice(0, 8);
-    immediateBatch.forEach((url) => {
-      preloadAndDecodeImage(url);
+    Promise.all(immediateBatch.map((url) => preloadAndDecodeImage(url))).then(() => {
+      ScrollTrigger.refresh();
     });
 
     // Priority 2: Decode all remaining section cards incrementally
     const remainingUrls = urls.slice(8);
     const preloadRemaining = () => {
-      remainingUrls.forEach((url) => {
-        preloadAndDecodeImage(url);
+      Promise.all(remainingUrls.map((url) => preloadAndDecodeImage(url))).then(() => {
+        ScrollTrigger.refresh();
       });
     };
 

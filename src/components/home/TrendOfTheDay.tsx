@@ -59,6 +59,7 @@ export const TrendOfTheDay: React.FC = () => {
           scrollTrigger: {
             trigger: sectionRef.current,
             start: 'top 95%',
+            refreshPriority: 1,
             toggleActions: 'play none none none',
           },
         }

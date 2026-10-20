@@ -53,6 +53,7 @@ export const BestSellers: React.FC = () => {
             scrollTrigger: {
               trigger: trackRef.current,
               start: 'top 95%',
+              refreshPriority: 1,
               toggleActions: 'play none none none',
             },
           }

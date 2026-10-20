@@ -1,5 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 
 describe('CinematicStories Full-Screen Section Architecture', () => {
   it('validates navigation cycle logic', () => {
@@ -121,5 +123,29 @@ describe('CinematicStories Full-Screen Section Architecture', () => {
     requiredDbFields.forEach((field) => {
       assert.ok(field in sampleDbRecord, `Database schema must define ${field}`);
     });
+  });
+
+  it('guarantees ScrollTrigger pinning configuration prevents section overlap', () => {
+    const compContent = fs.readFileSync(
+      path.resolve(process.cwd(), 'src/components/home/CinematicStories.tsx'),
+      'utf-8'
+    );
+
+    assert.ok(
+      compContent.includes('refreshPriority: 6'),
+      'CinematicStories must specify refreshPriority: 6 to calculate start after WovenToBeRemembered pinSpacing'
+    );
+    assert.ok(
+      compContent.includes('anticipatePin: 0'),
+      'CinematicStories must set anticipatePin: 0 to eliminate premature pin snapping over WorthYourAttention'
+    );
+    assert.ok(
+      compContent.includes('pinSpacing: true'),
+      'CinematicStories must explicitly enforce pinSpacing: true'
+    );
+    assert.ok(
+      compContent.includes("start: 'top top'"),
+      'CinematicStories must start at top top'
+    );
   });
 });
