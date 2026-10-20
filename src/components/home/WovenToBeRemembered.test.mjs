@@ -44,22 +44,22 @@ describe('WovenToBeRemembered True Circular Geometry (Top Circle)', () => {
 
   it('calculates responsive circular arc coordinates on mobile screens', () => {
     const width = 390;
-    const radius = Math.max(650, width * 1.5); // 650px
-    const tiltFactor = 0.55;
+    const radius = Math.max(750, width * 2.0); // 780px
+    const tiltFactor = 0.65;
     const maxRot = 12.0;
 
     // Mobile center card (zenith)
     const centerY = radius * (1 - Math.cos(0));
     assert.strictEqual(centerY, 0);
 
-    // Adjacent card peeking from edge (~260px away on mobile)
-    const dist = 260;
+    // Adjacent card on mobile (~222px away along the track)
+    const dist = 222;
     const theta = dist / radius;
     const adjacentY = radius * (1 - Math.cos(theta));
     const adjacentRotZ = Math.max(-maxRot, Math.min(maxRot, theta * (180 / Math.PI) * tiltFactor));
 
-    assert.ok(adjacentY > 45 && adjacentY < 65, `Mobile Y drop (${adjacentY.toFixed(2)}px) should form an active circle curve`);
-    assert.ok(adjacentRotZ > 10.0 && adjacentRotZ <= 12.0, `Mobile RotZ (${adjacentRotZ.toFixed(2)}deg) should follow circle arc`);
+    assert.ok(adjacentY > 25 && adjacentY < 40, `Mobile Y drop (${adjacentY.toFixed(2)}px) should form an active circle curve`);
+    assert.ok(adjacentRotZ > 8.0 && adjacentRotZ <= 12.0, `Mobile RotZ (${adjacentRotZ.toFixed(2)}deg) should follow circle arc`);
   });
 
   it('guarantees container bottom padding safely clears circular drop across all screens', () => {
@@ -78,67 +78,63 @@ describe('WovenToBeRemembered True Circular Geometry (Top Circle)', () => {
   });
 });
 
-describe('WovenToBeRemembered Responsive Architecture & ScrollTrigger Verification', () => {
+describe('WovenToBeRemembered Responsive Architecture & Card Shape Verification', () => {
   const componentPath = path.resolve(process.cwd(), 'src/components/home/WovenToBeRemembered.tsx');
   const componentContent = fs.readFileSync(componentPath, 'utf-8');
 
-  it('verifies circular arc property is active across all screens including mobile', () => {
+  it('verifies arched crown card silhouette on mobile and refined corners on desktop', () => {
     assert.ok(
-      componentContent.includes('const radius = isDesktop'),
-      'Curvature calculation must scale radius responsively across desktop, tablet, and mobile'
+      componentContent.includes('rounded-t-[75px]') || componentContent.includes('rounded-t-[85px]'),
+      'Cards on mobile must feature distinctive arched crown top silhouette (rounded-t-[85px])'
     );
     assert.ok(
-      componentContent.includes('applyCurvature'),
-      'applyCurvature function must be defined and called on scroll and resize'
+      componentContent.includes('lg:rounded-2xl'),
+      'Cards on desktop must transition to lg:rounded-2xl'
     );
     assert.ok(
-      componentContent.includes('card.style.transform = `translate3d('),
-      'Cards must receive parametric circle translate3d and rotate transforms'
+      componentContent.includes('w-[205px]') || componentContent.includes('xs:w-[220px]'),
+      'Cards on mobile must use compact proportions (~220px) allowing multiple cards on screen'
     );
   });
 
-  it('verifies card width covers mobile viewport (82vw) with centered magnetic snapping', () => {
+  it('verifies unified ScrollTrigger scrolling animation operates on mobile and desktop', () => {
     assert.ok(
-      componentContent.includes('w-[82vw]'),
-      'Cards on mobile must cover 82vw of the screen for prominent editorial presentation'
+      componentContent.includes("id: 'woven-scroll'"),
+      'ScrollTrigger must register id woven-scroll for programmatic step control'
     );
     assert.ok(
-      componentContent.includes('snap-center'),
-      'Cards on mobile must have snap-center so the active card centers cleanly in viewport'
+      componentContent.includes("start: 'top top'"),
+      'Desktop and mobile ScrollTrigger must start at top top for seamless position pinning'
     );
     assert.ok(
-      componentContent.includes('px-[9vw]'),
-      'Track must provide 9vw horizontal padding to balance 82vw cards exactly in center ((100vw - 82vw) / 2 = 9vw)'
+      componentContent.includes('pin: true'),
+      'pin: true must be active for smooth horizontal walkthrough during page scroll'
+    );
+    assert.ok(
+      componentContent.includes('applyCurvature()'),
+      'applyCurvature must execute during scroll scrub to keep cards along circular rim'
     );
   });
 
   it('verifies mobile interactive navigation controls: chevrons, pagination dots, and active counter', () => {
     assert.ok(
       componentContent.includes('ChevronLeft') && componentContent.includes('ChevronRight'),
-      'Component must provide previous/next chevron buttons for mobile touch navigation'
+      'Component must provide previous/next chevron buttons for touch navigation'
     );
     assert.ok(
-      componentContent.includes('activeMobileIndex'),
-      'Component must track active card index for mobile progress indicator'
+      componentContent.includes('activeIndex'),
+      'Component must track active card index for progress indicator'
     );
     assert.ok(
-      componentContent.includes('scrollToIndex'),
-      'Component must provide smooth scrollToIndex function for taps on dots or arrows'
-    );
-    assert.ok(
-      componentContent.includes('lg:hidden'),
-      'Mobile navigation controls must be hidden on desktop breakpoint'
+      componentContent.includes('scrollToCard'),
+      'Component must provide smooth scrollToCard function for taps on dots or arrows'
     );
   });
 
-  it('verifies ScrollTrigger configuration protects against mobile address-bar position shifts', () => {
+  it('verifies top clearance prevents pinned header collision', () => {
     assert.ok(
-      componentContent.includes('ignoreMobileResize: true'),
-      'ScrollTrigger.config must set ignoreMobileResize: true to prevent mobile address bar jumping'
-    );
-    assert.ok(
-      componentContent.includes("start: 'top top'"),
-      'Desktop ScrollTrigger must start at top top for seamless position pinning'
+      componentContent.includes('pt-16') || componentContent.includes('pt-20'),
+      'Pinned container must have top padding (pt-16/pt-20) to clear fixed header'
     );
   });
 });

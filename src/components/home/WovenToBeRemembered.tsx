@@ -17,11 +17,10 @@ import { SIGNATURE_ENSEMBLES } from '@/data/bridal';
 export const WovenToBeRemembered: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const pinWrapperRef = useRef<HTMLDivElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  const [activeMobileIndex, setActiveMobileIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   /**
    * Responsive circular arc geometry: ACTIVE ACROSS ALL SCREENS (Mobile, Tablet & Desktop).
@@ -37,26 +36,26 @@ export const WovenToBeRemembered: React.FC = () => {
     if (!track || cards.length === 0) return;
 
     const width = window.innerWidth;
-    const isDesktop = width >= 1024;
+    const isMobile = width < 640;
     const isTablet = width >= 640 && width < 1024;
 
     // Responsive circle radius and rotation tuning
-    const radius = isDesktop
-      ? Math.max(2000, width * 1.7)
+    const radius = isMobile
+      ? Math.max(750, width * 2.0)
       : isTablet
-        ? Math.max(1200, width * 1.6)
-        : Math.max(650, width * 1.5);
+        ? Math.max(1400, width * 1.8)
+        : Math.max(2000, width * 1.7);
 
-    const tiltFactor = isDesktop ? 0.85 : isTablet ? 0.70 : 0.55;
-    const maxRot = isDesktop ? 14.5 : isTablet ? 13.0 : 12.0;
+    const tiltFactor = isMobile ? 0.65 : isTablet ? 0.75 : 0.85;
+    const maxRot = isMobile ? 12.0 : isTablet ? 13.5 : 14.5;
 
     const viewportCenter = width / 2;
+    const trackLeft = track.getBoundingClientRect().left;
 
     cards.forEach((card) => {
-      // Calculate true visual screen-space horizontal center of the card
-      const cardRect = card.getBoundingClientRect();
-      const cardCenterOnScreen = cardRect.left + cardRect.width / 2;
-      const dist = cardCenterOnScreen - viewportCenter;
+      // Deterministic linear center of each card on screen
+      const cardBaseX = trackLeft + card.offsetLeft + card.offsetWidth / 2;
+      const dist = cardBaseX - viewportCenter;
 
       // Central angle theta along the circular circumference
       const theta = dist / radius;
@@ -74,45 +73,16 @@ export const WovenToBeRemembered: React.FC = () => {
     });
   }, []);
 
-  // Update active index and circular curvature on horizontal scroll (mobile / tablet gestures)
-  const handleScroll = useCallback(() => {
-    applyCurvature();
-
-    const container = scrollContainerRef.current;
-    if (!container || (typeof window !== 'undefined' && window.innerWidth >= 1024)) return;
-
-    const containerCenter = container.scrollLeft + container.clientWidth / 2;
-    const cards = cardRefs.current.filter((c): c is HTMLDivElement => Boolean(c));
-
-    let closestIndex = 0;
-    let minDistance = Infinity;
-
-    cards.forEach((card, idx) => {
-      const cardCenter = card.offsetLeft + card.offsetWidth / 2;
-      const distance = Math.abs(cardCenter - containerCenter);
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestIndex = idx;
-      }
-    });
-
-    setActiveMobileIndex(closestIndex);
-  }, [applyCurvature]);
-
-  const scrollToIndex = useCallback((index: number) => {
-    const targetIdx = Math.max(0, Math.min(index, SIGNATURE_ENSEMBLES.length - 1));
-    const container = scrollContainerRef.current;
-    const card = cardRefs.current[targetIdx];
-    if (!container || !card) return;
-
-    const cardCenter = card.offsetLeft + card.offsetWidth / 2;
-    const targetScrollLeft = cardCenter - container.clientWidth / 2;
-
-    container.scrollTo({
-      left: targetScrollLeft,
-      behavior: 'smooth',
-    });
-    setActiveMobileIndex(targetIdx);
+  // Smooth programmatic step to card index via ScrollTrigger scroll position
+  const scrollToCard = useCallback((targetIndex: number) => {
+    const idx = Math.max(0, Math.min(targetIndex, SIGNATURE_ENSEMBLES.length - 1));
+    const st = ScrollTrigger.getById('woven-scroll');
+    if (st) {
+      const progress = idx / (SIGNATURE_ENSEMBLES.length - 1);
+      const targetY = st.start + progress * (st.end - st.start);
+      window.scrollTo({ top: targetY, behavior: 'smooth' });
+    }
+    setActiveIndex(idx);
   }, []);
 
   // Ensure curvature is initialized on mount and updated on window resize
@@ -125,7 +95,7 @@ export const WovenToBeRemembered: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [applyCurvature]);
 
-  // Desktop pinned horizontal walkthrough with ScrollTrigger + useGSAP
+  // Unified GSAP ScrollTrigger scrolling animation across Mobile, Tablet, and Desktop
   useGSAP(
     () => {
       const pinWrapper = pinWrapperRef.current;
@@ -133,55 +103,62 @@ export const WovenToBeRemembered: React.FC = () => {
       const cards = cardRefs.current.filter((c): c is HTMLDivElement => Boolean(c));
       if (!pinWrapper || !track || cards.length === 0) return;
 
-      const mm = gsap.matchMedia();
+      const width = window.innerWidth;
+      const isMobile = width < 640;
+      const isTablet = width >= 640 && width < 1024;
 
-      // Desktop (>= 1024px): ScrollTrigger pins the section and scrubs the track
-      mm.add('(min-width: 1024px)', () => {
-        const getTravel = () => {
-          const containerWidth = pinWrapper.clientWidth;
-          const lastCard = cards[cards.length - 1];
-          if (!lastCard) return track.scrollWidth - containerWidth;
-          const minimalGap = 32;
-          return Math.max(0, lastCard.offsetLeft + lastCard.offsetWidth - (containerWidth - minimalGap));
-        };
+      const getTravel = () => {
+        const containerWidth = pinWrapper.clientWidth;
+        const lastCard = cards[cards.length - 1];
+        if (!lastCard) return track.scrollWidth - containerWidth;
+        const minimalGap = isMobile ? 24 : 32;
+        return Math.max(0, lastCard.offsetLeft + lastCard.offsetWidth - (containerWidth - minimalGap));
+      };
 
-        // Initialize curvature
-        applyCurvature();
+      // Set initial curve state on mount
+      applyCurvature();
 
-        // Smooth desktop pinned horizontal scroll
-        const scrollTween = gsap.to(track, {
-          x: () => -getTravel(),
-          ease: 'none',
-          scrollTrigger: {
-            trigger: pinWrapper,
-            pin: true,
-            anticipatePin: 1,
-            start: 'top top',
-            end: () => '+=' + Math.max(1200, Math.round(getTravel() * 1.35)),
-            scrub: 0.8,
-            invalidateOnRefresh: true,
-            pinSpacing: true,
-            onUpdate: () => {
-              applyCurvature();
-            },
-            onRefresh: () => {
-              applyCurvature();
-            },
+      // Scroll distance scaled for responsive device travel
+      const scrollDistance = isMobile
+        ? Math.max(1000, Math.round(getTravel() * 1.15))
+        : isTablet
+          ? Math.max(1300, Math.round(getTravel() * 1.25))
+          : Math.max(1600, Math.round(getTravel() * 1.35));
+
+      // ScrollTrigger pins section while page scroll drives horizontal circular walkthrough
+      const scrollTween = gsap.to(track, {
+        x: () => -getTravel(),
+        ease: 'none',
+        scrollTrigger: {
+          id: 'woven-scroll',
+          trigger: pinWrapper,
+          pin: true,
+          anticipatePin: 1,
+          start: 'top top',
+          end: () => '+=' + scrollDistance,
+          scrub: 0.6,
+          invalidateOnRefresh: true,
+          pinSpacing: true,
+          onUpdate: (self) => {
+            applyCurvature();
+            // Dynamically synchronize active index with scroll progress
+            const cardCount = SIGNATURE_ENSEMBLES.length;
+            const currentIdx = Math.min(
+              cardCount - 1,
+              Math.max(0, Math.round(self.progress * (cardCount - 1)))
+            );
+            setActiveIndex(currentIdx);
           },
-        });
-
-        return () => {
-          scrollTween.kill();
-          track.style.transform = '';
-        };
+          onRefresh: () => {
+            applyCurvature();
+          },
+        },
       });
 
-      // Mobile / tablet (< 1024px): curvature is active during horizontal swipe/scroll
-      mm.add('(max-width: 1023px)', () => {
-        applyCurvature();
-      });
-
-      return () => mm.revert();
+      return () => {
+        scrollTween.kill();
+        track.style.transform = '';
+      };
     },
     { scope: sectionRef, dependencies: [applyCurvature] }
   );
@@ -190,20 +167,20 @@ export const WovenToBeRemembered: React.FC = () => {
     <section
       id="woven-to-be-remembered"
       ref={sectionRef}
-      className="relative w-full bg-[#FAF6F0] text-monarch-charcoal overflow-hidden pt-6 pb-14 sm:pt-8 sm:pb-18 lg:pt-10 lg:pb-24"
+      className="relative w-full bg-[#FAF6F0] text-monarch-charcoal overflow-hidden"
     >
-      {/* Viewport Container (pinned on desktop with start: 'top top') */}
+      {/* Viewport Container: Pinned during scrolling animation with header clearance */}
       <div
         ref={pinWrapperRef}
-        className="w-full flex flex-col justify-center py-4 sm:py-6 lg:py-8 relative bg-[#FAF6F0]"
+        className="w-full min-h-screen flex flex-col justify-between pt-16 sm:pt-20 lg:pt-14 pb-6 sm:pb-8 lg:pb-10 relative bg-[#FAF6F0]"
       >
         {/* Header Row: THE VAULT SIGNATURES / Woven to Be Remembered */}
-        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-3 sm:mb-6 lg:mb-8">
+        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 shrink-0">
           <div>
-            <div className="text-[10px] sm:text-[11px] font-nav uppercase tracking-[0.28em] text-monarch-charcoal/70 font-semibold mb-1.5">
+            <div className="text-[10px] sm:text-[11px] font-nav uppercase tracking-[0.28em] text-monarch-charcoal/70 font-semibold mb-1">
               THE VAULT SIGNATURES
             </div>
-            <h2 className="font-display text-2xl sm:text-3xl lg:text-[42px] font-normal tracking-tight text-monarch-charcoal leading-none">
+            <h2 className="font-display text-2xl sm:text-3xl lg:text-[40px] font-normal tracking-tight text-monarch-charcoal leading-none">
               <span>Woven</span> <span>to</span> <span>Be</span>{' '}
               <span className="font-serif italic text-monarch-gold-dark font-light ml-1 text-[1.12em]">
                 Remembered
@@ -226,16 +203,12 @@ export const WovenToBeRemembered: React.FC = () => {
           </div>
         </div>
 
-        {/* Scrollable Panoramic Strip: circular arc active on mobile (swipe) and desktop (scrub) */}
-        <div
-          ref={scrollContainerRef}
-          onScroll={handleScroll}
-          className="relative w-full select-none my-auto pt-4 pb-16 sm:pt-6 sm:pb-20 lg:pt-6 lg:pb-24 overflow-x-auto lg:overflow-visible no-scrollbar snap-x snap-mandatory lg:snap-none scroll-smooth touch-pan-x"
-        >
+        {/* Circular Panoramic Strip: Pinned horizontal scrolling walkthrough with arched jharokha card silhouette on mobile */}
+        <div className="relative w-full select-none my-auto pt-2 pb-14 sm:pb-18 lg:pb-20 overflow-hidden">
           {/* Horizontal Track Container */}
           <div
             ref={trackRef}
-            className="flex gap-4 sm:gap-5 lg:gap-3.5 items-start px-[9vw] sm:px-8 lg:pl-12 lg:pr-8 w-max lg:no-scrollbar"
+            className="flex gap-3 sm:gap-4 lg:gap-3.5 items-start pl-4 sm:pl-8 lg:pl-12 pr-4 sm:pr-8 w-max will-change-transform"
           >
             {SIGNATURE_ENSEMBLES.map((item, index) => (
               <div
@@ -243,14 +216,14 @@ export const WovenToBeRemembered: React.FC = () => {
                 ref={(el) => {
                   cardRefs.current[index] = el;
                 }}
-                className="relative z-10 shrink-0 w-[82vw] max-w-[340px] sm:w-[320px] lg:w-[290px] h-[460px] sm:h-[480px] lg:h-[455px] snap-center lg:snap-align-none will-change-transform transform-gpu select-none hover:z-50"
+                className="relative z-10 shrink-0 w-[205px] xs:w-[220px] sm:w-[260px] lg:w-[290px] h-[340px] xs:h-[360px] sm:h-[410px] lg:h-[455px] will-change-transform transform-gpu select-none hover:z-50"
                 style={{
                   transformOrigin: '50% 50%',
                 }}
               >
                 <Link
                   href={item.href}
-                  className="panoramic-card group relative w-full h-full rounded-2xl overflow-hidden bg-monarch-charcoal shadow-xl hover:shadow-[0_20px_45px_rgba(0,0,0,0.7),0_0_25px_rgba(212,175,55,0.3)] transition-all duration-300 ease-out hover:-translate-y-3.5 hover:scale-[1.025] border border-monarch-gold/30 hover:border-monarch-gold flex flex-col justify-end p-5 sm:p-6 lg:p-5 cursor-pointer block ring-0 hover:ring-1 hover:ring-monarch-gold/60"
+                  className="panoramic-card group relative w-full h-full rounded-t-[75px] xs:rounded-t-[85px] sm:rounded-t-[110px] lg:rounded-2xl rounded-b-2xl overflow-hidden bg-monarch-charcoal shadow-xl hover:shadow-[0_20px_45px_rgba(0,0,0,0.7),0_0_25px_rgba(212,175,55,0.3)] transition-all duration-300 ease-out hover:-translate-y-3 hover:scale-[1.025] border border-monarch-gold/30 hover:border-monarch-gold flex flex-col justify-end p-4 sm:p-5 cursor-pointer block ring-0 hover:ring-1 hover:ring-monarch-gold/60"
                 >
                   {/* Background Luxury Fashion Model Photo */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -263,36 +236,42 @@ export const WovenToBeRemembered: React.FC = () => {
                     decoding="async"
                   />
 
+                  {/* Arched Crown Top Ambient Glow */}
+                  <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-monarch-gold/25 via-monarch-gold/5 to-transparent pointer-events-none opacity-40 group-hover:opacity-80 transition-opacity duration-300" />
+
                   {/* Editorial Gradient Scrim - softens subtly on hover */}
                   <div className="absolute inset-0 bg-gradient-to-t from-[#16070B] via-[#16070B]/40 to-transparent opacity-95 group-hover:opacity-85 transition-opacity duration-300 pointer-events-none" />
 
-                  {/* Top Badge: Ensemble Index & Craft Tag */}
-                  <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between pointer-events-none">
-                    <span className="text-[10px] sm:text-[11px] font-mono text-monarch-gold-light bg-black/60 group-hover:bg-monarch-maroon/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-monarch-gold/30 group-hover:border-monarch-gold transition-colors duration-300">
+                  {/* Top Badge: Ensemble Index centered on mobile arch, top-left on desktop */}
+                  <div className="absolute top-3.5 left-1/2 -translate-x-1/2 sm:left-4 sm:translate-x-0 z-10 flex items-center gap-1.5 pointer-events-none">
+                    <span className="text-[10px] font-mono text-monarch-gold-light bg-black/60 group-hover:bg-monarch-maroon/80 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-monarch-gold/30 group-hover:border-monarch-gold transition-colors duration-300">
                       0{index + 1} / 0{SIGNATURE_ENSEMBLES.length}
-                    </span>
-                    <span className="text-[9px] sm:text-[10px] font-nav uppercase tracking-[0.2em] bg-black/60 group-hover:bg-monarch-gold/20 backdrop-blur-md px-2.5 py-1 rounded-full text-monarch-gold-light border border-monarch-gold/30 group-hover:border-monarch-gold transition-colors duration-300">
-                      {item.tag}
                     </span>
                   </div>
 
                   {/* Bottom Editorial Content */}
-                  <div className="relative z-10 space-y-1.5 pointer-events-none">
-                    <h3 className="font-serif text-lg sm:text-xl text-monarch-ivory font-medium group-hover:text-monarch-gold-light transition-colors duration-300 line-clamp-1">
+                  <div className="relative z-10 space-y-1 sm:space-y-1.5 pointer-events-none">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[8px] xs:text-[9px] font-nav uppercase tracking-[0.2em] bg-black/60 group-hover:bg-monarch-gold/20 backdrop-blur-md px-2 py-0.5 rounded-full text-monarch-gold-light border border-monarch-gold/30 group-hover:border-monarch-gold transition-colors duration-300">
+                        {item.tag}
+                      </span>
+                    </div>
+
+                    <h3 className="font-serif text-sm xs:text-base sm:text-lg lg:text-xl text-monarch-ivory font-medium group-hover:text-monarch-gold-light transition-colors duration-300 line-clamp-1 leading-snug">
                       {item.title}
                     </h3>
 
-                    <p className="text-xs sm:text-[13px] font-sans text-monarch-beige/80 group-hover:text-monarch-beige transition-colors duration-300 line-clamp-1">
+                    <p className="text-[10px] xs:text-[11px] sm:text-xs font-sans text-monarch-beige/80 group-hover:text-monarch-beige transition-colors duration-300 line-clamp-1">
                       {item.craft}
                     </p>
 
-                    <div className="pt-2 flex items-center justify-between text-xs font-nav uppercase tracking-wider text-monarch-beige/90 group-hover:text-white border-t border-monarch-gold/20 group-hover:border-monarch-gold/50 transition-colors duration-300">
-                      <span className="font-serif font-bold text-monarch-gold-light text-base sm:text-lg group-hover:text-white transition-colors">
+                    <div className="pt-1.5 flex items-center justify-between text-[11px] xs:text-xs font-nav uppercase tracking-wider text-monarch-beige/90 group-hover:text-white border-t border-monarch-gold/20 group-hover:border-monarch-gold/50 transition-colors duration-300">
+                      <span className="font-serif font-bold text-monarch-gold-light text-xs xs:text-sm sm:text-base group-hover:text-white transition-colors">
                         {item.price}
                       </span>
-                      <div className="flex items-center gap-1.5 text-xs text-monarch-gold group-hover:text-monarch-gold-light transition-colors font-semibold">
-                        <span>View Ensemble</span>
-                        <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1.5 transition-transform duration-300" />
+                      <div className="flex items-center gap-1 text-[10px] xs:text-[11px] sm:text-xs text-monarch-gold group-hover:text-monarch-gold-light transition-colors font-semibold">
+                        <span>View</span>
+                        <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform duration-300" />
                       </div>
                     </div>
                   </div>
@@ -302,34 +281,33 @@ export const WovenToBeRemembered: React.FC = () => {
           </div>
         </div>
 
-        {/* Mobile Interactive Controls: Chevrons + Pagination Dots */}
-        <div className="flex lg:hidden flex-col items-center gap-2.5 -mt-8 mb-4 px-4 relative z-20">
+        {/* Bottom Bar: Interactive Step Indicators & Complete Archives Link */}
+        <div className="shrink-0 flex flex-col items-center gap-2 px-4">
+          {/* Active Ensemble Step Indicator */}
           <div className="flex items-center justify-between w-full max-w-[340px]">
-            {/* Left Chevron */}
             <button
               type="button"
-              onClick={() => scrollToIndex(activeMobileIndex - 1)}
-              disabled={activeMobileIndex === 0}
+              onClick={() => scrollToCard(activeIndex - 1)}
+              disabled={activeIndex === 0}
               aria-label="Previous signature ensemble"
-              className="w-9 h-9 rounded-full border border-monarch-gold/40 bg-[#FAF6F0]/90 backdrop-blur-md flex items-center justify-center text-monarch-charcoal hover:bg-monarch-gold/20 active:scale-95 transition-all disabled:opacity-25 disabled:pointer-events-none cursor-pointer shadow-sm"
+              className="w-8 h-8 rounded-full border border-monarch-gold/40 bg-monarch-charcoal/5 flex items-center justify-center text-monarch-charcoal hover:bg-monarch-gold/20 active:scale-95 transition-all disabled:opacity-25 disabled:pointer-events-none cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4 text-monarch-charcoal" />
             </button>
 
-            {/* Center Pagination Indicators */}
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-mono tracking-widest text-monarch-charcoal/70 font-semibold">
-                0{activeMobileIndex + 1}
+                0{activeIndex + 1}
               </span>
               <div className="flex items-center gap-1.5 px-1.5">
                 {SIGNATURE_ENSEMBLES.map((_, idx) => (
                   <button
                     key={idx}
                     type="button"
-                    onClick={() => scrollToIndex(idx)}
+                    onClick={() => scrollToCard(idx)}
                     aria-label={`Go to ensemble 0${idx + 1}`}
                     className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                      activeMobileIndex === idx
+                      activeIndex === idx
                         ? 'w-6 bg-monarch-maroon'
                         : 'w-1.5 bg-monarch-gold/40 hover:bg-monarch-gold'
                     }`}
@@ -341,25 +319,17 @@ export const WovenToBeRemembered: React.FC = () => {
               </span>
             </div>
 
-            {/* Right Chevron */}
             <button
               type="button"
-              onClick={() => scrollToIndex(activeMobileIndex + 1)}
-              disabled={activeMobileIndex === SIGNATURE_ENSEMBLES.length - 1}
+              onClick={() => scrollToCard(activeIndex + 1)}
+              disabled={activeIndex === SIGNATURE_ENSEMBLES.length - 1}
               aria-label="Next signature ensemble"
-              className="w-9 h-9 rounded-full border border-monarch-gold/40 bg-[#FAF6F0]/90 backdrop-blur-md flex items-center justify-center text-monarch-charcoal hover:bg-monarch-gold/20 active:scale-95 transition-all disabled:opacity-25 disabled:pointer-events-none cursor-pointer shadow-sm"
+              className="w-8 h-8 rounded-full border border-monarch-gold/40 bg-monarch-charcoal/5 flex items-center justify-center text-monarch-charcoal hover:bg-monarch-gold/20 active:scale-95 transition-all disabled:opacity-25 disabled:pointer-events-none cursor-pointer"
             >
               <ChevronRight className="w-4 h-4 text-monarch-charcoal" />
             </button>
           </div>
 
-          <div className="text-[10px] font-nav uppercase tracking-[0.2em] text-monarch-charcoal/50">
-            Swipe or tap to explore vault signatures
-          </div>
-        </div>
-
-        {/* Bottom Archive Link */}
-        <div className="text-center shrink-0 pt-1 pb-1">
           <Link
             href="/collections/all"
             className="inline-flex items-center gap-2 text-[11px] font-nav uppercase tracking-[0.2em] font-semibold text-monarch-maroon hover:text-monarch-maroon-dark pb-0.5 border-b border-monarch-maroon/30 transition-all group"
