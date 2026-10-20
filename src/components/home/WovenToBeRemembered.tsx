@@ -42,7 +42,7 @@ export const WovenToBeRemembered: React.FC = () => {
 
     // Responsive circle radius and rotation tuning
     const radius = isMobile
-      ? Math.max(750, width * 2.0)
+      ? Math.max(850, width * 2.2)
       : isTablet
         ? Math.max(1400, width * 1.8)
         : Math.max(2000, width * 1.7);
@@ -109,36 +109,40 @@ export const WovenToBeRemembered: React.FC = () => {
       const isMobile = width < 640;
       const isTablet = width >= 640 && width < 1024;
 
-      // Exact track positions so Card 0 is centered at start (zenith) and Card N-1 is centered at end
-      const firstCard = cards[0];
-      const lastCard = cards[cards.length - 1];
-      const initialTrackX = width / 2 - (firstCard.offsetLeft + firstCard.offsetWidth / 2);
-      const finalTrackX = width / 2 - (lastCard.offsetLeft + lastCard.offsetWidth / 2);
-      const travelDistance = Math.abs(initialTrackX - finalTrackX);
+      // Exact travel calculation: the last card stops cleanly at the right edge of the viewport
+      const getTravel = () => {
+        const containerWidth = pinWrapper.clientWidth;
+        const lastCard = cards[cards.length - 1];
+        if (!lastCard) return track.scrollWidth - containerWidth;
+        const minimalGap = isMobile ? 24 : 32;
+        return Math.max(0, lastCard.offsetLeft + lastCard.offsetWidth - (containerWidth - minimalGap));
+      };
+
+      const travel = getTravel();
 
       // Scroll distance scaled for responsive device travel
       const scrollDistance = isMobile
-        ? Math.max(1000, Math.round(travelDistance * 1.15))
+        ? Math.max(900, Math.round(travel * 1.15))
         : isTablet
-          ? Math.max(1300, Math.round(travelDistance * 1.25))
-          : Math.max(1600, Math.round(travelDistance * 1.35));
+          ? Math.max(1200, Math.round(travel * 1.25))
+          : Math.max(1600, Math.round(travel * 1.35));
 
-      // Strictly position track at Card 0 initially
-      gsap.set(track, { x: initialTrackX });
+      // Initial state: starts at 0 without unexpected jumps
+      gsap.set(track, { x: 0 });
       applyCurvature();
 
       // ScrollTrigger pins section while page scroll drives horizontal circular walkthrough
       const scrollTween = gsap.fromTo(
         track,
-        { x: initialTrackX },
+        { x: 0 },
         {
-          x: finalTrackX,
+          x: () => -getTravel(),
           ease: 'none',
           scrollTrigger: {
             id: 'woven-scroll',
             trigger: section,
             pin: pinWrapper,
-            anticipatePin: 0, // Eliminate premature pinning jump
+            anticipatePin: 0,
             start: 'top top',
             end: () => '+=' + scrollDistance,
             scrub: 0.5,
@@ -212,12 +216,12 @@ export const WovenToBeRemembered: React.FC = () => {
           </div>
         </div>
 
-        {/* Circular Panoramic Strip: Pinned horizontal scrolling walkthrough with arched jharokha card silhouette on mobile */}
+        {/* Circular Panoramic Strip: Pinned horizontal scrolling walkthrough with increased card sizing on mobile */}
         <div className="relative w-full select-none my-auto pt-2 pb-12 sm:pb-16 lg:pb-18 overflow-hidden">
           {/* Horizontal Track Container */}
           <div
             ref={trackRef}
-            className="flex gap-3 sm:gap-4 lg:gap-3.5 items-start w-max will-change-transform"
+            className="flex gap-3.5 sm:gap-4 lg:gap-3.5 items-start pl-6 sm:pl-8 lg:pl-12 pr-6 sm:pr-8 w-max will-change-transform"
           >
             {SIGNATURE_ENSEMBLES.map((item, index) => (
               <div
@@ -225,14 +229,14 @@ export const WovenToBeRemembered: React.FC = () => {
                 ref={(el) => {
                   cardRefs.current[index] = el;
                 }}
-                className="relative z-10 shrink-0 w-[205px] xs:w-[220px] sm:w-[260px] lg:w-[290px] h-[340px] xs:h-[360px] sm:h-[410px] lg:h-[455px] will-change-transform transform-gpu select-none hover:z-50"
+                className="relative z-10 shrink-0 w-[260px] xs:w-[275px] sm:w-[285px] lg:w-[290px] h-[405px] xs:h-[425px] sm:h-[445px] lg:h-[455px] will-change-transform transform-gpu select-none hover:z-50"
                 style={{
                   transformOrigin: '50% 50%',
                 }}
               >
                 <Link
                   href={item.href}
-                  className="panoramic-card group relative w-full h-full rounded-t-[75px] xs:rounded-t-[85px] sm:rounded-t-[110px] lg:rounded-2xl rounded-b-2xl overflow-hidden bg-monarch-charcoal shadow-xl hover:shadow-[0_20px_45px_rgba(0,0,0,0.7),0_0_25px_rgba(212,175,55,0.3)] transition-all duration-300 ease-out hover:-translate-y-3 hover:scale-[1.025] border border-monarch-gold/30 hover:border-monarch-gold flex flex-col justify-end p-4 sm:p-5 cursor-pointer block ring-0 hover:ring-1 hover:ring-monarch-gold/60"
+                  className="panoramic-card group relative w-full h-full rounded-t-[80px] xs:rounded-t-[90px] sm:rounded-t-[110px] lg:rounded-2xl rounded-b-2xl overflow-hidden bg-monarch-charcoal shadow-xl hover:shadow-[0_20px_45px_rgba(0,0,0,0.7),0_0_25px_rgba(212,175,55,0.3)] transition-all duration-300 ease-out hover:-translate-y-3 hover:scale-[1.025] border border-monarch-gold/30 hover:border-monarch-gold flex flex-col justify-end p-4 sm:p-5 cursor-pointer block ring-0 hover:ring-1 hover:ring-monarch-gold/60"
                 >
                   {/* Background Luxury Fashion Model Photo */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}

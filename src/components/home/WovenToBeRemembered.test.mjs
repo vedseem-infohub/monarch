@@ -44,7 +44,7 @@ describe('WovenToBeRemembered True Circular Geometry (Top Circle)', () => {
 
   it('calculates responsive circular arc coordinates on mobile screens', () => {
     const width = 390;
-    const radius = Math.max(750, width * 2.0); // 780px
+    const radius = Math.max(850, width * 2.2); // 858px
     const tiltFactor = 0.65;
     const maxRot = 12.0;
 
@@ -52,14 +52,14 @@ describe('WovenToBeRemembered True Circular Geometry (Top Circle)', () => {
     const centerY = radius * (1 - Math.cos(0));
     assert.strictEqual(centerY, 0);
 
-    // Adjacent card on mobile (~222px away along the track)
-    const dist = 222;
+    // Adjacent card on mobile (~280px away along the track)
+    const dist = 280;
     const theta = dist / radius;
     const adjacentY = radius * (1 - Math.cos(theta));
     const adjacentRotZ = Math.max(-maxRot, Math.min(maxRot, theta * (180 / Math.PI) * tiltFactor));
 
-    assert.ok(adjacentY > 25 && adjacentY < 40, `Mobile Y drop (${adjacentY.toFixed(2)}px) should form an active circle curve`);
-    assert.ok(adjacentRotZ > 8.0 && adjacentRotZ <= 12.0, `Mobile RotZ (${adjacentRotZ.toFixed(2)}deg) should follow circle arc`);
+    assert.ok(adjacentY > 40 && adjacentY < 55, `Mobile Y drop (${adjacentY.toFixed(2)}px) should form an active circle curve`);
+    assert.ok(adjacentRotZ > 10.0 && adjacentRotZ <= 12.0, `Mobile RotZ (${adjacentRotZ.toFixed(2)}deg) should follow circle arc`);
   });
 
   it('guarantees container bottom padding safely clears circular drop across all screens', () => {
@@ -82,29 +82,33 @@ describe('WovenToBeRemembered Responsive Architecture & Card Shape Verification'
   const componentPath = path.resolve(process.cwd(), 'src/components/home/WovenToBeRemembered.tsx');
   const componentContent = fs.readFileSync(componentPath, 'utf-8');
 
-  it('verifies arched crown card silhouette on mobile and refined corners on desktop', () => {
+  it('verifies increased card sizing on mobile screens with arched crown silhouette', () => {
     assert.ok(
-      componentContent.includes('rounded-t-[75px]') || componentContent.includes('rounded-t-[85px]'),
-      'Cards on mobile must feature distinctive arched crown top silhouette (rounded-t-[85px])'
+      componentContent.includes('w-[260px]') || componentContent.includes('xs:w-[275px]'),
+      'Cards on mobile must have increased width (~275px) for prominent display'
+    );
+    assert.ok(
+      componentContent.includes('h-[405px]') || componentContent.includes('xs:h-[425px]'),
+      'Cards on mobile must have increased height (~425px)'
+    );
+    assert.ok(
+      componentContent.includes('rounded-t-[80px]') || componentContent.includes('rounded-t-[90px]'),
+      'Cards on mobile must feature distinctive arched crown top silhouette'
     );
     assert.ok(
       componentContent.includes('lg:rounded-2xl'),
       'Cards on desktop must transition to lg:rounded-2xl'
     );
-    assert.ok(
-      componentContent.includes('w-[205px]') || componentContent.includes('xs:w-[220px]'),
-      'Cards on mobile must use compact proportions (~220px) allowing multiple cards on screen'
-    );
   });
 
-  it('guarantees Card 0 is strictly centered at zenith on first reach using initialTrackX and fromTo', () => {
+  it('guarantees the last card stops cleanly on the right side and does not extra-scroll to center', () => {
     assert.ok(
-      componentContent.includes('initialTrackX'),
-      'Component must compute exact initialTrackX so Card 0 starts centered at zenith'
+      componentContent.includes('containerWidth - minimalGap'),
+      'Travel distance must stop the last card at containerWidth - minimalGap (right edge)'
     );
     assert.ok(
-      componentContent.includes('gsap.fromTo'),
-      'Component must use gsap.fromTo to guarantee track starts at initialTrackX without offsets'
+      componentContent.includes('x: () => -getTravel()'),
+      'ScrollTween must animate track to -getTravel() to align last card on the right side'
     );
     assert.ok(
       componentContent.includes('anticipatePin: 0'),
