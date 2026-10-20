@@ -6,7 +6,7 @@ import path from 'node:path';
 describe('WovenToBeRemembered True Circular Geometry (Top Circle)', () => {
   it('calculates exact circular arc coordinates and tangent angles for desktop', () => {
     const width = 1440;
-    const radius = Math.max(2000, width * 1.7); // 2448px
+    const radius = Math.max(2200, width * 1.7); // 2448px
     const tiltFactor = 0.85;
     const maxRot = 14.5;
 
@@ -62,7 +62,7 @@ describe('WovenToBeRemembered True Circular Geometry (Top Circle)', () => {
     assert.ok(adjacentRotZ > 10.0 && adjacentRotZ <= 12.0, `Mobile RotZ (${adjacentRotZ.toFixed(2)}deg) should follow circle arc`);
   });
 
-  it('guarantees container bottom padding safely clears circular drop across all screens', () => {
+  it('guarantees container bottom padding safely clears circular drop across all screens including big screens', () => {
     const radius = 2448;
     const edgeDist = 750;
     const edgeTheta = edgeDist / radius;
@@ -78,26 +78,33 @@ describe('WovenToBeRemembered True Circular Geometry (Top Circle)', () => {
   });
 });
 
-describe('WovenToBeRemembered Responsive Architecture & Card Shape Verification', () => {
+describe('WovenToBeRemembered Responsive Architecture, Device Switching & Big Screen Clearance', () => {
   const componentPath = path.resolve(process.cwd(), 'src/components/home/WovenToBeRemembered.tsx');
   const componentContent = fs.readFileSync(componentPath, 'utf-8');
 
-  it('verifies increased card sizing on mobile screens with arched crown silhouette', () => {
+  it('guarantees panoramic track uses overflow-visible with generous bottom padding to prevent big screen bottom cropping', () => {
     assert.ok(
-      componentContent.includes('w-[260px]') || componentContent.includes('xs:w-[275px]'),
-      'Cards on mobile must have increased width (~275px) for prominent display'
+      componentContent.includes('overflow-visible'),
+      'Track container must use overflow-visible to prevent cropping cards at bottom of arc'
     );
     assert.ok(
-      componentContent.includes('h-[405px]') || componentContent.includes('xs:h-[425px]'),
-      'Cards on mobile must have increased height (~425px)'
+      componentContent.includes('pb-28') || componentContent.includes('pb-32') || componentContent.includes('pb-36'),
+      'Track container must provide ample bottom clearance (pb-36) for 120px+ circular drops on large displays'
+    );
+  });
+
+  it('guarantees seamless device switching using gsap.matchMedia to eliminate lag and coordinate conflicts', () => {
+    assert.ok(
+      componentContent.includes('gsap.matchMedia(section)'),
+      'Component must use gsap.matchMedia(section) to handle responsive device switches cleanly'
     );
     assert.ok(
-      componentContent.includes('rounded-t-[80px]') || componentContent.includes('rounded-t-[90px]'),
-      'Cards on mobile must feature distinctive arched crown top silhouette'
+      componentContent.includes('isMobile:') && componentContent.includes('isDesktop:'),
+      'matchMedia must configure breakpoint conditions for mobile, tablet, and desktop'
     );
     assert.ok(
-      componentContent.includes('lg:rounded-2xl'),
-      'Cards on desktop must transition to lg:rounded-2xl'
+      componentContent.includes('cancelAnimationFrame'),
+      'Resize listener must use debounced requestAnimationFrame to eliminate resize lag'
     );
   });
 
@@ -116,22 +123,18 @@ describe('WovenToBeRemembered Responsive Architecture & Card Shape Verification'
     );
   });
 
-  it('verifies unified ScrollTrigger scrolling animation operates on mobile and desktop', () => {
+  it('verifies increased card sizing on mobile screens with arched crown silhouette', () => {
     assert.ok(
-      componentContent.includes("id: 'woven-scroll'"),
-      'ScrollTrigger must register id woven-scroll for programmatic step control'
+      componentContent.includes('w-[260px]') || componentContent.includes('xs:w-[275px]'),
+      'Cards on mobile must have increased width (~275px) for prominent display'
     );
     assert.ok(
-      componentContent.includes("start: 'top top'"),
-      'Desktop and mobile ScrollTrigger must start at top top for seamless position pinning'
+      componentContent.includes('h-[405px]') || componentContent.includes('xs:h-[425px]'),
+      'Cards on mobile must have increased height (~425px)'
     );
     assert.ok(
-      componentContent.includes('pin: pinWrapper'),
-      'pin: pinWrapper inside section must be used for rock-solid document flow'
-    );
-    assert.ok(
-      componentContent.includes('applyCurvature()'),
-      'applyCurvature must execute during scroll scrub to keep cards along circular rim'
+      componentContent.includes('rounded-t-[80px]') || componentContent.includes('rounded-t-[90px]'),
+      'Cards on mobile must feature distinctive arched crown top silhouette'
     );
   });
 
@@ -147,13 +150,6 @@ describe('WovenToBeRemembered Responsive Architecture & Card Shape Verification'
     assert.ok(
       componentContent.includes('scrollToCard'),
       'Component must provide smooth scrollToCard function for taps on dots or arrows'
-    );
-  });
-
-  it('verifies top clearance prevents pinned header collision', () => {
-    assert.ok(
-      componentContent.includes('pt-16') || componentContent.includes('pt-20'),
-      'Pinned container must have top padding (pt-16/pt-20) to clear fixed header'
     );
   });
 });

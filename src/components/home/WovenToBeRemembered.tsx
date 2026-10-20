@@ -45,7 +45,7 @@ export const WovenToBeRemembered: React.FC = () => {
       ? Math.max(850, width * 2.2)
       : isTablet
         ? Math.max(1400, width * 1.8)
-        : Math.max(2000, width * 1.7);
+        : Math.max(2200, width * 1.7);
 
     const tiltFactor = isMobile ? 0.65 : isTablet ? 0.75 : 0.85;
     const maxRot = isMobile ? 12.0 : isTablet ? 13.5 : 14.5;
@@ -53,7 +53,8 @@ export const WovenToBeRemembered: React.FC = () => {
     const viewportCenter = width / 2;
     const trackLeft = track.getBoundingClientRect().left;
 
-    cards.forEach((card) => {
+    for (let i = 0; i < cards.length; i++) {
+      const card = cards[i];
       // Deterministic linear center of each card on screen
       const cardBaseX = trackLeft + card.offsetLeft + card.offsetWidth / 2;
       const dist = cardBaseX - viewportCenter;
@@ -70,8 +71,8 @@ export const WovenToBeRemembered: React.FC = () => {
       const rawRot = theta * (180 / Math.PI) * tiltFactor;
       const rotZ = Math.max(-maxRot, Math.min(maxRot, rawRot));
 
-      card.style.transform = `translate3d(${deltaX.toFixed(2)}px, ${y.toFixed(2)}px, 0) rotate(${rotZ.toFixed(2)}deg)`;
-    });
+      card.style.transform = `translate3d(${deltaX.toFixed(1)}px, ${y.toFixed(1)}px, 0) rotate(${rotZ.toFixed(2)}deg)`;
+    }
   }, []);
 
   // Smooth programmatic step to card index via ScrollTrigger scroll position
@@ -87,16 +88,23 @@ export const WovenToBeRemembered: React.FC = () => {
     setActiveIndex(idx);
   }, []);
 
-  // Ensure curvature is recalculated on window resize
+  // Ultra-smooth debounced resize listener with RAF to eliminate lag when switching device/resizing
   useEffect(() => {
+    let rafId = 0;
     const handleResize = () => {
-      applyCurvature();
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        applyCurvature();
+      });
     };
     window.addEventListener('resize', handleResize, { passive: true });
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', handleResize);
+    };
   }, [applyCurvature]);
 
-  // Unified GSAP ScrollTrigger scrolling animation across Mobile, Tablet, and Desktop
+  // Responsive GSAP matchMedia integration: perfectly recalibrates when switching devices
   useGSAP(
     () => {
       const section = sectionRef.current;
@@ -105,73 +113,85 @@ export const WovenToBeRemembered: React.FC = () => {
       const cards = cardRefs.current.filter((c): c is HTMLDivElement => Boolean(c));
       if (!section || !pinWrapper || !track || cards.length === 0) return;
 
-      const width = window.innerWidth;
-      const isMobile = width < 640;
-      const isTablet = width >= 640 && width < 1024;
+      const mm = gsap.matchMedia(section);
 
-      // Exact travel calculation: the last card stops cleanly at the right edge of the viewport
-      const getTravel = () => {
-        const containerWidth = pinWrapper.clientWidth;
-        const lastCard = cards[cards.length - 1];
-        if (!lastCard) return track.scrollWidth - containerWidth;
-        const minimalGap = isMobile ? 24 : 32;
-        return Math.max(0, lastCard.offsetLeft + lastCard.offsetWidth - (containerWidth - minimalGap));
-      };
-
-      const travel = getTravel();
-
-      // Scroll distance scaled for responsive device travel
-      const scrollDistance = isMobile
-        ? Math.max(900, Math.round(travel * 1.15))
-        : isTablet
-          ? Math.max(1200, Math.round(travel * 1.25))
-          : Math.max(1600, Math.round(travel * 1.35));
-
-      // Initial state: starts at 0 without unexpected jumps
-      gsap.set(track, { x: 0 });
-      applyCurvature();
-
-      // ScrollTrigger pins section while page scroll drives horizontal circular walkthrough
-      const scrollTween = gsap.fromTo(
-        track,
-        { x: 0 },
+      mm.add(
         {
-          x: () => -getTravel(),
-          ease: 'none',
-          scrollTrigger: {
-            id: 'woven-scroll',
-            trigger: section,
-            pin: pinWrapper,
-            anticipatePin: 0,
-            start: 'top top',
-            end: () => '+=' + scrollDistance,
-            scrub: 0.5,
-            invalidateOnRefresh: true,
-            pinSpacing: true,
-            onUpdate: (self) => {
-              applyCurvature();
-              // Synchronize active index ONLY when index changes (avoids 60fps React re-render thrashing)
-              const cardCount = SIGNATURE_ENSEMBLES.length;
-              const currentIdx = Math.min(
-                cardCount - 1,
-                Math.max(0, Math.round(self.progress * (cardCount - 1)))
-              );
-              if (currentIdx !== activeIndexRef.current) {
-                activeIndexRef.current = currentIdx;
-                setActiveIndex(currentIdx);
-              }
-            },
-            onRefresh: () => {
-              applyCurvature();
-            },
-          },
+          isMobile: '(max-width: 639px)',
+          isTablet: '(min-width: 640px) and (max-width: 1023px)',
+          isDesktop: '(min-width: 1024px)',
+        },
+        (context) => {
+          const { isMobile, isTablet } = context.conditions!;
+
+          // Exact travel calculation: the last card stops cleanly at the right edge of the viewport
+          const getTravel = () => {
+            const containerWidth = pinWrapper.clientWidth;
+            const lastCard = cards[cards.length - 1];
+            if (!lastCard) return track.scrollWidth - containerWidth;
+            const minimalGap = isMobile ? 24 : 32;
+            return Math.max(0, lastCard.offsetLeft + lastCard.offsetWidth - (containerWidth - minimalGap));
+          };
+
+          // Functional scroll distance evaluated dynamically per breakpoint
+          const getScrollDistance = () => {
+            const travel = getTravel();
+            return isMobile
+              ? Math.max(900, Math.round(travel * 1.15))
+              : isTablet
+                ? Math.max(1200, Math.round(travel * 1.25))
+                : Math.max(1600, Math.round(travel * 1.35));
+          };
+
+          // Initial state: starts at 0 without unexpected jumps
+          gsap.set(track, { x: 0 });
+          applyCurvature();
+
+          // ScrollTrigger pins section while page scroll drives horizontal circular walkthrough
+          const scrollTween = gsap.fromTo(
+            track,
+            { x: 0 },
+            {
+              x: () => -getTravel(),
+              ease: 'none',
+              scrollTrigger: {
+                id: 'woven-scroll',
+                trigger: section,
+                pin: pinWrapper,
+                anticipatePin: 0,
+                start: 'top top',
+                end: () => '+=' + getScrollDistance(),
+                scrub: 0.5,
+                invalidateOnRefresh: true,
+                pinSpacing: true,
+                onUpdate: (self) => {
+                  applyCurvature();
+                  // Synchronize active index ONLY when index changes (avoids 60fps React re-render thrashing)
+                  const cardCount = SIGNATURE_ENSEMBLES.length;
+                  const currentIdx = Math.min(
+                    cardCount - 1,
+                    Math.max(0, Math.round(self.progress * (cardCount - 1)))
+                  );
+                  if (currentIdx !== activeIndexRef.current) {
+                    activeIndexRef.current = currentIdx;
+                    setActiveIndex(currentIdx);
+                  }
+                },
+                onRefresh: () => {
+                  applyCurvature();
+                },
+              },
+            }
+          );
+
+          return () => {
+            scrollTween.kill();
+            track.style.transform = '';
+          };
         }
       );
 
-      return () => {
-        scrollTween.kill();
-        track.style.transform = '';
-      };
+      return () => mm.revert();
     },
     { scope: sectionRef, dependencies: [applyCurvature] }
   );
@@ -185,7 +205,7 @@ export const WovenToBeRemembered: React.FC = () => {
       {/* Viewport Container: Pinned during scrolling animation with header clearance */}
       <div
         ref={pinWrapperRef}
-        className="w-full min-h-screen flex flex-col justify-between pt-16 sm:pt-20 lg:pt-14 pb-4 sm:pb-6 lg:pb-8 relative bg-[#FAF6F0]"
+        className="w-full min-h-screen flex flex-col justify-between pt-16 sm:pt-20 lg:pt-14 pb-8 sm:pb-10 lg:pb-12 relative bg-[#FAF6F0]"
       >
         {/* Header Row: THE VAULT SIGNATURES / Woven to Be Remembered */}
         <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 shrink-0">
@@ -216,8 +236,8 @@ export const WovenToBeRemembered: React.FC = () => {
           </div>
         </div>
 
-        {/* Circular Panoramic Strip: Pinned horizontal scrolling walkthrough with increased card sizing on mobile */}
-        <div className="relative w-full select-none my-auto pt-2 pb-12 sm:pb-16 lg:pb-18 overflow-hidden">
+        {/* Circular Panoramic Strip: overflow-visible with ample bottom clearance prevents cropping on big screens */}
+        <div className="relative w-full select-none my-auto pt-4 pb-28 sm:pb-32 lg:pb-36 overflow-visible">
           {/* Horizontal Track Container */}
           <div
             ref={trackRef}
@@ -295,7 +315,7 @@ export const WovenToBeRemembered: React.FC = () => {
         </div>
 
         {/* Bottom Bar: Interactive Step Indicators & Complete Archives Link */}
-        <div className="shrink-0 flex flex-col items-center gap-2 px-4">
+        <div className="shrink-0 flex flex-col items-center gap-2.5 px-4 pt-2 pb-2 relative z-20">
           {/* Active Ensemble Step Indicator */}
           <div className="flex items-center justify-between w-full max-w-[340px]">
             <button
