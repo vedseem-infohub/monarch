@@ -9,46 +9,98 @@ import { Search, Heart, ShoppingBag, User, Menu, X, ChevronDown, Sparkles } from
 import { MegaMenu } from './MegaMenu';
 import { SearchOverlay } from './SearchOverlay';
 import { CartDrawer } from './CartDrawer';
+import { ProductQuickView } from '@/components/product/ProductQuickView';
 import { WOMEN_CATEGORIES, MEN_CATEGORIES } from '@/data/categories';
 
 export const Header: React.FC = () => {
+  const pathname = usePathname();
+  const isHomePage = pathname === '/';
+
+  const [isInHero, setIsInHero] = useState(isHomePage);
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeMenu, setActiveMenu] = useState<'women' | 'men' | 'wedding' | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState<'women' | 'men' | null>(null);
 
-  const pathname = usePathname();
-  const isHomePage = pathname === '/';
-
   const { totalCount, setIsCartOpen } = useCart();
   const { wishlistCount } = useWishlist();
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 40);
+      const scrollY = window.scrollY;
+      setIsScrolled(scrollY > 40);
+
+      if (isHomePage) {
+        const heroEl = document.getElementById('hero-section');
+        if (heroEl) {
+          const rect = heroEl.getBoundingClientRect();
+          // Hero section is active while its bottom hasn't scrolled past the header
+          setIsInHero(rect.bottom > 80);
+        } else {
+          // Fallback based on typical 320vh scroll distance
+          setIsInHero(scrollY < window.innerHeight * 3.0);
+        }
+      } else {
+        setIsInHero(false);
+      }
     };
+
+    handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    window.addEventListener('resize', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
+  }, [isHomePage]);
 
   // Header background logic:
-  // On homepage before scroll: transparent with gold/ivory text
-  // After scroll or on inner pages: solid deep burgundy (#240E14) or ivory with fine gold border
-  const headerBgClass = isScrolled || !isHomePage
-    ? 'bg-[#240E14]/95 backdrop-blur-md border-b border-monarch-gold/30 shadow-lg text-monarch-ivory py-3.5'
-    : 'bg-transparent text-monarch-ivory py-5';
+  // 1. Glossy gradient overlay: ONLY active when on the homepage Hero section.
+  // 2. Normal pages or past Hero section: FULL DARK background (#12070A) with backdrop blur and zero border.
+  // 3. When MegaMenu is OPEN: fuses seamlessly with the full dark or glossy panel.
+  const isMenuOpen = activeMenu !== null;
+  const isGlossy = isHomePage && isInHero;
+
+  const headerBgClass = isGlossy
+    ? 'border-none text-monarch-ivory py-4'
+    : 'border-none text-monarch-ivory py-3.5';
+
+  const backdropBgClass = isMenuOpen
+    ? isGlossy
+      ? 'bg-gradient-to-b from-black/95 via-black/92 to-black/90 backdrop-blur-xl border-none shadow-none'
+      : 'bg-[#12070A]/98 backdrop-blur-xl border-none shadow-none'
+    : isGlossy
+      ? 'bg-gradient-to-b from-black/90 via-black/50 to-transparent backdrop-blur-md [mask-image:linear-gradient(to_bottom,black_0%,black_35%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_35%,transparent_100%)] border-none'
+      : 'bg-[#12070A]/98 backdrop-blur-md border-none shadow-xl';
 
   return (
     <>
-      <header className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${headerBgClass}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <header
+        onMouseLeave={(e) => {
+          const related = e.relatedTarget;
+          if (
+            typeof Node === 'undefined' ||
+            !(related instanceof Node) ||
+            !e.currentTarget.contains(related)
+          ) {
+            setActiveMenu(null);
+          }
+        }}
+        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${headerBgClass}`}
+      >
+        {/* Dynamic Progressive Blur & Dark Gradient Backdrop (fuses with MegaMenu when open, fades into frames when closed) */}
+        <div
+          className={`absolute inset-0 pointer-events-none -z-10 transition-all duration-500 ${backdropBgClass}`}
+        />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="flex items-center justify-between">
             {/* Left: Mobile Menu Trigger & Main Desktop Nav */}
             <div className="flex items-center gap-6">
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
-                className="lg:hidden text-monarch-ivory hover:text-monarch-gold p-1"
+                className="lg:hidden text-monarch-ivory/95 hover:text-monarch-gold p-1 transition-colors [filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.85))]"
                 aria-label="Open menu"
               >
                 <Menu className="w-6 h-6" />
@@ -62,10 +114,10 @@ export const Header: React.FC = () => {
                 >
                   <Link
                     href="/collections/women"
-                    className="font-nav text-xs tracking-widest uppercase hover:text-monarch-gold-light transition-colors flex items-center gap-1"
+                    className="font-nav text-xs tracking-widest uppercase text-monarch-ivory/95 hover:text-monarch-gold-light transition-colors flex items-center gap-1.5 [text-shadow:_0_1px_4px_rgba(0,0,0,0.85)]"
                   >
                     <span>Women</span>
-                    <ChevronDown className="w-3 h-3 text-monarch-gold opacity-70 group-hover:rotate-180 transition-transform" />
+                    <ChevronDown className="w-3 h-3 text-monarch-gold opacity-80 group-hover:rotate-180 transition-transform" />
                   </Link>
                 </div>
 
@@ -76,10 +128,10 @@ export const Header: React.FC = () => {
                 >
                   <Link
                     href="/collections/men"
-                    className="font-nav text-xs tracking-widest uppercase hover:text-monarch-gold-light transition-colors flex items-center gap-1"
+                    className="font-nav text-xs tracking-widest uppercase text-monarch-ivory/95 hover:text-monarch-gold-light transition-colors flex items-center gap-1.5 [text-shadow:_0_1px_4px_rgba(0,0,0,0.85)]"
                   >
                     <span>Men</span>
-                    <ChevronDown className="w-3 h-3 text-monarch-gold opacity-70 group-hover:rotate-180 transition-transform" />
+                    <ChevronDown className="w-3 h-3 text-monarch-gold opacity-80 group-hover:rotate-180 transition-transform" />
                   </Link>
                 </div>
 
@@ -90,17 +142,17 @@ export const Header: React.FC = () => {
                 >
                   <Link
                     href="/collections/wedding-edit"
-                    className="font-nav text-xs tracking-widest uppercase hover:text-monarch-gold-light transition-colors flex items-center gap-1"
+                    className="font-nav text-xs tracking-widest uppercase text-monarch-ivory/95 hover:text-monarch-gold-light transition-colors flex items-center gap-1.5 [text-shadow:_0_1px_4px_rgba(0,0,0,0.85)]"
                   >
                     <span>Wedding Edit</span>
-                    <ChevronDown className="w-3 h-3 text-monarch-gold opacity-70 group-hover:rotate-180 transition-transform" />
+                    <ChevronDown className="w-3 h-3 text-monarch-gold opacity-80 group-hover:rotate-180 transition-transform" />
                   </Link>
                 </div>
 
                 <Link
                   href="/collections/all?filter=new"
                   onMouseEnter={() => setActiveMenu(null)}
-                  className="font-nav text-xs tracking-widest uppercase hover:text-monarch-gold-light transition-colors"
+                  className="font-nav text-xs tracking-widest uppercase text-monarch-ivory/95 hover:text-monarch-gold-light transition-colors [text-shadow:_0_1px_4px_rgba(0,0,0,0.85)]"
                 >
                   New Arrivals
                 </Link>
@@ -108,7 +160,7 @@ export const Header: React.FC = () => {
                 <Link
                   href="/collections/all"
                   onMouseEnter={() => setActiveMenu(null)}
-                  className="font-nav text-xs tracking-widest uppercase hover:text-monarch-gold-light transition-colors"
+                  className="font-nav text-xs tracking-widest uppercase text-monarch-ivory/95 hover:text-monarch-gold-light transition-colors [text-shadow:_0_1px_4px_rgba(0,0,0,0.85)]"
                 >
                   Collections
                 </Link>
@@ -116,7 +168,7 @@ export const Header: React.FC = () => {
                 <Link
                   href="/our-craft"
                   onMouseEnter={() => setActiveMenu(null)}
-                  className="font-nav text-xs tracking-widest uppercase hover:text-monarch-gold-light transition-colors"
+                  className="font-nav text-xs tracking-widest uppercase text-monarch-ivory/95 hover:text-monarch-gold-light transition-colors [text-shadow:_0_1px_4px_rgba(0,0,0,0.85)]"
                 >
                   Our Craft
                 </Link>
@@ -127,11 +179,11 @@ export const Header: React.FC = () => {
             <div className="flex flex-col items-center">
               <Link href="/" className="group text-center">
                 <div className="flex items-center justify-center gap-2">
-                  <span className="font-serif text-2xl sm:text-3xl tracking-[0.22em] text-monarch-ivory group-hover:text-monarch-gold-light transition-colors uppercase font-medium">
+                  <span className="font-serif text-2xl sm:text-3xl tracking-[0.22em] text-monarch-ivory group-hover:text-monarch-gold-light transition-colors uppercase font-medium [text-shadow:_0_2px_8px_rgba(0,0,0,0.9)]">
                     MONARCH
                   </span>
                 </div>
-                <span className="hidden sm:block text-[9px] tracking-[0.35em] text-monarch-gold/80 font-nav uppercase -mt-1 group-hover:text-monarch-gold transition-colors">
+                <span className="hidden sm:block text-[10px] tracking-[0.35em] text-monarch-gold-light font-medium font-nav uppercase -mt-0.5 group-hover:text-white transition-colors [text-shadow:_0_1px_5px_rgba(0,0,0,0.95)]">
                   Haute Couture Heritage
                 </span>
               </Link>
@@ -141,7 +193,7 @@ export const Header: React.FC = () => {
             <div className="flex items-center space-x-3 sm:space-x-5">
               <button
                 onClick={() => setIsSearchOpen(true)}
-                className="text-monarch-ivory hover:text-monarch-gold p-1.5 transition-colors"
+                className="text-monarch-ivory/95 hover:text-monarch-gold p-1.5 transition-colors [filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.85))]"
                 aria-label="Search collection"
               >
                 <Search className="w-5 h-5" />
@@ -149,7 +201,7 @@ export const Header: React.FC = () => {
 
               <Link
                 href="/account"
-                className="hidden sm:block text-monarch-ivory hover:text-monarch-gold p-1.5 transition-colors"
+                className="hidden sm:block text-monarch-ivory/95 hover:text-monarch-gold p-1.5 transition-colors [filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.85))]"
                 aria-label="Royal concierge and account"
               >
                 <User className="w-5 h-5" />
@@ -157,7 +209,7 @@ export const Header: React.FC = () => {
 
               <Link
                 href="/wishlist"
-                className="relative text-monarch-ivory hover:text-monarch-gold p-1.5 transition-colors"
+                className="relative text-monarch-ivory/95 hover:text-monarch-gold p-1.5 transition-colors [filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.85))]"
                 aria-label="Wishlist"
               >
                 <Heart className="w-5 h-5" />
@@ -170,7 +222,7 @@ export const Header: React.FC = () => {
 
               <button
                 onClick={() => setIsCartOpen(true)}
-                className="relative text-monarch-ivory hover:text-monarch-gold p-1.5 transition-colors"
+                className="relative text-monarch-ivory/95 hover:text-monarch-gold p-1.5 transition-colors [filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.85))]"
                 aria-label="Shopping bag"
               >
                 <ShoppingBag className="w-5 h-5" />
@@ -185,14 +237,17 @@ export const Header: React.FC = () => {
         </div>
 
         {/* MegaMenu Dropdown */}
-        <MegaMenu activeMenu={activeMenu} onClose={() => setActiveMenu(null)} />
+        <MegaMenu activeMenu={activeMenu} onClose={() => setActiveMenu(null)} isGlossy={isGlossy} />
       </header>
 
       {/* Full-Screen Search Modal */}
-      <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} isGlossy={isGlossy} />
 
       {/* Cart Drawer */}
       <CartDrawer />
+
+      {/* Global Couture Quick View Drawer */}
+      <ProductQuickView />
 
       {/* Mobile Drawer */}
       {isMobileMenuOpen && (
@@ -202,7 +257,13 @@ export const Header: React.FC = () => {
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           />
 
-          <div className="absolute inset-y-0 left-0 w-4/5 max-w-sm bg-[#240E14] text-monarch-ivory border-r border-monarch-gold/30 p-6 flex flex-col justify-between overflow-y-auto">
+          <div
+            className={`absolute inset-y-0 left-0 w-4/5 max-w-sm text-monarch-ivory p-6 flex flex-col justify-between overflow-y-auto transition-colors duration-500 ${
+              isGlossy
+                ? 'bg-gradient-to-b from-black/85 via-black/75 to-black/60 backdrop-blur-md border-none'
+                : 'bg-[#12070A] border-r border-monarch-gold/30'
+            }`}
+          >
             <div>
               <div className="flex items-center justify-between pb-6 border-b border-monarch-gold/25">
                 <Link

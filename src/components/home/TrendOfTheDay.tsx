@@ -1,157 +1,122 @@
 'use client';
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import Link from 'next/link';
-import { PRODUCTS, FORMAT_CURRENCY } from '@/data/products';
-import { ArrowRight, Sparkles, Flame, Eye } from 'lucide-react';
+import { TREND_PRODUCTS } from '@/data/trends';
+import { HorizontalProductCard } from './HorizontalProductCard';
+import { ArrowRight } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-// 4 Daily trend spotlights paired with genuine products
-const TREND_ITEMS = [
-  {
-    product: PRODUCTS.find((p) => p.id === 'monarch-012') || PRODUCTS[0],
-    trendName: 'Moonlight Tissue Organza',
-    trendTag: 'Trending Drape',
-    highlight: 'Gossamer handloom silk with micro-zardozi jasmine vines',
-  },
-  {
-    product: PRODUCTS.find((p) => p.id === 'monarch-003') || PRODUCTS[1],
-    trendName: 'Authentic Kadwa Weft',
-    trendTag: 'Heritage Revival',
-    highlight: 'Pitloom shikargah motifs in hallmarked pure silver zari',
-  },
-  {
-    product: PRODUCTS.find((p) => p.id === 'monarch-005') || PRODUCTS[2],
-    trendName: 'Kalidar Velvet Flairs',
-    trendTag: 'Royal Evening',
-    highlight: '32 hand-shaped gota ribbon petals with sheer silk dupatta',
-  },
-  {
-    product: PRODUCTS.find((p) => p.id === 'monarch-002') || PRODUCTS[3],
-    trendName: 'Imperial Tonal Marodi',
-    trendTag: 'Groom Couture',
-    highlight: 'Bhagalpur raw silk finished with custom carved brass buttons',
-  },
-];
+/*
+ * ============================================================================
+ * SECTION: TrendOfTheDay
+ * ============================================================================
+ * Features:
+ * - Header: "| Trend of the Day" with gold vertical bar accent
+ * - Marquee Track: Glides smoothly from RIGHT to LEFT (.animate-marquee)
+ * - Auto-pauses on hover so cards can be inspected and added to bag
+ *
+ * BACKEND API INTEGRATION INSTRUCTIONS:
+ * When the backend API is ready:
+ * 1. Replace TREND_PRODUCTS with data fetched from your backend endpoint (e.g. GET /api/trends/daily)
+ * 2. Example with React Query / SWR / useEffect:
+ *
+ *    // const [trendProducts, setTrendProducts] = useState<Product[]>(TREND_PRODUCTS);
+ *    // useEffect(() => {
+ *    //   async function loadTrends() {
+ *    //     try {
+ *    //       const res = await fetch('/api/trends/daily');
+ *    //       const json = await res.json();
+ *    //       if (json?.data) setTrendProducts(json.data);
+ *    //     } catch (err) {
+ *    //       console.error('Failed to load trends from backend:', err);
+ *    //     }
+ *    //   }
+ *    //   loadTrends();
+ *    // }, []);
+ * ============================================================================
+ */
 
 export const TrendOfTheDay: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      if (trackRef.current) {
-        gsap.from(trackRef.current.querySelectorAll('.trend-card'), {
+  useGSAP(
+    () => {
+      gsap.fromTo(
+        '.trend-header-reveal',
+        { opacity: 0.85, y: 12 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.5,
+          ease: 'power2.out',
           scrollTrigger: {
-            trigger: trackRef.current,
-            start: 'top 85%',
+            trigger: sectionRef.current,
+            start: 'top 95%',
+            refreshPriority: 1,
             toggleActions: 'play none none none',
           },
-          y: 35,
-          opacity: 0,
-          duration: 0.9,
-          stagger: 0.1,
-          ease: 'power3.out',
-        });
-      }
-    }, sectionRef);
-
-    return () => ctx.revert();
-  }, []);
+        }
+      );
+    },
+    { scope: sectionRef, dependencies: [] }
+  );
 
   return (
     <section
       ref={sectionRef}
-      className="py-14 sm:py-20 bg-[#F7F0E5] text-monarch-charcoal relative overflow-hidden"
+      className="py-7 sm:py-9 bg-[#FAF7F2] text-monarch-charcoal relative overflow-hidden border-t border-monarch-gold/15"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10 pb-4 border-b border-monarch-gold/30">
-          <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-monarch-maroon/10 border border-monarch-maroon/20 text-[10px] font-nav uppercase tracking-[0.25em] text-monarch-maroon font-semibold">
-              <Flame className="w-3 h-3 text-monarch-maroon" />
-              <span>Daily Editorial Highlight</span>
-            </div>
-            <h2 className="font-serif text-2xl sm:text-4xl text-monarch-charcoal font-medium">
-              Trend of the{' '}
-              <span className="font-serif italic font-light text-monarch-gold-dark">
-                Day
-              </span>
+      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Section Header: "| Trend of the Day" (Matching Screenshot) */}
+        <div className="trend-header-reveal flex items-center justify-between gap-4 mb-4 pb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-[#C59B27] font-serif font-light text-2xl sm:text-3xl select-none leading-none">
+              |
+            </span>
+            <h2 className="font-serif text-xl sm:text-2xl lg:text-[27px] font-normal tracking-tight text-[#1E1714]">
+              Trend of the Day
             </h2>
           </div>
 
           <Link
             href="/collections/all"
-            className="text-xs font-nav uppercase tracking-[0.2em] font-semibold text-monarch-maroon hover:text-monarch-maroon-dark pb-0.5 border-b border-monarch-maroon/30 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-nav uppercase tracking-wider text-monarch-maroon hover:text-monarch-maroon-dark font-medium transition-colors"
           >
-            Explore All Trends
+            <span>View All</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
+      </div>
 
-        {/* 4 Spotlight Horizontal Mini-Cards */}
+      {/* Marquee Track: Glides smoothly from Right to Left (Direction 1) */}
+      <div className="relative w-full overflow-hidden select-none py-1">
+        {/* Edge Gradient Masks */}
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-8 sm:w-16 bg-gradient-to-r from-[#FAF7F2] to-transparent z-10" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-8 sm:w-16 bg-gradient-to-l from-[#FAF7F2] to-transparent z-10" />
+
         <div
-          ref={trackRef}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
+          className="flex gap-4 sm:gap-5 w-max animate-marquee hover:[animation-play-state:paused] py-2 px-2"
+          style={{
+            animation: 'marquee 35s linear infinite normal',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.animationPlayState = 'paused';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.animationPlayState = 'running';
+          }}
         >
-          {TREND_ITEMS.map((item) => (
-            <div
-              key={item.trendName}
-              className="trend-card group flex flex-col bg-white rounded-xl overflow-hidden border border-monarch-beige/60 hover:border-monarch-gold transition-all duration-300 shadow-sm hover:shadow-lg p-3"
-            >
-              <div className="flex gap-3 items-center">
-                {/* Square Product Image */}
-                <Link
-                  href={`/product/${item.product.id}`}
-                  className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden shrink-0 bg-monarch-ivory"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={item.product.images[0]}
-                    alt={item.product.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <span className="absolute top-1 left-1 text-[8px] font-nav uppercase tracking-wider bg-monarch-maroon text-white px-1.5 py-0.5 rounded">
-                    HOT
-                  </span>
-                </Link>
-
-                {/* Info & Price */}
-                <div className="flex-1 min-w-0 space-y-1">
-                  <span className="text-[9px] font-nav uppercase tracking-wider text-monarch-gold-dark font-semibold block">
-                    {item.trendTag}
-                  </span>
-                  <Link
-                    href={`/product/${item.product.id}`}
-                    className="font-serif text-sm text-monarch-charcoal font-medium hover:text-monarch-maroon transition-colors line-clamp-1 block"
-                  >
-                    {item.trendName}
-                  </Link>
-                  <p className="text-[11px] font-serif font-bold text-monarch-maroon">
-                    {FORMAT_CURRENCY(item.product.price)}
-                  </p>
-                </div>
-
-                {/* View Button */}
-                <Link
-                  href={`/product/${item.product.id}`}
-                  className="p-2 rounded-full bg-monarch-gold/15 hover:bg-monarch-gold text-monarch-maroon hover:text-white transition-colors shrink-0"
-                  title="View Ensemble"
-                >
-                  <Eye className="w-4 h-4" />
-                </Link>
-              </div>
-
-              {/* Sub-note */}
-              <div className="mt-2.5 pt-2 border-t border-monarch-beige/30 text-[11px] text-monarch-charcoal/70 font-sans line-clamp-1">
-                {item.highlight}
-              </div>
+          {/* Seamless infinite loop: duplicate items */}
+          {[...TREND_PRODUCTS, ...TREND_PRODUCTS].map((product, idx) => (
+            <div key={`trend-${product.id}-${idx}`} className="shrink-0">
+              <HorizontalProductCard product={product} priority={idx < 4} />
             </div>
           ))}
         </div>

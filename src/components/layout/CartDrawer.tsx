@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
+import { useSmoothScroll } from '@/components/common/SmoothScrollProvider';
 import { FORMAT_CURRENCY } from '@/data/products';
 import { X, Plus, Minus, Trash2, ArrowRight, ShieldCheck, Sparkles, Tag } from 'lucide-react';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export const CartDrawer: React.FC = () => {
   const {
@@ -22,11 +24,23 @@ export const CartDrawer: React.FC = () => {
     applyPromo,
     removePromo,
   } = useCart();
+  const { pauseScroll, resumeScroll } = useSmoothScroll();
 
   const [promoInput, setPromoInput] = useState('');
   const [promoMessage, setPromoMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  if (!isCartOpen) return null;
+  // Lock window scroll when cart is open
+  useEffect(() => {
+    if (isCartOpen) {
+      pauseScroll();
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prevOverflow;
+        resumeScroll();
+      };
+    }
+  }, [isCartOpen, pauseScroll, resumeScroll]);
 
   const handleApplyCode = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,18 +57,33 @@ export const CartDrawer: React.FC = () => {
   const progressPercent = Math.min(100, Math.round((subtotal / freeShippingThreshold) * 100));
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden animate-fadeIn">
-      {/* Backdrop */}
-      <div
-        onClick={() => setIsCartOpen(false)}
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
-      />
+    <AnimatePresence>
+      {isCartOpen && (
+        <div
+          data-lenis-prevent="true"
+          className="fixed inset-0 z-50 overflow-hidden flex justify-end"
+        >
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            onClick={() => setIsCartOpen(false)}
+            className="fixed inset-0 bg-black/65 backdrop-blur-sm"
+          />
 
-      {/* Slide-over panel */}
-      <div className="absolute inset-y-0 right-0 max-w-full flex pl-10">
-        <div className="w-screen max-w-md bg-[#240E14] text-monarch-ivory border-l border-monarch-gold/30 shadow-2xl flex flex-col">
-          {/* Header */}
-          <div className="p-6 border-b border-monarch-gold/25 flex items-center justify-between">
+          {/* Slide-over panel */}
+          <motion.div
+            data-lenis-prevent="true"
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ duration: 0.38, ease: [0.32, 0.72, 0, 1] }}
+            className="relative z-10 w-full max-w-md bg-[#240E14] text-monarch-ivory border-l border-monarch-gold/30 shadow-2xl flex flex-col h-full max-h-screen overscroll-contain"
+          >
+            {/* Header */}
+            <div className="p-6 border-b border-monarch-gold/25 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="font-serif text-xl tracking-wider text-monarch-ivory">Royal Shopping Bag</span>
               <span className="text-xs font-nav px-2 py-0.5 rounded-full bg-monarch-gold/20 text-monarch-gold border border-monarch-gold/30">
@@ -91,7 +120,10 @@ export const CartDrawer: React.FC = () => {
           </div>
 
           {/* Cart Items List */}
-          <div className="flex-1 overflow-y-auto p-6 divide-y divide-monarch-gold/15">
+          <div
+            data-lenis-prevent="true"
+            className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-6 divide-y divide-monarch-gold/15 no-scrollbar touch-pan-y"
+          >
             {cart.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center py-16">
                 <div className="w-16 h-16 rounded-full border border-monarch-gold/30 flex items-center justify-center text-monarch-gold mb-4">
@@ -289,8 +321,9 @@ export const CartDrawer: React.FC = () => {
               </div>
             </div>
           )}
-        </div>
+        </motion.div>
       </div>
-    </div>
-  );
+    )}
+  </AnimatePresence>
+);
 };

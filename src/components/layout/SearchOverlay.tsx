@@ -10,9 +10,10 @@ import { Product } from '@/types';
 interface SearchOverlayProps {
   isOpen: boolean;
   onClose: () => void;
+  isGlossy?: boolean;
 }
 
-export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
+export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose, isGlossy = false }) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Product[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -64,7 +65,13 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-monarch-burgundy/95 backdrop-blur-xl text-monarch-ivory animate-fadeIn">
+    <div
+      className={`fixed inset-0 z-50 flex flex-col text-monarch-ivory animate-fadeIn transition-colors duration-500 border-none ${
+        isGlossy
+          ? 'bg-gradient-to-b from-black/90 via-black/80 to-black/65 backdrop-blur-md'
+          : 'bg-[#12070A]/98 backdrop-blur-xl'
+      }`}
+    >
       {/* Top Bar */}
       <div className="border-b border-monarch-gold/30 px-6 py-6 max-w-6xl mx-auto w-full flex items-center justify-between">
         <div className="flex items-center gap-3 text-monarch-gold">

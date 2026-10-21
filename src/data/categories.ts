@@ -126,4 +126,67 @@ export const MEN_CATEGORIES: Category[] = [
   },
 ];
 
-export const ALL_CATEGORIES = [...WOMEN_CATEGORIES, ...MEN_CATEGORIES];
+export const SILK_CATEGORIES: Category[] = [
+  {
+    id: 'kanjivaram-silk',
+    name: 'Kanjivaram Silk',
+    slug: 'kanjivaram-silk',
+    gender: 'women',
+    image: '/images/moods/mood_kanjivaram.png',
+    itemCount: 16,
+    tagline: 'Temple weaves in pure mulberry silk with 24K electroplated gold zari',
+    description: 'Ancestral Korvai interlocking border tapestries from Tamil Nadu, woven with solid gold zari pallus and auspicious temple spires.',
+  },
+  {
+    id: 'chanderi-silk',
+    name: 'Chanderi Silk',
+    slug: 'chanderi-silk',
+    gender: 'women',
+    image: '/images/moods/mood_chanderi.png',
+    itemCount: 14,
+    tagline: 'Featherlight sheer silks woven with silver-gilt zari booti motifs',
+    description: 'Heirloom gossamer drapes from Central India, blending pure spun silk with shimmering mukaish accents.',
+  },
+  {
+    id: 'tussar-silk',
+    name: 'Tussar Silk',
+    slug: 'tussar-silk',
+    gender: 'women',
+    image: '/images/moods/mood_tussar.png',
+    itemCount: 12,
+    tagline: 'Rich golden forest silks textured with natural coarse sheen',
+    description: 'Earthy luxury hand-loomed from wild silkworms, featuring tribal Kantha needlework and sacred geometric blocks.',
+  },
+  {
+    id: 'paithani-silk',
+    name: 'Paithani Silk',
+    slug: 'paithani-silk',
+    gender: 'women',
+    image: '/images/moods/mood_paithani.png',
+    itemCount: 15,
+    tagline: 'Royal Maharashtrian tapestry weaves with peacock motifs and oblique borders',
+    description: 'Intricately shuttled gold pallus woven on non-electric wooden pitlooms, preserved from 18th-century Peshwa courts.',
+  },
+  {
+    id: 'banarasi-silk',
+    name: 'Banarasi Silk',
+    slug: 'banarasi-silk',
+    gender: 'women',
+    image: '/images/moods/mood_banarasi.png',
+    itemCount: 24,
+    tagline: 'Ancestral Kashi Kadwa and Shikargah brocades in pure Katan silk',
+    description: 'Sacred corridor masterworks woven along the holy ghats with real zari, celebrated across centuries of royal darbars.',
+  },
+  {
+    id: 'organza-tissue',
+    name: 'Organza & Tissue',
+    slug: 'organza-tissue',
+    gender: 'women',
+    image: '/images/moods/mood_organza.png',
+    itemCount: 18,
+    tagline: 'Weightless gossamer net silks illuminated with delicate mukaish dots',
+    description: 'Contemporary royal drapes engineered for graceful fluidity, featuring hand-scalloped borders and floating metallic threads.',
+  },
+];
+
+export const ALL_CATEGORIES = [...WOMEN_CATEGORIES, ...MEN_CATEGORIES, ...SILK_CATEGORIES];

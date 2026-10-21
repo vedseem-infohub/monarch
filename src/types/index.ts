@@ -1,7 +1,53 @@
 export interface ColorVariant {
+  id?: string;
   name: string;
   hex: string;
   imageIndex?: number;
+  image?: string;
+}
+
+export interface ProductAudioTrack {
+  title: string;
+  artist: string;
+  src?: string;
+}
+
+export interface SectionMetadata {
+  // Editorial Campaign (Autumn-Winter 2026 / Cathedral Arches)
+  campaignTag?: string;       // e.g. "Heritage Festive", "Royal Gathering", "Couture Heirloom"
+  campaignTitle?: string;     // e.g. "Awadhi Darbar Couture"
+  campaignSubtitle?: string;  // e.g. "Pure Katan Silk Kadwa"
+  curatedSaree?: string;      // e.g. "Royal Crimson & Sapphire Weave"
+  // Occasion Edits (Edits for Every Occasion)
+  occasionTag?: string;       // e.g. "CURATED WEDDING TROUSSEAU", "TIMELESS HANDLOOMS"
+  occasionTitle?: string;     // e.g. "The Wedding Edit", "Heritage Weaves"
+
+  // Interactive Studio (Change Your Look)
+  lookbookName?: string;      // e.g. "IVORY ORGANZA BLOOM"
+  thumbnail?: string;         // e.g. "/images/panoramic/ensemble_utsav.jpg"
+  audioTrack?: ProductAudioTrack;
+  features?: string[];
+
+  // Bridal & Signature Heritage (Woven to be Remembered & Bridal Collection)
+  craftTechnique?: string;    // e.g. "Hand-Stretched 3D Dabka", "Certified Silk Mark Guild"
+  heritageTag?: string;       // e.g. "Awadhi Karchob Flora", "Ancestral Pitloom Weft"
+
+  // Seasonal & Trending Drops
+  seasonTag?: string;         // e.g. "Winter Festive 2026"
+  trendVelocity?: string | number; // e.g. "High Demand" | 99
+  rangeCategory?: string;     // e.g. "Banarasi" | "Bridal"
+  rangeCategorySlug?: string; // e.g. "banarasi-silk" | "bridal-lehengas"
+  storyBehindDrape?: string;  // e.g. "Every piece carries a story woven into its silk..."
+
+  // Worth Your Attention (Spotlight & Offers)
+  verticalText?: string;      // e.g. "CURRENT OFFERS"
+  attentionHeadline?: string; // e.g. "Occasionwear, reduced"
+  spotlightTag?: string;      // e.g. "ROYAL ARCHIVE · 15% PRIVILEGE"
+  offerBadge?: string;        // e.g. "LIMITED PRIVILEGE"
+  href?: string;
+
+  // Open Section Metadata Index for area-specific reflections
+  [key: string]: unknown;
 }
 
 export interface Model3DConfig {
@@ -36,11 +82,14 @@ export interface Product {
   deliveryDays: number;
   has3D: boolean;
   model3DConfig?: Model3DConfig;
-  badge?: 'Bestseller' | 'New Arrival' | 'Heritage Masterpiece' | 'Royal Edit';
+  badge?: string;
   inStock: boolean;
   rating: number;
   reviewsCount: number;
   featured?: boolean;
+
+  // Unified Backend Area Reflection
+  sectionMetadata?: SectionMetadata;
 }
 
 export interface CustomMeasurements {

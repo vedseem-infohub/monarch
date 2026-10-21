@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { PRODUCTS, FORMAT_CURRENCY } from '@/data/products';
+import { BRIDAL_ENSEMBLES, BridalEnsemble } from '@/data/bridal';
+import { BridalCard } from './BridalCard';
 import { CurvedDivider } from '@/components/home/shared/CurvedDivider';
-import { ArrowRight, Sparkles, Heart } from 'lucide-react';
-import { useWishlist } from '@/context/WishlistContext';
+import { ArrowRight, ArrowUpRight, Sparkles } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -15,211 +16,209 @@ if (typeof window !== 'undefined') {
 
 export const BridalCollection: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
-  const campaignImgRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const { isInWishlist, toggleWishlist } = useWishlist();
+  const bigImgRef = useRef<HTMLImageElement>(null);
+  const bigTextRef = useRef<HTMLDivElement>(null);
 
-  // Curated bridal wear from PRODUCTS (e.g. bridal lehengas, royal sarees)
-  const bridalItems = PRODUCTS.filter(
-    (p) => p.category === 'bridal-lehengas' || p.category === 'designer-sarees'
-  ).slice(0, 4);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
 
+  const activeEnsemble: BridalEnsemble = BRIDAL_ENSEMBLES[activeIndex] || BRIDAL_ENSEMBLES[0];
+
+  // Automatic silent auto-change of the Big Card every 4 seconds (no play button)
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      // 1. Large campaign image parallax & clip-path reveal
-      if (campaignImgRef.current) {
-        gsap.fromTo(
-          campaignImgRef.current.querySelector('img'),
-          { scale: 1.12, y: -20 },
-          {
-            scale: 1,
-            y: 20,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: campaignImgRef.current,
-              start: 'top bottom',
-              end: 'bottom top',
-              scrub: 1.2,
-            },
-          }
-        );
-      }
+    if (isHovered) return;
 
-      // 2. Stagger text and product cards
-      if (contentRef.current) {
-        gsap.from(contentRef.current.querySelectorAll('.bridal-reveal'), {
+    const timer = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % BRIDAL_ENSEMBLES.length);
+    }, 4000);
+
+    return () => clearInterval(timer);
+  }, [isHovered]);
+
+  // Smooth GSAP crossfade on the Big Card whenever activeIndex changes
+  useEffect(() => {
+    if (bigImgRef.current) {
+      gsap.fromTo(
+        bigImgRef.current,
+        { opacity: 0.35, scale: 1.05 },
+        { opacity: 1, scale: 1, duration: 0.6, ease: 'power2.out' }
+      );
+    }
+
+    if (bigTextRef.current) {
+      gsap.fromTo(
+        bigTextRef.current,
+        { y: 14, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' }
+      );
+    }
+  }, [activeIndex]);
+
+  // Scoped GSAP ScrollTrigger entrance animations using useGSAP
+  useGSAP(
+    () => {
+      gsap.fromTo(
+        '.bridal-reveal',
+        { opacity: 0.85, y: 16 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.5,
+          stagger: 0.05,
+          ease: 'power2.out',
           scrollTrigger: {
-            trigger: contentRef.current,
+            trigger: sectionRef.current,
             start: 'top 95%',
+            refreshPriority: 1,
             toggleActions: 'play none none none',
           },
-          y: 35,
-          opacity: 0,
-          duration: 0.9,
-          stagger: 0.1,
-          ease: 'power3.out',
-        });
-      }
-    }, sectionRef);
-
-    return () => ctx.revert();
-  }, []);
+        }
+      );
+    },
+    { scope: sectionRef, dependencies: [] }
+  );
 
   return (
     <section
       ref={sectionRef}
-      className="relative w-full bg-[#291116] text-monarch-ivory overflow-hidden"
+      className="relative w-full bg-[#0E0507] text-monarch-ivory overflow-hidden"
     >
-      {/* Top curved divider transitioning from light ivory to deep burgundy */}
+      {/* Top curved divider transitioning from light ivory to deep dark royal velvet */}
       <CurvedDivider direction="toDark" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-          {/* Left Column: Full-Height Cinematic Bridal Campaign Hero */}
-          <div
-            ref={campaignImgRef}
-            className="lg:col-span-5 relative rounded-2xl overflow-hidden aspect-[3/4.5] sm:aspect-[4/5] lg:aspect-[3/4.6] border border-monarch-gold/40 shadow-2xl group"
-          >
-            {/* Background Bridal Model Photo */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=70&w=700&auto=format&fit=crop"
-              alt="Monarch Royal Bridal Couture"
-              className="w-full h-full object-cover transition-transform duration-1000 ease-out"
-              loading="eager"
-              decoding="async"
-            />
+      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch">
+          {/* Left Column: Big Interactive Featured Bridal Card (Matches Screenshot) */}
+          <div className="bridal-reveal lg:col-span-5 flex flex-col">
+            <div
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+              className="relative w-full h-full min-h-[480px] sm:min-h-[560px] lg:min-h-[620px] rounded-2xl overflow-hidden border border-monarch-gold/40 shadow-2xl bg-black flex flex-col justify-between p-6 sm:p-8 group"
+            >
+              {/* Background Model Image with smooth crossfade */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                ref={bigImgRef}
+                src={activeEnsemble.image}
+                alt={activeEnsemble.name}
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-104 pointer-events-none"
+                loading="eager"
+                decoding="async"
+              />
 
-            {/* Gradient Scrim & Vignette */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#1A0A0E] via-transparent to-[#1A0A0E]/40" />
+              {/* Gradient Scrim & Vignette */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-black/30 pointer-events-none" />
 
-            {/* Floating Gold Crest Overlay */}
-            <div className="absolute top-5 left-5 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-monarch-gold/40 text-xs font-nav uppercase tracking-[0.2em] text-monarch-gold-light">
-              <Sparkles className="w-3.5 h-3.5 text-monarch-gold animate-pulse" />
-              <span>Imperial Bridal Sanctum</span>
-            </div>
+              {/* Top Floating Badge & Category */}
+              <div className="relative z-10 flex items-center justify-between w-full">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/65 backdrop-blur-md border border-monarch-gold/40 text-[10px] sm:text-xs font-nav uppercase tracking-[0.2em] text-monarch-gold-light">
+                  <Sparkles className="w-3.5 h-3.5 text-monarch-gold animate-pulse" />
+                  <span>{activeEnsemble.categoryName}</span>
+                </div>
 
-            {/* Bottom Caption Overlay */}
-            <div className="absolute bottom-6 inset-x-6 space-y-2">
-              <p className="font-serif italic text-lg sm:text-xl text-monarch-gold-light">
-                &ldquo;Where eternal vows meet four hundred hours of Awadhi karigari.&rdquo;
-              </p>
-              <Link
-                href="/wedding"
-                className="inline-flex items-center gap-2 text-xs font-nav uppercase tracking-widest text-monarch-ivory hover:text-monarch-gold transition-colors"
-              >
-                <span>Read Bespoke Bridal Diary</span>
-                <ArrowRight className="w-3.5 h-3.5 text-monarch-gold" />
-              </Link>
+                <span className="text-[11px] font-mono text-monarch-gold-light bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-monarch-gold/30">
+                  0{activeIndex + 1} / 0{BRIDAL_ENSEMBLES.length}
+                </span>
+              </div>
+
+              {/* Bottom Featured Content Bar (Matches Screenshot) */}
+              <div ref={bigTextRef} className="relative z-10 flex items-end justify-between gap-4 mt-auto">
+                <div className="space-y-1.5 max-w-[70%]">
+                  <p className="text-[10px] sm:text-[11px] font-nav uppercase tracking-[0.25em] text-monarch-gold-light font-semibold">
+                    {activeEnsemble.craft}
+                  </p>
+
+                  <h3 className="font-serif text-xl sm:text-2xl lg:text-3xl font-medium text-white line-clamp-1">
+                    {activeEnsemble.name}
+                  </h3>
+
+                  <div className="flex items-center gap-3 pt-1">
+                    <span className="font-serif text-base sm:text-lg font-bold text-monarch-gold-light">
+                      {activeEnsemble.formattedPrice}
+                    </span>
+                    <span className="text-white/40">·</span>
+                    <Link
+                      href="/wedding"
+                      className="font-serif text-sm sm:text-base text-white hover:text-monarch-gold underline underline-offset-4 transition-colors"
+                    >
+                      View the collection
+                    </Link>
+                  </div>
+                </div>
+
+                {/* White Square Button with Arrow (Matches user screenshot) */}
+                <Link
+                  href={activeEnsemble.href}
+                  className="shrink-0 w-11 h-11 sm:w-12 sm:h-12 bg-white hover:bg-monarch-gold text-black rounded-xl flex items-center justify-center transition-all duration-300 shadow-xl hover:scale-105 active:scale-95 group/btn"
+                  title={`View ${activeEnsemble.name}`}
+                  aria-label="View ensemble details"
+                >
+                  <ArrowUpRight className="w-5 h-5 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
+                </Link>
+              </div>
             </div>
           </div>
 
-          {/* Right Column: Editorial Narrative & Curated Bridal Product Cards */}
-          <div ref={contentRef} className="lg:col-span-7 space-y-8">
-            <div className="bridal-reveal space-y-3">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-monarch-gold/15 border border-monarch-gold/30 text-[11px] font-nav uppercase tracking-[0.25em] text-monarch-gold-light font-medium">
-                <Sparkles className="w-3 h-3 text-monarch-gold" />
-                <span>The Bridal Sanctum</span>
-              </div>
-
-              <h2 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-medium tracking-tight text-monarch-ivory">
+          {/* Right Column: "The Bridal Collection" Heading & Continuous Marquee */}
+          <div className="bridal-reveal lg:col-span-7 flex flex-col justify-between space-y-6">
+            {/* Header: "The Bridal Collection" */}
+            <div className="border-b border-monarch-gold/25 pb-4">
+              <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-normal tracking-tight text-white leading-tight">
                 The Bridal{' '}
-                <span className="font-serif italic font-light text-monarch-gold-light">
+                <span className="font-serif italic text-monarch-gold-light font-light ml-1">
                   Collection
                 </span>
               </h2>
-
-              <p className="text-xs sm:text-sm text-monarch-beige/85 font-sans leading-relaxed max-w-xl">
+              <p className="text-xs sm:text-sm text-monarch-beige/80 font-sans mt-1.5 max-w-xl">
                 Woven with certified pure silver-gilt zari, genuine Kashi Kadwa brocades, and 24K gold-dipped dabka. Ensembles curated for sacred wedding rituals, grand baithaks, and royal pheras.
               </p>
             </div>
 
-            {/* Curated Bridal Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
-              {bridalItems.map((item, idx) => {
-                const inWishlist = isInWishlist(item.id);
+            {/* Continuous Marquee Track (Seamless Loop, Pauses on Hover) */}
+            <div
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+              className="relative w-full overflow-hidden select-none py-2"
+            >
+              {/* Subtle edge fade scrims */}
+              <div className="pointer-events-none absolute inset-y-0 left-0 w-6 sm:w-10 bg-gradient-to-r from-[#0E0507] to-transparent z-10" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 w-6 sm:w-10 bg-gradient-to-l from-[#0E0507] to-transparent z-10" />
 
-                return (
-                  <div
-                    key={item.id}
-                    className="bridal-reveal group flex flex-col bg-[#1A0A0E] rounded-xl overflow-hidden border border-monarch-gold/30 hover:border-monarch-gold transition-all duration-500 shadow-xl"
-                  >
-                    <Link
-                      href={`/product/${item.id}`}
-                      className="relative aspect-[3/4] overflow-hidden block bg-black/40"
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={item.images[0]}
-                        alt={item.name}
-                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-108"
-                        loading={idx < 2 ? 'eager' : 'lazy'}
-                        decoding="async"
+              <div
+                className="flex gap-4 w-max animate-marquee hover:[animation-play-state:paused] py-2"
+                style={{ animationDuration: '32s' }}
+              >
+                {/* Duplicated list for seamless infinite marquee loop */}
+                {[...BRIDAL_ENSEMBLES, ...BRIDAL_ENSEMBLES].map((ensemble, idx) => {
+                  const realIdx = idx % BRIDAL_ENSEMBLES.length;
+                  const isCardActive = activeIndex === realIdx;
+
+                  return (
+                    <div key={`${ensemble.id}-${idx}`} className="shrink-0">
+                      <BridalCard
+                        ensemble={ensemble}
+                        isActive={isCardActive}
+                        onSelect={() => setActiveIndex(realIdx)}
+                        priority={idx < 4}
                       />
-
-                      {/* Wishlist Button */}
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          toggleWishlist(item.id);
-                        }}
-                        className={`absolute top-2.5 right-2.5 p-2 rounded-full backdrop-blur-md transition-all z-10 ${
-                          inWishlist
-                            ? 'bg-monarch-maroon text-monarch-gold shadow'
-                            : 'bg-black/50 hover:bg-black/80 text-white shadow-sm'
-                        }`}
-                        aria-label="Toggle Wishlist"
-                      >
-                        <Heart className={`w-3.5 h-3.5 ${inWishlist ? 'fill-monarch-gold text-monarch-gold' : ''}`} />
-                      </button>
-
-                      <div className="absolute bottom-2 left-2">
-                        <span className="text-[10px] font-nav uppercase tracking-wider bg-monarch-maroon/90 text-monarch-ivory px-2 py-0.5 rounded border border-monarch-gold/30">
-                          {item.categoryName}
-                        </span>
-                      </div>
-                    </Link>
-
-                    <div className="p-4 flex-1 flex flex-col justify-between space-y-3 bg-[#1A0A0E]">
-                      <div>
-                        <Link
-                          href={`/product/${item.id}`}
-                          className="font-serif text-base text-monarch-ivory font-medium group-hover:text-monarch-gold-light transition-colors line-clamp-1"
-                        >
-                          {item.name}
-                        </Link>
-                        <p className="text-[11px] text-monarch-beige/70 font-sans line-clamp-1 mt-0.5">
-                          {item.fabric}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center justify-between pt-2 border-t border-monarch-gold/20">
-                        <span className="font-serif text-base font-bold text-monarch-gold-light">
-                          {FORMAT_CURRENCY(item.price)}
-                        </span>
-
-                        <Link
-                          href={`/product/${item.id}`}
-                          className="px-3.5 py-1.5 rounded-full bg-monarch-gold hover:bg-monarch-gold-light text-[#1A0A0E] text-[10px] font-nav uppercase tracking-widest font-semibold transition-all"
-                        >
-                          View Details
-                        </Link>
-                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
 
-            {/* Bottom Section CTA */}
-            <div className="bridal-reveal pt-4 flex flex-col sm:flex-row items-center gap-4">
+            {/* Bottom Section Link */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-monarch-gold/20">
+              <p className="text-xs text-monarch-beige/70 font-sans">
+                Hover to pause marquee and inspect or click any card to spotlight in the featured window.
+              </p>
+
               <Link
                 href="/wedding"
-                className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-gradient-to-r from-monarch-gold-dark via-monarch-gold to-monarch-gold-light text-[#1A0A0E] font-nav text-xs uppercase tracking-[0.2em] font-semibold flex items-center justify-center gap-2 hover:brightness-110 transition-all shadow-xl group"
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-monarch-maroon to-monarch-burgundy hover:brightness-110 text-white font-nav text-[11px] uppercase tracking-[0.2em] font-semibold border border-monarch-gold/40 transition-all shadow-md group shrink-0"
               >
-                <span>EXPLORE THE COMPLETE BRIDAL VAULT</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                <span>EXPLORE COMPLETE BRIDAL VAULT</span>
+                <ArrowRight className="w-3.5 h-3.5 text-monarch-gold group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
           </div>

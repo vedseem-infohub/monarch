@@ -9,85 +9,152 @@ interface PageProps {
   params: Promise<{
     category: string;
   }>;
+  searchParams?: Promise<{
+    category?: string;
+    occasion?: string;
+    fabric?: string;
+    gender?: 'women' | 'men';
+    sort?: string;
+  }>;
 }
 
-export async function generateMetadata({ params }: PageProps) {
+export async function generateStaticParams() {
+  const categories = [
+    'all',
+    'women',
+    'men',
+    'wedding-edit',
+    'new-arrivals',
+    'sarees',
+    'bridal',
+    'best-sellers',
+    ...ALL_CATEGORIES.map((c) => c.slug),
+  ];
+  return Array.from(new Set(categories)).map((category) => ({ category }));
+}
+
+export async function generateMetadata({ params, searchParams }: PageProps) {
   const { category } = await params;
+  const search = searchParams ? await searchParams : {};
+
   if (category === 'women') {
     return { title: 'Women’s Haute Couture — MONARCH' };
   }
   if (category === 'men') {
     return { title: 'Men’s Imperial Regalia — MONARCH' };
   }
-  if (category === 'wedding-edit') {
+  if (category === 'wedding-edit' || search.occasion === 'wedding') {
     return { title: 'The Wedding Edit 2026 — MONARCH' };
   }
-  const matched = ALL_CATEGORIES.find((c) => c.slug === category);
+  const matched = ALL_CATEGORIES.find((c) => c.slug === (category === 'all' && search.category ? search.category : category));
   return {
     title: matched ? `${matched.name} — MONARCH` : 'Collection — MONARCH',
     description: matched?.description || 'Luxury Indian Ethnic Wear',
   };
 }
 
-export default async function CategoryCollectionPage({ params }: PageProps) {
+export default async function CategoryCollectionPage({ params, searchParams }: PageProps) {
   const { category } = await params;
+  const search = searchParams ? await searchParams : {};
+  const queryCategory = search.category;
+  const queryOccasion = search.occasion;
+  const queryFabric = search.fabric;
+  const queryGender = search.gender;
 
-  let filteredProducts: Product[] = [];
   let title = 'Royal Collection';
   let description = '';
   let activeSlug = category;
-  let genderFilter: 'women' | 'men' | undefined = undefined;
+  let genderFilter: 'women' | 'men' | undefined = queryGender;
+  let initialOccasion = queryOccasion;
+  let initialFabric = queryFabric;
+
+  // Check if category is a Silk Mood
+  const SILK_KEY_MAP: Record<string, string> = {
+    'kanjivaram-silk': 'kanjivaram',
+    'chanderi-silk': 'chanderi',
+    'tussar-silk': 'tussar',
+    'paithani-silk': 'paithani',
+    'banarasi-silk': 'banarasi',
+    'organza-tissue': 'organza',
+  };
 
   if (category === 'women') {
-    filteredProducts = PRODUCTS.filter((p) => p.gender === 'women');
     title = "Women's Royal Haute Couture";
     description =
       'Explore bridal lehengas, pure Banarasi katan silk sarees, kalidar anarkalis, and celebratory festive ensembles handcrafted with authentic gold zari.';
     activeSlug = 'all';
     genderFilter = 'women';
   } else if (category === 'men') {
-    filteredProducts = PRODUCTS.filter((p) => p.gender === 'men');
     title = "Men's Imperial Regalia";
     description =
       'Discover raw mulberry silk sherwanis, structured prince bandhgalas, and heritage hand-brocaded silk Nehru jackets.';
     activeSlug = 'all';
     genderFilter = 'men';
-  } else if (category === 'wedding-edit') {
-    filteredProducts = PRODUCTS.filter((p) =>
-      p.occasion.some((o) => ['Bridal', 'Wedding', 'Groom Wear', 'Royal Gala'].includes(o))
-    );
+  } else if (category === 'wedding-edit' || queryOccasion?.toLowerCase() === 'wedding') {
     title = 'The Wedding Edit 2026';
     description =
       'Heirloom bridal lehengas and commanding groom sherwanis curated for palace weddings, sacred pheras, and unforgettable beginnings.';
     activeSlug = 'all';
-  } else if (category === 'all') {
-    filteredProducts = PRODUCTS;
-    title = 'The Complete Vault';
-    description = 'All handcrafted royal ensembles across women and men collections.';
+    initialOccasion = 'Wedding';
+  } else if (SILK_KEY_MAP[category]) {
+    const silkKeyword = SILK_KEY_MAP[category];
+    const matchedCategory = ALL_CATEGORIES.find((c) => c.slug === category);
+    title = matchedCategory ? matchedCategory.name : `${silkKeyword.toUpperCase()} Silk Mood`;
+    description = matchedCategory?.description || `Exquisite handwoven ${silkKeyword} silks from royal ateliers.`;
     activeSlug = 'all';
+    initialFabric = silkKeyword;
+  } else if (category === 'sarees') {
+    title = 'Imperial Silk Sarees';
+    description = 'Authentic handwoven Banarasi, Kanjivaram, and Chanderi sarees created with gold zari.';
+    activeSlug = 'designer-sarees';
+  } else if (category === 'bridal') {
+    title = 'Royal Bridal Edit';
+    description = 'Bespoke bridal lehengas and wedding silks curated for unforgettable celebrations.';
+    activeSlug = 'bridal-lehengas';
+  } else if (category === 'new-arrivals') {
+    title = 'New Arrivals';
+    description = 'The newest seasonal expressions and handwoven silks fresh from the royal looms.';
+    activeSlug = 'all';
+  } else if (category === 'best-sellers') {
+    title = 'Best Sellers';
+    description = 'The most revered and celebrated handwoven silks across our ateliers.';
+    activeSlug = 'all';
+  } else if (category === 'all') {
+    if (queryCategory && queryCategory !== 'all') {
+      const matchedCategory = ALL_CATEGORIES.find((c) => c.slug === queryCategory);
+      if (matchedCategory) {
+        title = matchedCategory.name;
+        description = matchedCategory.description;
+      }
+      activeSlug = queryCategory;
+    } else {
+      title = 'The Complete Vault';
+      description = 'All handcrafted royal ensembles across women and men collections.';
+      activeSlug = 'all';
+    }
   } else {
     const matchedCategory = ALL_CATEGORIES.find((c) => c.slug === category);
     if (!matchedCategory) {
-      // Fallback: search if any product has this category directly
-      filteredProducts = PRODUCTS.filter((p) => p.category === category);
-      if (filteredProducts.length === 0) {
+      const hasProducts = PRODUCTS.some((p) => p.category === category);
+      if (!hasProducts) {
         notFound();
       }
-      title = filteredProducts[0]?.categoryName || 'Collection';
+      title = 'Collection';
     } else {
       title = matchedCategory.name;
       description = matchedCategory.description;
-      filteredProducts = PRODUCTS.filter((p) => p.category === category);
     }
   }
 
   return (
     <CollectionBrowser
-      initialProducts={filteredProducts.length > 0 ? filteredProducts : PRODUCTS}
+      initialProducts={PRODUCTS}
       collectionTitle={title}
       collectionDescription={description}
       activeCategorySlug={activeSlug}
       genderFilter={genderFilter}
+      initialOccasion={initialOccasion}
+      initialFabric={initialFabric}
     />
   );
 }

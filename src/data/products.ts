@@ -1,6 +1,18 @@
 import { Product } from '@/types';
+import { BRIDAL_PRODUCTS } from '@/data/bridal';
+import { AUTUMN_WINTER_DATA } from '@/data/autumnWinter';
+import { CHANGE_LOOK_PRODUCTS } from '@/data/changeLook';
+import { EDITS_FOR_OCCASION_DATA } from '@/data/editsForOccasion';
+import { SEASONAL_PRODUCTS } from '@/data/seasonal';
+import { TREND_PRODUCTS } from '@/data/trends';
+import { ATTENTION_PRODUCTS } from '@/data/worthYourAttention';
+import { LATEST_TRENDS_PRODUCTS } from '@/data/latestTrends';
+import { CINEMATIC_STORIES } from '@/data/cinematicStories';
+import { ROYAL_CLIENT_DIARIES } from '@/data/atelier';
+import { NEW_ARRIVALS_PRODUCTS } from '@/data/newArrivals';
+import { BEST_SELLERS_PRODUCTS } from '@/data/bestSellers';
 
-export const PRODUCTS: Product[] = [
+const BASE_PRODUCTS: Product[] = [
   {
     id: 'monarch-001',
     name: 'Gulnaar Embroidered Zardozi Lehenga',
@@ -462,6 +474,47 @@ export const PRODUCTS: Product[] = [
     featured: false,
   },
 ];
+
+/**
+ * ============================================================================
+ * UNIFIED MASTER PRODUCT CATALOG
+ * ============================================================================
+ * Consolidates all genuine Product instances across every section:
+ * Master catalog, Bridal collections, Autumn-Winter 2026, Change Your Look,
+ * Edits for Every Occasion, Seasonal specials, and Trending ensembles.
+ * ============================================================================
+ */
+const DEDUPED_CATALOG: Product[] = [
+  ...BASE_PRODUCTS,
+  ...BRIDAL_PRODUCTS,
+  ...AUTUMN_WINTER_DATA.products,
+  ...CHANGE_LOOK_PRODUCTS,
+  ...EDITS_FOR_OCCASION_DATA.products,
+  ...SEASONAL_PRODUCTS,
+  ...TREND_PRODUCTS,
+  ...ATTENTION_PRODUCTS,
+  ...LATEST_TRENDS_PRODUCTS,
+  ...CINEMATIC_STORIES,
+  ...ROYAL_CLIENT_DIARIES.map((d) => d.ensemble),
+  ...NEW_ARRIVALS_PRODUCTS,
+  ...BEST_SELLERS_PRODUCTS,
+].filter((p, index, self) => index === self.findIndex((item) => item.id === p.id));
+
+export const ALL_PRODUCTS: Product[] = DEDUPED_CATALOG;
+export const PRODUCTS: Product[] = ALL_PRODUCTS;
+
+/**
+ * Robust product lookup supporting case-insensitive lookup by canonical ID or slug
+ */
+export function getProductByIdOrSlug(idOrSlug: string): Product | undefined {
+  if (!idOrSlug) return undefined;
+  const normalized = idOrSlug.trim().toLowerCase();
+  return ALL_PRODUCTS.find(
+    (p) =>
+      p.id.toLowerCase() === normalized ||
+      (p.slug && p.slug.toLowerCase() === normalized)
+  );
+}
 
 export const PROMO_CODES = [
   {

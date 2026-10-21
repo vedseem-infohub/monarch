@@ -9,15 +9,28 @@ interface PageProps {
   }>;
 }
 
+function findProduct(id: string) {
+  if (!id) return undefined;
+  const normalized = id.trim().toLowerCase();
+  return PRODUCTS.find(
+    (p) =>
+      p.id.toLowerCase() === normalized ||
+      (p.slug && p.slug.toLowerCase() === normalized)
+  );
+}
+
 export async function generateStaticParams() {
-  return PRODUCTS.map((product) => ({
-    id: product.id,
-  }));
+  const ids = new Set<string>();
+  PRODUCTS.forEach((product) => {
+    if (product.id) ids.add(product.id);
+    if (product.slug) ids.add(product.slug);
+  });
+  return Array.from(ids).map((id) => ({ id }));
 }
 
 export async function generateMetadata({ params }: PageProps) {
   const { id } = await params;
-  const product = PRODUCTS.find((p) => p.id === id || p.slug === id);
+  const product = findProduct(id);
   if (!product) return { title: 'Product Not Found — MONARCH' };
 
   return {
@@ -31,7 +44,7 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function ProductPage({ params }: PageProps) {
   const { id } = await params;
-  const product = PRODUCTS.find((p) => p.id === id || p.slug === id);
+  const product = findProduct(id);
 
   if (!product) {
     notFound();
