@@ -71,7 +71,8 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
     };
 
     gsap.ticker.add(tickerCb);
-    gsap.ticker.lagSmoothing(0);
+    // Smooth out micro frame spikes in Safari WebKit without desyncing Lenis
+    gsap.ticker.lagSmoothing(500, 33);
 
     // 1. Initial calibration once Lenis is operational
     const initTimer = setTimeout(() => {

@@ -59,7 +59,8 @@ export const HorizontalProductCard: React.FC<HorizontalProductCardProps> = ({
           src={product.images[0]}
           alt={product.name}
           className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-106"
-          loading="eager"
+          loading="lazy"
+          sizes="(max-width: 640px) 115px, 130px"
           decoding="async"
         />
 

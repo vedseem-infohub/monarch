@@ -23,7 +23,8 @@ export const ArchedCard: React.FC<ArchedCardProps> = ({ item, priority = false }
         src={item.image}
         alt={item.title}
         className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-106"
-        loading="eager"
+        loading="lazy"
+        sizes="(max-width: 640px) 90vw, (max-width: 1024px) 33vw, 400px"
         decoding="async"
       />
 

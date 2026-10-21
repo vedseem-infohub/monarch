@@ -102,7 +102,7 @@ export const BridalCollection: React.FC = () => {
                 src={activeEnsemble.image}
                 alt={activeEnsemble.name}
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-104 pointer-events-none"
-                loading="eager"
+                loading="lazy"
                 decoding="async"
               />
 

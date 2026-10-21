@@ -8,6 +8,7 @@ import * as THREE from 'three';
 import { RotateCcw, ZoomIn, Eye, Sparkles } from 'lucide-react';
 import { RoyalMannequin } from './RoyalMannequin';
 import { PalaceArchEnvironment } from './PalaceArchEnvironment';
+import { MonarchLoader } from '@/components/common/MonarchLoader';
 
 interface Product3DViewerProps {
   primaryColor?: string;
@@ -147,9 +148,12 @@ export const Product3DViewer = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="w-full h-[520px] md:h-[620px] rounded-2xl bg-monarch-burgundy flex items-center justify-center border border-monarch-gold/20">
-        <div className="w-10 h-10 border-2 border-monarch-gold border-t-transparent rounded-full animate-spin" />
-      </div>
+      <MonarchLoader
+        variant="embedded"
+        message="Loading Ensemble Silhouette"
+        subtitle="Interactive 3D Preview"
+        className="min-h-[520px] md:min-h-[620px]"
+      />
     ),
   }
 );

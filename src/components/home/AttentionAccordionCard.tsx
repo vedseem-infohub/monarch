@@ -89,7 +89,7 @@ export const AttentionAccordionCard: React.FC<AttentionAccordionCardProps> = ({
             ? 'filter-none brightness-100 contrast-[1.02] scale-[1.02]'
             : 'grayscale brightness-[0.45] contrast-125 scale-100'
         }`}
-        loading="eager"
+        loading="lazy"
         decoding="async"
       />
 

@@ -45,7 +45,7 @@ export const StoryFloatingCard: React.FC<StoryFloatingCardProps> = ({
         src={story.cardThumbnail}
         alt={story.name}
         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-        loading="eager"
+        loading="lazy"
         decoding="async"
       />
 
