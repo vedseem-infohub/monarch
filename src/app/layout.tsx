@@ -9,7 +9,6 @@ import { Footer } from '@/components/layout/Footer';
 import { QuickViewProvider } from '@/context/QuickViewContext';
 import { LoadingProvider } from '@/context/LoadingContext';
 import { SmoothScrollProvider } from '@/components/common/SmoothScrollProvider';
-import { MonarchLoader } from '@/components/common/MonarchLoader';
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -83,7 +82,6 @@ export default function RootLayout({
                 {/* <AnnouncementBar /> */}
                 <Header />
                 <SmoothScrollProvider>
-                  <MonarchLoader />
                   <main className="flex-1">{children}</main>
                 </SmoothScrollProvider>
                 <Footer />

@@ -95,43 +95,56 @@ export const SixMoodsSection: React.FC = () => {
               </p>
             </div>
 
-            <div className="hidden sm:flex items-center gap-2 text-xs font-nav uppercase tracking-widest text-monarch-gold-dark font-medium">
-              <span>Authentic Handloom Archives</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-monarch-gold" />
+            <div className="flex items-center gap-2 text-xs font-nav uppercase tracking-widest text-monarch-gold-dark font-medium">
+              <span className="lg:hidden flex items-center gap-1.5 text-[10px] sm:text-xs">
+                <span>Swipe to explore</span>
+                <span className="text-xs">→</span>
+              </span>
+              <span className="hidden lg:inline">Authentic Handloom Archives</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-monarch-gold shrink-0" />
             </div>
           </div>
 
-          {/* 6 Large Architectural Arch Cards (rounded-t-full) */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5 sm:gap-4 lg:gap-5">
-            {SIX_MOODS.map((mood) => (
-              <Link
-                key={mood.title}
-                href={`/collections/${mood.slug}`}
-                className="group flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1.5"
-              >
-                {/* Arch-topped Card */}
-                <div className="w-full aspect-[3/4.6] rounded-t-full rounded-b-xl overflow-hidden bg-monarch-charcoal border border-monarch-gold/40 group-hover:border-monarch-gold shadow-md group-hover:shadow-xl transition-all duration-500 relative">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={mood.image}
-                    alt={mood.title}
-                    className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
-                    loading="eager"
-                    decoding="async"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent opacity-60 group-hover:opacity-30 transition-opacity" />
-                </div>
+          {/* 6 Large Architectural Arch Cards (Horizontally scrollable on mobile/tablet, 6-col grid on lg) */}
+          <div className="relative w-full -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0">
+            {/* Subtle Gradient Edge Fades (Mobile & Tablet) */}
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-6 sm:w-10 bg-gradient-to-r from-[#FAF6F0] to-transparent z-10 lg:hidden" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-6 sm:w-10 bg-gradient-to-l from-[#FAF6F0] to-transparent z-10 lg:hidden" />
 
-                {/* Card Title & Subtitle */}
-                <h3 className="font-sans text-[11px] sm:text-xs font-bold uppercase tracking-wider text-monarch-charcoal mt-3 group-hover:text-monarch-maroon transition-colors line-clamp-1">
-                  {mood.title}
-                </h3>
-                <span className="text-[10px] text-monarch-gold-dark/90 font-serif italic mt-0.5">
-                  {mood.subtitle}
-                </span>
-                <span className="w-0 group-hover:w-6 h-0.5 bg-monarch-gold transition-all duration-300 mt-1 rounded-full" />
-              </Link>
-            ))}
+            <div
+              className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory no-scrollbar gap-3.5 sm:gap-4 lg:grid lg:grid-cols-6 lg:gap-5 lg:overflow-visible pb-4 pt-1 lg:pb-0 lg:pt-0"
+              style={{ WebkitOverflowScrolling: 'touch' }}
+            >
+              {SIX_MOODS.map((mood) => (
+                <Link
+                  key={mood.title}
+                  href={`/collections/${mood.slug}`}
+                  className="group flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1.5 w-[155px] xs:w-[175px] sm:w-[210px] shrink-0 snap-start lg:w-auto lg:shrink"
+                >
+                  {/* Arch-topped Card */}
+                  <div className="w-full aspect-[3/4.6] rounded-t-full rounded-b-xl overflow-hidden bg-monarch-charcoal border border-monarch-gold/40 group-hover:border-monarch-gold shadow-md group-hover:shadow-xl transition-all duration-500 relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={mood.image}
+                      alt={mood.title}
+                      className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
+                      loading="eager"
+                      decoding="async"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent opacity-60 group-hover:opacity-30 transition-opacity" />
+                  </div>
+
+                  {/* Card Title & Subtitle */}
+                  <h3 className="font-sans text-[11px] sm:text-xs font-bold uppercase tracking-wider text-monarch-charcoal mt-3 group-hover:text-monarch-maroon transition-colors line-clamp-1">
+                    {mood.title}
+                  </h3>
+                  <span className="text-[10px] text-monarch-gold-dark/90 font-serif italic mt-0.5">
+                    {mood.subtitle}
+                  </span>
+                  <span className="w-0 group-hover:w-6 h-0.5 bg-monarch-gold transition-all duration-300 mt-1 rounded-full" />
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </div>

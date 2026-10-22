@@ -7,6 +7,9 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import 'lenis/dist/lenis.css';
 
 if (typeof window !== 'undefined') {
+  if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
   gsap.registerPlugin(ScrollTrigger);
   // Prevent mobile address-bar resize jumps & optimize ScrollTrigger responsiveness
   ScrollTrigger.config({
@@ -47,9 +50,18 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+
     // Respect reduced motion preference
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) return;
+
+    // Reset window scroll to top immediately upon mount if no hash is present
+    if (!window.location.hash) {
+      window.scrollTo(0, 0);
+    }
 
     // Initialize Lenis smooth scroll
     const lenis = new Lenis({
@@ -61,6 +73,21 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     lenisRef.current = lenis;
     setLenisInstance(lenis);
+
+    // Guarantee initial coordinates are at 0 before ScrollTrigger registers triggers
+    if (!window.location.hash) {
+      window.scrollTo(0, 0);
+      lenis.scrollTo(0, { immediate: true });
+    } else {
+      // If a valid hash is present, scroll smoothly to target after mount
+      const targetHash = window.location.hash;
+      setTimeout(() => {
+        const targetEl = document.querySelector<HTMLElement>(targetHash);
+        if (targetEl) {
+          lenis.scrollTo(targetEl, { offset: -60 });
+        }
+      }, 350);
+    }
 
     // Synchronize Lenis scroll position with GSAP ScrollTrigger
     lenis.on('scroll', ScrollTrigger.update);
@@ -74,8 +101,12 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // Smooth out micro frame spikes in Safari WebKit without desyncing Lenis
     gsap.ticker.lagSmoothing(500, 33);
 
-    // 1. Initial calibration once Lenis is operational
+    // 1. Initial calibration once Lenis is operational and scroll position is at (0, 0)
     const initTimer = setTimeout(() => {
+      if (!window.location.hash && (window.scrollY !== 0 || window.pageYOffset !== 0)) {
+        window.scrollTo(0, 0);
+        lenis.scrollTo(0, { immediate: true });
+      }
       lenis.resize();
       ScrollTrigger.refresh();
     }, 150);
@@ -83,6 +114,10 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // 2. Font loading synchronization: when web fonts load, layout metrics settle
     if ('fonts' in document) {
       document.fonts.ready.then(() => {
+        if (!window.location.hash && (window.scrollY !== 0 || window.pageYOffset !== 0)) {
+          window.scrollTo(0, 0);
+          lenis.scrollTo(0, { immediate: true });
+        }
         lenis.resize();
         ScrollTrigger.refresh();
       });
@@ -90,6 +125,10 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     // 3. Complete window load event synchronization
     const handleLoad = () => {
+      if (!window.location.hash && (window.scrollY !== 0 || window.pageYOffset !== 0)) {
+        window.scrollTo(0, 0);
+        lenis.scrollTo(0, { immediate: true });
+      }
       lenis.resize();
       ScrollTrigger.refresh();
     };
@@ -100,7 +139,18 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
       window.addEventListener('load', handleLoad);
     }
 
-    // 4. ResizeObserver on document body to catch layout shifts from late images without thrashing
+    // 4. Back-forward cache (bfcache) restore handler
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted && !window.location.hash) {
+        window.scrollTo(0, 0);
+        lenis.scrollTo(0, { immediate: true });
+        lenis.resize();
+        ScrollTrigger.refresh();
+      }
+    };
+    window.addEventListener('pageshow', handlePageShow);
+
+    // 5. ResizeObserver on document body to catch layout shifts from late images without thrashing
     let resizeTimer: NodeJS.Timeout | null = null;
     let lastHeight = document.documentElement.scrollHeight;
 
@@ -125,6 +175,7 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
       if (resizeTimer) clearTimeout(resizeTimer);
       clearTimeout(initTimer);
       window.removeEventListener('load', handleLoad);
+      window.removeEventListener('pageshow', handlePageShow);
       ro.disconnect();
       gsap.ticker.remove(tickerCb);
       lenis.destroy();

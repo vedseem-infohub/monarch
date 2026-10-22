@@ -4,6 +4,7 @@ import React, { useRef } from 'react';
 import Link from 'next/link';
 import { SEASONAL_PRODUCTS } from '@/data/seasonal';
 import { HorizontalProductCard } from './HorizontalProductCard';
+import { useMarqueeScroll } from '@/hooks/useMarqueeScroll';
 import { ArrowRight } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -19,32 +20,31 @@ if (typeof window !== 'undefined') {
  * ============================================================================
  * Features:
  * - Header: "| Seasonal Special" with gold vertical bar accent
- * - Marquee Track: Glides smoothly in the OPPOSITE DIRECTION (Left to Right, .animate-marquee-reverse)
- * - Auto-pauses on hover so cards can be inspected and added to bag
- *
- * BACKEND API INTEGRATION INSTRUCTIONS:
- * When the backend API is ready:
- * 1. Replace SEASONAL_PRODUCTS with data fetched from your backend endpoint (e.g. GET /api/collections/seasonal)
- * 2. Example with React Query / SWR / useEffect:
- *
- *    // const [seasonalProducts, setSeasonalProducts] = useState<Product[]>(SEASONAL_PRODUCTS);
- *    // useEffect(() => {
- *    //   async function loadSeasonal() {
- *    //     try {
- *    //       const res = await fetch('/api/collections/seasonal?season=current');
- *    //       const json = await res.json();
- *    //       if (json?.data) setSeasonalProducts(json.data);
- *    //     } catch (err) {
- *    //       console.error('Failed to load seasonal specials from backend:', err);
- *    //     }
- *    //   }
- *    //   loadSeasonal();
- *    // }, []);
+ * - Centered Marquee Track: Glides smoothly in REVERSE direction (Left to Right)
+ * - Supports manual horizontal touch swipe on mobile & mouse drag on desktop
+ * - Auto-pauses on hover, touch, drag, and scroll so cards can be freely inspected
+ * - Mobile responsive cards with zero white overlay obstruction
  * ============================================================================
  */
 
 export const SeasonalSpecial: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
+
+  // Marquee scroll hook providing smooth reverse glide + manual touch/drag/wheel scrolling
+  const { containerRef, trackRef } = useMarqueeScroll<HTMLDivElement, HTMLDivElement>({
+    speed: 38,
+    direction: 'right',
+    repeatCount: 4,
+    pauseOnHover: true,
+  });
+
+  // Duplicate 4 times for seamless continuous bi-directional loop
+  const quadrupled = [
+    ...SEASONAL_PRODUCTS,
+    ...SEASONAL_PRODUCTS,
+    ...SEASONAL_PRODUCTS,
+    ...SEASONAL_PRODUCTS,
+  ];
 
   useGSAP(
     () => {
@@ -74,7 +74,7 @@ export const SeasonalSpecial: React.FC = () => {
       className="py-7 sm:py-9 bg-[#FAF7F2] text-monarch-charcoal relative overflow-hidden pb-12 border-t border-monarch-gold/15"
     >
       <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header: "| Seasonal Special" (Matching Screenshot) */}
+        {/* Section Header: "| Seasonal Special" */}
         <div className="seasonal-header-reveal flex items-center justify-between gap-4 mb-4 pb-2">
           <div className="flex items-center gap-2">
             <span className="text-[#C59B27] font-serif font-light text-2xl sm:text-3xl select-none leading-none">
@@ -95,30 +95,31 @@ export const SeasonalSpecial: React.FC = () => {
         </div>
       </div>
 
-      {/* Marquee Track: Glides smoothly in OPPOSITE DIRECTION (Left to Right) */}
+      {/* Marquee Track: Centered, Interactive & Silky Smooth */}
       <div className="relative w-full overflow-hidden select-none py-1">
-        {/* Edge Gradient Masks */}
-        <div className="pointer-events-none absolute inset-y-0 left-0 w-8 sm:w-16 bg-gradient-to-r from-[#FAF7F2] to-transparent z-10" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-8 sm:w-16 bg-gradient-to-l from-[#FAF7F2] to-transparent z-10" />
+        {/* Edge Gradient Masks — hidden on mobile to prevent white overlay haze, visible on sm+ */}
+        <div className="hidden sm:block pointer-events-none absolute inset-y-0 left-0 w-12 sm:w-16 bg-gradient-to-r from-[#FAF7F2] to-transparent z-10" />
+        <div className="hidden sm:block pointer-events-none absolute inset-y-0 right-0 w-12 sm:w-16 bg-gradient-to-l from-[#FAF7F2] to-transparent z-10" />
 
         <div
-          className="flex gap-4 sm:gap-5 w-max animate-marquee-reverse hover:[animation-play-state:paused] py-2 px-2"
+          ref={containerRef}
+          className="w-full overflow-x-auto no-scrollbar scrollbar-none touch-pan-x cursor-grab active:cursor-grabbing select-none py-1"
           style={{
-            animation: 'marquee 35s linear infinite reverse',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.animationPlayState = 'paused';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.animationPlayState = 'running';
+            WebkitOverflowScrolling: 'touch',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
           }}
         >
-          {/* Seamless infinite loop: duplicate items */}
-          {[...SEASONAL_PRODUCTS, ...SEASONAL_PRODUCTS].map((product, idx) => (
-            <div key={`seasonal-${product.id}-${idx}`} className="shrink-0">
-              <HorizontalProductCard product={product} priority={idx < 4} />
-            </div>
-          ))}
+          <div
+            ref={trackRef}
+            className="flex items-center gap-3 xs:gap-3.5 sm:gap-5 w-max py-2 px-3 sm:px-6"
+          >
+            {quadrupled.map((product, idx) => (
+              <div key={`seasonal-${product.id}-${idx}`} className="shrink-0 flex items-center">
+                <HorizontalProductCard product={product} priority={idx < 4} />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
