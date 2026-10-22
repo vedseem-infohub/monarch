@@ -18,47 +18,53 @@ export const WorthYourAttention: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Desktop: null indicates quiet dark resting state until hover.
+  // Desktop / Laptop: null indicates quiet dark resting state until mouse hover.
   // Mobile / touch screen: card 0 starts active so it's immediately attractive and informative.
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
-  const [isTouchDevice, setIsTouchDevice] = useState<boolean>(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const isTouch =
-      window.matchMedia('(hover: none) and (pointer: coarse)').matches ||
-      window.innerWidth < 768;
-    setIsTouchDevice(isTouch);
-    if (isTouch) {
-      setActiveIndex(0); // Card 0 starts open on mobile!
+    // On mobile / tablet screens (< 768px), start with Card 0 active
+    if (window.innerWidth < 768) {
+      setActiveIndex(0);
     }
   }, []);
 
-  // Tap to expand / toggle handler
+  // Tap handler (Mobile / Touch): Tapping any card opens it and smoothly centers it
   const handleCardToggle = (idx: number, element?: HTMLDivElement | null) => {
+    let willOpen = false;
     setActiveIndex((prev) => {
       const next = prev === idx ? null : idx;
-      // When expanding a card on touch, smoothly center it in the scroll container
-      if (next !== null && element && scrollContainerRef.current) {
-        const container = scrollContainerRef.current;
-        const cardLeft = element.offsetLeft;
-        const cardWidth = element.offsetWidth || 320;
-        const containerWidth = container.clientWidth;
-        const targetScroll = Math.max(0, cardLeft - (containerWidth - cardWidth) / 2);
-        container.scrollTo({ left: targetScroll, behavior: 'smooth' });
-      }
+      willOpen = next !== null;
       return next;
     });
-  };
 
-  const handleMouseEnter = (idx: number) => {
-    if (!isTouchDevice) {
-      setActiveIndex(idx);
+    // When expanding a card on tap, smoothly center it in the scroll container on mobile
+    if (willOpen && scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      const targetEl = element || (container.children[idx] as HTMLDivElement | undefined);
+      if (!targetEl) return;
+
+      setTimeout(() => {
+        if (!container || !targetEl) return;
+        const cardLeft = targetEl.offsetLeft;
+        const isMobile = window.innerWidth < 640;
+        const targetExpandedWidth = isMobile ? 310 : (window.innerWidth < 1024 ? 380 : 460);
+        const containerWidth = container.clientWidth;
+        const targetScroll = Math.max(0, cardLeft - (containerWidth - targetExpandedWidth) / 2);
+        container.scrollTo({ left: targetScroll, behavior: 'smooth' });
+      }, 50);
     }
   };
 
+  // Hover handler (Laptop / Desktop): Moving the mouse over any card instantly expands it
+  const handleMouseEnter = (idx: number) => {
+    setActiveIndex(idx);
+  };
+
+  // On laptop, when the mouse leaves the cards track, return to quiet dark resting state
   const handleContainerMouseLeave = () => {
-    if (!isTouchDevice) {
+    if (typeof window !== 'undefined' && window.innerWidth >= 768) {
       setActiveIndex(null);
     }
   };
@@ -161,7 +167,7 @@ export const WorthYourAttention: React.FC = () => {
           <div
             ref={scrollContainerRef}
             onMouseLeave={handleContainerMouseLeave}
-            className="overflow-x-auto scroll-smooth pb-4 pt-1 scrollbar-none flex items-center gap-3 sm:gap-4 w-full"
+            className="relative overflow-x-auto scroll-smooth pb-4 pt-1 no-scrollbar scrollbar-none flex items-center gap-3 sm:gap-4 w-full"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
             {WORTH_YOUR_ATTENTION_DATA.products.map((product, idx) => (

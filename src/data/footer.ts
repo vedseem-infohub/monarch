@@ -4,6 +4,7 @@ export interface FooterLink {
 }
 
 export interface FooterColumn {
+  id: string;
   title: string;
   links: FooterLink[];
 }
@@ -20,6 +21,7 @@ export interface FooterData {
     tagline: string;
     scriptTag: string;
     monogram: string;
+    description?: string;
   };
   columns: {
     shop: FooterColumn;
@@ -27,6 +29,7 @@ export interface FooterData {
     support: FooterColumn;
   };
   newsletter: {
+    eyebrow?: string;
     title: string;
     description: string;
     placeholder: string;
@@ -45,12 +48,14 @@ export interface FooterData {
 export const FOOTER_DATA: FooterData = {
   brand: {
     name: 'DRIFT',
-    tagline: 'Handwoven silks',
-    scriptTag: 'draped for every celebration.',
+    tagline: 'Handwoven Silks · DRIFT by MONARCH',
+    scriptTag: 'Draped for every royal celebration.',
     monogram: 'D',
+    description: 'Preserving sacred handloom corridors and imperial Indian weaves across Varanasi, Kanchipuram, and Chanderi.',
   },
   columns: {
     shop: {
+      id: 'shop',
       title: 'Shop',
       links: [
         { label: 'New arrivals', href: '/collections/new-arrivals' },
@@ -60,6 +65,7 @@ export const FOOTER_DATA: FooterData = {
       ],
     },
     explore: {
+      id: 'explore',
       title: 'Explore',
       links: [
         { label: 'Our story', href: '/our-story' },
@@ -69,6 +75,7 @@ export const FOOTER_DATA: FooterData = {
       ],
     },
     support: {
+      id: 'support',
       title: 'Support',
       links: [
         { label: 'Contact us', href: '/contact' },
@@ -79,8 +86,9 @@ export const FOOTER_DATA: FooterData = {
     },
   },
   newsletter: {
+    eyebrow: 'Royal Registry',
     title: 'Stay updated',
-    description: 'Subscribe for new arrivals, private offerings and stories from the loom.',
+    description: 'Subscribe for private trunk shows, rare handwoven drops, and stories from the loom.',
     placeholder: 'Your email address',
     buttonText: 'Subscribe',
     successMessage: 'Thank you for subscribing to DRIFT. Welcome to our royal registry.',
@@ -100,5 +108,5 @@ export const FOOTER_DATA: FooterData = {
     { name: 'X', href: 'https://x.com', icon: 'twitter' },
     { name: 'YouTube', href: 'https://youtube.com', icon: 'youtube' },
   ],
-  copyright: '© 2026 DRIFT. All rights reserved.',
+  copyright: '© 2026 DRIFT by MONARCH. All rights reserved.',
 };

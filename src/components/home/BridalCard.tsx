@@ -42,20 +42,20 @@ export const BridalCard: React.FC<BridalCardProps> = ({
   return (
     <div
       onClick={onSelect}
-      className={`group shrink-0 w-[220px] sm:w-[245px] lg:w-[260px] flex flex-col rounded-xl overflow-hidden cursor-pointer transition-all duration-300 shadow-xl hover:shadow-2xl select-none ${
+      className={`group shrink-0 w-[155px] xs:w-[175px] sm:w-[220px] lg:w-[260px] flex flex-col rounded-xl overflow-hidden cursor-pointer transition-all duration-300 shadow-xl hover:shadow-2xl select-none ${
         isActive
           ? 'bg-[#260E15] ring-2 ring-monarch-gold border border-monarch-gold shadow-2xl scale-[1.02]'
           : 'bg-[#1A0A0E] border border-monarch-gold/30 hover:border-monarch-gold hover:bg-[#200C12]'
       }`}
     >
       {/* Product Image Frame */}
-      <div className="relative aspect-[3/4] overflow-hidden bg-black/40 block">
+      <div className="relative aspect-[3/4.2] overflow-hidden bg-black/40 block">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={ensemble.image}
           alt={ensemble.name}
           className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-108 pointer-events-none"
-          loading="eager"
+          loading={priority ? 'eager' : 'lazy'}
           decoding="async"
         />
 
@@ -66,26 +66,30 @@ export const BridalCard: React.FC<BridalCardProps> = ({
             e.stopPropagation();
             toggleWishlist(ensemble.id);
           }}
-          className={`absolute top-2.5 right-2.5 p-2 rounded-full backdrop-blur-md transition-all z-10 ${
+          className={`absolute top-2 right-2 sm:top-2.5 sm:right-2.5 w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-full backdrop-blur-md transition-all z-10 ${
             inWishlist
               ? 'bg-monarch-maroon text-monarch-gold shadow'
               : 'bg-black/50 hover:bg-black/80 text-white shadow-sm'
           }`}
           aria-label="Toggle Wishlist"
         >
-          <Heart className={`w-3.5 h-3.5 ${inWishlist ? 'fill-monarch-gold text-monarch-gold' : ''}`} />
+          <Heart
+            className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${
+              inWishlist ? 'fill-monarch-gold text-monarch-gold' : ''
+            }`}
+          />
         </button>
 
         {/* Bottom Left Category Tag */}
-        <div className="absolute bottom-2.5 left-2.5 z-10">
-          <span className="text-[10px] font-nav uppercase tracking-wider bg-monarch-maroon/90 text-monarch-ivory px-2 py-0.5 rounded border border-monarch-gold/30 backdrop-blur-sm">
+        <div className="absolute bottom-2 left-2 sm:bottom-2.5 sm:left-2.5 z-10 max-w-[85%]">
+          <span className="inline-block truncate text-[8px] xs:text-[9px] sm:text-[10px] font-nav uppercase tracking-wider bg-monarch-maroon/90 text-monarch-ivory px-1.5 py-0.5 sm:px-2 rounded border border-monarch-gold/30 backdrop-blur-sm">
             {ensemble.categoryName}
           </span>
         </div>
 
         {/* Top Left Active Badge */}
         {isActive && (
-          <div className="absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1 bg-black/75 backdrop-blur-md text-monarch-gold-light text-[9px] font-nav uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-monarch-gold/40">
+          <div className="absolute top-2 left-2 sm:top-2.5 sm:left-2.5 z-10 inline-flex items-center gap-1 bg-black/80 backdrop-blur-md text-monarch-gold-light text-[8px] xs:text-[9px] font-nav uppercase tracking-wider px-1.5 sm:px-2.5 py-0.5 rounded-full border border-monarch-gold/40">
             <Sparkles className="w-2.5 h-2.5 text-monarch-gold animate-pulse" />
             <span>Featured</span>
           </div>
@@ -93,33 +97,33 @@ export const BridalCard: React.FC<BridalCardProps> = ({
       </div>
 
       {/* Card Body Details (Royal Dark & Gold Styling) */}
-      <div className="p-4 flex-1 flex flex-col justify-between space-y-3 bg-inherit">
+      <div className="p-2.5 xs:p-3 sm:p-4 flex-1 flex flex-col justify-between space-y-2 sm:space-y-3 bg-inherit">
         <div>
-          <h4 className="font-serif text-sm sm:text-base text-monarch-ivory font-medium group-hover:text-monarch-gold-light transition-colors line-clamp-1">
+          <h4 className="font-serif text-xs sm:text-base text-monarch-ivory font-medium group-hover:text-monarch-gold-light transition-colors line-clamp-1">
             {ensemble.name}
           </h4>
-          <p className="text-[11px] text-monarch-beige/70 font-sans line-clamp-1 mt-0.5">
+          <p className="text-[9px] xs:text-[10px] sm:text-xs text-monarch-beige/70 font-sans line-clamp-1 mt-0.5">
             {ensemble.craft || ensemble.tagline}
           </p>
         </div>
 
-        <div className="flex items-center justify-between pt-2 border-t border-monarch-gold/20">
-          <span className="font-serif text-sm sm:text-base font-bold text-monarch-gold-light">
+        <div className="flex items-center justify-between pt-1.5 sm:pt-2 border-t border-monarch-gold/20 gap-1.5">
+          <span className="font-serif text-xs xs:text-sm sm:text-base font-bold text-monarch-gold-light shrink-0">
             {ensemble.formattedPrice}
           </span>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <Link
               href={ensemble.href}
               onClick={(e) => e.stopPropagation()}
-              className="text-[10px] font-nav uppercase tracking-wider text-monarch-beige/60 hover:text-monarch-gold-light transition-colors"
+              className="text-[9px] sm:text-[10px] font-nav uppercase tracking-wider text-monarch-beige/60 hover:text-monarch-gold-light transition-colors hidden sm:inline-block"
             >
               Details
             </Link>
 
             <button
               onClick={handleAddToCart}
-              className={`px-3 py-1.5 rounded-full text-[10px] font-nav uppercase tracking-widest font-semibold transition-all duration-300 flex items-center justify-center gap-1 shadow-sm active:scale-95 ${
+              className={`px-2 xs:px-2.5 sm:px-3 py-1.5 xs:py-2 rounded-full text-[10px] sm:text-xs font-nav uppercase tracking-wider font-semibold transition-all duration-300 flex items-center justify-center gap-1 shadow-sm active:scale-95 shrink-0 ${
                 added
                   ? 'bg-emerald-700 text-white'
                   : 'bg-monarch-gold hover:bg-monarch-gold-light text-[#1A0A0E]'
@@ -127,11 +131,14 @@ export const BridalCard: React.FC<BridalCardProps> = ({
             >
               {added ? (
                 <>
-                  <Check className="w-3 h-3" />
-                  <span>ADDED</span>
+                  <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                  <span className="text-[9px] sm:text-[10px]">ADDED</span>
                 </>
               ) : (
-                <span>ADD TO BAG</span>
+                <>
+                  <span className="text-[9px] sm:text-[10px] hidden xs:inline">ADD TO BAG</span>
+                  <span className="text-[9px] sm:text-[10px] xs:hidden">ADD</span>
+                </>
               )}
             </button>
           </div>

@@ -25,11 +25,17 @@ export const WovenToBeRemembered: React.FC = () => {
   const activeIndexRef = useRef(0);
 
   /**
-   * Deterministic circular arc geometry: ACTIVE ACROSS ALL SCREENS (Mobile, Tablet & Desktop).
-   * Cards follow the circumference of a giant concentric circle:
+   * Deterministic circular arc geometry on Tablet & Desktop (>= 640px).
+   * Linear, flat horizontal layout on Mobile (< 640px).
+   *
+   * On Tablet and Desktop:
+   * - Cards follow the circumference of a giant concentric circle:
    * - Cards near center sit at the zenith (top of the arch, y = 0, rotZ = 0deg)
    * - Side cards curve downward along the circular rim (y = R * (1 - cos(theta)))
    * - Tangent angles (rotZ) dynamically rotate cards to follow the crest
+   *
+   * On Mobile:
+   * - Flat linear cards (transform = '') without arc drop or rotation.
    *
    * Crucial Fix: Uses pure mathematical coordinates derived from the GSAP track X position.
    * Completely avoids reading track.getBoundingClientRect().left inside the loop,
@@ -45,15 +51,25 @@ export const WovenToBeRemembered: React.FC = () => {
     const isMobile = width < 640;
     const isTablet = width >= 640 && width < 1024;
 
-    // Responsive circle radius and rotation tuning
-    const radius = isMobile
-      ? Math.max(850, width * 2.2)
-      : isTablet
-        ? Math.max(1400, width * 1.8)
-        : Math.max(2200, width * 1.7);
+    // Mobile screens (< 640px): linear layout without circular arc drop or rotation
+    if (isMobile) {
+      for (let i = 0; i < cards.length; i++) {
+        const card = cards[i];
+        if (card.style.transform !== '') {
+          card.style.transform = '';
+          card.style.webkitTransform = '';
+        }
+      }
+      return;
+    }
 
-    const tiltFactor = isMobile ? 0.65 : isTablet ? 0.75 : 0.85;
-    const maxRot = isMobile ? 12.0 : isTablet ? 13.5 : 14.5;
+    // Responsive circle radius and rotation tuning for Tablet and Desktop (>= 640px)
+    const radius = isTablet
+      ? Math.max(1400, width * 1.8)
+      : Math.max(2200, width * 1.7);
+
+    const tiltFactor = isTablet ? 0.75 : 0.85;
+    const maxRot = isTablet ? 13.5 : 14.5;
     const viewportCenter = width / 2;
 
     // Direct mathematical track X: read directly from GSAP transform or override parameter
@@ -268,6 +284,10 @@ export const WovenToBeRemembered: React.FC = () => {
             approachTrigger.kill();
             scrollTween.kill();
             track.style.transform = '';
+            cards.forEach((c) => {
+              c.style.transform = '';
+              c.style.webkitTransform = '';
+            });
           };
         }
       );
@@ -318,7 +338,7 @@ export const WovenToBeRemembered: React.FC = () => {
         </div>
 
         {/* Circular Panoramic Strip: overflow-visible with ample bottom clearance prevents cropping on big screens */}
-        <div className="relative w-full select-none my-auto pt-4 pb-28 sm:pb-32 lg:pb-36 overflow-visible">
+        <div className="relative w-full select-none my-auto pt-4 pb-14 sm:pb-32 lg:pb-36 overflow-visible">
           {/* Horizontal Track Container - relative ensures card.offsetLeft is strictly relative to track */}
           <div
             ref={trackRef}
@@ -337,7 +357,7 @@ export const WovenToBeRemembered: React.FC = () => {
               >
                 <Link
                   href={item.href}
-                  className="panoramic-card group relative w-full h-full rounded-t-[80px] xs:rounded-t-[90px] sm:rounded-t-[110px] lg:rounded-2xl rounded-b-2xl overflow-hidden bg-monarch-charcoal shadow-xl hover:shadow-[0_20px_45px_rgba(0,0,0,0.7),0_0_25px_rgba(212,175,55,0.3)] transition-all duration-300 ease-out hover:-translate-y-3 hover:scale-[1.025] border border-monarch-gold/30 hover:border-monarch-gold flex flex-col justify-end p-4 sm:p-5 cursor-pointer block ring-0 hover:ring-1 hover:ring-monarch-gold/60"
+                  className="panoramic-card group relative w-full h-full rounded-2xl sm:rounded-t-[110px] sm:rounded-b-2xl lg:rounded-2xl overflow-hidden bg-monarch-charcoal shadow-xl hover:shadow-[0_20px_45px_rgba(0,0,0,0.7),0_0_25px_rgba(212,175,55,0.3)] transition-all duration-300 ease-out hover:-translate-y-3 hover:scale-[1.025] border border-monarch-gold/30 hover:border-monarch-gold flex flex-col justify-end p-4 sm:p-5 cursor-pointer block ring-0 hover:ring-1 hover:ring-monarch-gold/60"
                 >
                   {/* Background Luxury Fashion Model Photo */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -356,9 +376,9 @@ export const WovenToBeRemembered: React.FC = () => {
                   {/* Editorial Gradient Scrim - softens subtly on hover */}
                   <div className="absolute inset-0 bg-gradient-to-t from-[#16070B] via-[#16070B]/40 to-transparent opacity-95 group-hover:opacity-85 transition-opacity duration-300 pointer-events-none" />
 
-                  {/* Top Badge: Ensemble Index centered on mobile arch, top-left on desktop */}
-                  <div className="absolute top-3.5 left-1/2 -translate-x-1/2 sm:left-4 sm:translate-x-0 z-10 flex items-center gap-1.5 pointer-events-none">
-                    <span className="text-[10px] font-mono text-monarch-gold-light bg-black/60 group-hover:bg-monarch-maroon/80 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-monarch-gold/30 group-hover:border-monarch-gold transition-colors duration-300">
+                  {/* Top Badge: Ensemble Index positioned at the arch crest (centered to prevent border-radius clipping) */}
+                  <div className="absolute top-3 sm:top-4 left-1/2 -translate-x-1/2 z-20 flex items-center justify-center pointer-events-none whitespace-nowrap">
+                    <span className="text-[9px] sm:text-[10px] font-mono tracking-widest text-monarch-gold-light bg-black/75 group-hover:bg-monarch-maroon/90 backdrop-blur-md px-3 py-0.5 rounded-full border border-monarch-gold/40 group-hover:border-monarch-gold shadow-md transition-colors duration-300">
                       0{index + 1} / 0{SIGNATURE_ENSEMBLES.length}
                     </span>
                   </div>

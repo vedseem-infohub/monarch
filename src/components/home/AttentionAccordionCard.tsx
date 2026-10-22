@@ -26,6 +26,7 @@ export const AttentionAccordionCard: React.FC<AttentionAccordionCardProps> = ({
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const lastTouchEndRef = useRef<number>(0);
 
   // STRICTLY 2 STATES:
   // State 1: Inactive (compact dark card) -> 130-140px on mobile, 180px tablet, 220px desktop, 240px xl
@@ -55,14 +56,26 @@ export const AttentionAccordionCard: React.FC<AttentionAccordionCardProps> = ({
     touchStartRef.current = null;
     // If finger moved > 12px, user was swiping/scrolling horizontally, so don't toggle
     if (dx > 12 || dy > 12) return;
+    lastTouchEndRef.current = Date.now();
     triggerToggle();
   };
 
-  const handleClick = () => {
-    triggerToggle();
+  const handleClick = (e: React.MouseEvent) => {
+    // Ignore synthetic click event triggered right after touchEnd on mobile/touch devices
+    if (Date.now() - lastTouchEndRef.current < 500) {
+      return;
+    }
+    // On laptop with mouse: clicking an unopened card activates it
+    if (!isActive) {
+      triggerToggle();
+    }
   };
 
   const handleMouseEnter = () => {
+    // Ignore synthetic mouseenter that mobile browsers fire on tap
+    if (Date.now() - lastTouchEndRef.current < 500) {
+      return;
+    }
     if (onMouseEnter) {
       onMouseEnter();
     } else if (onActivate) {
@@ -158,6 +171,7 @@ export const AttentionAccordionCard: React.FC<AttentionAccordionCardProps> = ({
           <Link
             href={product.actionHref}
             onClick={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
             className="inline-flex items-center gap-2 text-xs font-nav uppercase tracking-[0.2em] text-white hover:text-monarch-gold-light font-medium transition-colors group/link w-fit"
           >
             <span className="border-b border-white/60 group-hover/link:border-monarch-gold-light pb-0.5 transition-colors">

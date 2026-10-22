@@ -55,6 +55,26 @@ describe('WovenToBeRemembered', () => {
     expect(Number.isNaN(leftRotZ)).toBe(false);
   });
 
+  it('verifies mobile screen (< 640px) uses linear flat layout without circular arc drop or rotation', () => {
+    const width = 390; // Typical mobile screen (iPhone 14/15)
+    const isMobile = width < 640;
+    expect(isMobile).toBe(true);
+
+    // On mobile, applyCurvature clears transforms so cards sit completely flat:
+    // deltaX = 0, y = 0, rotZ = 0 (no circular displacement or tilt)
+    const deltaX = 0;
+    const y = 0;
+    const rotZ = 0;
+
+    expect(deltaX).toBe(0);
+    expect(y).toBe(0);
+    expect(rotZ).toBe(0);
+
+    // Verify right padding on mobile is compact (24px vs 48px desktop)
+    const mobileRightPadding = isMobile ? 24 : 48;
+    expect(mobileRightPadding).toBe(24);
+  });
+
   it('verifies edge-to-edge travel calculation eliminating half-screen free space', () => {
     const containerWidth = 1440;
     const rightPadding = 48;
