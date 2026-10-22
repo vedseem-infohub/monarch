@@ -93,7 +93,7 @@ export const TrendDeckCard: React.FC<TrendDeckCardProps> = ({
         src={product.images[0]}
         alt={product.name}
         className="w-full h-full object-cover pointer-events-none"
-        loading="eager"
+        loading="lazy"
         decoding="async"
         draggable={false}
       />

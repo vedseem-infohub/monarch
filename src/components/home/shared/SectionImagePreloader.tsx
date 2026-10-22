@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -19,19 +19,20 @@ import { NEW_ARRIVALS_PRODUCTS } from '@/data/newArrivals';
 import { BEST_SELLERS_PRODUCTS } from '@/data/bestSellers';
 import { PRODUCTS } from '@/data/products';
 
-/**
- * Curated list of high-priority section images used across homepage cards
- */
-const BASE_SECTION_IMAGES = [
-  // Section 1: Six Moods of Silk
+// ─── Section image batches (index = section order) ────────────────────────────
+
+/** Section 0: Six Moods of Silk — above-fold, always preloaded immediately */
+const SECTION_0_IMAGES = [
   '/images/moods/kanjivaram_silk.jpg',
   '/images/moods/banarasi_brocade.jpg',
   '/images/moods/chanderi_heritage.jpg',
   '/images/moods/paithani_heirloom.jpg',
   '/images/moods/tussar_silk.jpg',
   '/images/moods/pure_organza.jpg',
+];
 
-  // Section 2: Woven to Be Remembered Panoramic Ensembles
+/** Section 1: Woven to Be Remembered Panoramic Ensembles — above-fold, always preloaded */
+const SECTION_1_IMAGES = [
   '/images/panoramic/ensemble_aarunya.jpg',
   '/images/panoramic/ensemble_kalyani.jpg',
   '/images/panoramic/ensemble_saanjh.jpg',
@@ -39,6 +40,12 @@ const BASE_SECTION_IMAGES = [
   '/images/panoramic/ensemble_utsav.jpg',
   '/images/panoramic/ensemble_vara.jpg',
 ];
+
+/**
+ * Curated list of high-priority section images used across homepage cards.
+ * Kept for backwards compatibility with other consumers.
+ */
+const BASE_SECTION_IMAGES = [...SECTION_0_IMAGES, ...SECTION_1_IMAGES];
 
 /**
  * Aggregates all card image URLs across sections to guarantee instant,
@@ -150,46 +157,141 @@ export function preloadAndDecodeImage(url: string): Promise<void> {
   });
 }
 
+// ─── Lazy batches for sections 2–13 ────────────────────────────────────────
+
+function getLazyBatches(): string[][] {
+  const bridal: string[] = [];
+  BRIDAL_ENSEMBLES.forEach((b) => { if (b.image) bridal.push(b.image); });
+
+  const newArrivals: string[] = [];
+  NEW_ARRIVALS_PRODUCTS.forEach((p) => { if (p.images?.[0]) newArrivals.push(p.images[0]); });
+
+  const bestSellers: string[] = [];
+  BEST_SELLERS_PRODUCTS.forEach((p) => { if (p.images?.[0]) bestSellers.push(p.images[0]); });
+
+  const trends: string[] = [];
+  AUTUMN_WINTER_DATA.campaigns.forEach((c) => {
+    if (c.image) trends.push(c.image);
+    if (c.images?.[0]) trends.push(c.images[0]);
+  });
+  EDITS_FOR_OCCASION_DATA.edits.forEach((e) => { if (e.image) trends.push(e.image); });
+
+  const deep: string[] = [];
+  WORTH_YOUR_ATTENTION_DATA.products.forEach((p) => { if (p.images?.[0]) deep.push(p.images[0]); });
+  LATEST_TRENDS_DATA.products.forEach((t) => { if (t.images?.[0]) deep.push(t.images[0]); });
+  CINEMATIC_STORIES.forEach((s) => {
+    if (s.bgImage) deep.push(s.bgImage);
+    if (s.cardThumbnail) deep.push(s.cardThumbnail);
+  });
+  CHANGE_LOOK_PRODUCTS.forEach((l) => { if (l.images?.[0]) deep.push(l.images[0]); });
+  CRAFT_SANCTUM_PILLARS.forEach((p) => { if (p.macroImage) deep.push(p.macroImage); });
+
+  return [
+    [...newArrivals, ...bestSellers],  // batch 0 → sections 2-3
+    bridal,                            // batch 1 → section 4 (BridalCollection)
+    trends,                            // batch 2 → sections 5-8 (Trends, AutumnWinter, etc.)
+    deep,                              // batch 3 → sections 9-13 (deep scroll)
+  ];
+}
+
+// Singleton: resolved lazily so data imports stay tree-shakeable
+let _lazyBatches: string[][] | null = null;
+function getLazyBatchesMemo(): string[][] {
+  if (!_lazyBatches) _lazyBatches = getLazyBatches();
+  return _lazyBatches;
+}
+
+function scheduleIdlePreload(urls: string[], timeout = 1500): void {
+  if (typeof window === 'undefined') return;
+  const doPreload = () => urls.forEach((url) => preloadAndDecodeImage(url));
+  if ('requestIdleCallback' in window) {
+    (window as Window & { requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => number })
+      .requestIdleCallback(doPreload, { timeout });
+  } else {
+    setTimeout(doPreload, timeout);
+  }
+}
+
+// ─── Component ─────────────────────────────────────────────────────────────
+
 /**
- * Central Image Preloader Component:
- * Runs immediately on mount to download and GPU-decode all section card assets.
- * When the user scrolls down, all cards render instantly with zero delay and no white flash.
+ * Central Image Preloader Component — viewport-aware progressive loading.
+ *
+ * Strategy:
+ *  • Phase 1 (mount): immediately preload above-fold images (SixMoods + WovenToBeRemembered)
+ *  • Phase 2 (IntersectionObserver): when a sentinel div enters the viewport, trigger
+ *    preloading of the NEXT batch ("look-ahead" strategy)
+ *  • Phase 3 (requestIdleCallback): non-critical deep-scroll sections load on idle
+ *
+ * Renders invisible sentinel `<div>` anchors for each section transition point.
  */
 export const SectionImagePreloader: React.FC = () => {
+  const sentinelRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const batchLoaded = useRef<boolean[]>([false, false, false, false]);
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const urls = getAllSectionImageUrls();
-
-    // Priority 1: Decode the next 8 immediately visible section cards in parallel
-    const immediateBatch = urls.slice(0, 8);
-    Promise.all(immediateBatch.map((url) => preloadAndDecodeImage(url))).then(() => {
+    // ── Phase 1: Above-fold images — preload immediately ──────────────────
+    Promise.all([...SECTION_0_IMAGES, ...SECTION_1_IMAGES].map(preloadAndDecodeImage)).then(() => {
       ScrollTrigger.refresh();
     });
 
-    // Priority 2: Decode all remaining section cards incrementally
-    const remainingUrls = urls.slice(8);
-    const preloadRemaining = () => {
-      Promise.all(remainingUrls.map((url) => preloadAndDecodeImage(url))).then(() => {
-        ScrollTrigger.refresh();
-      });
-    };
+    // ── Phase 2: IntersectionObserver look-ahead loading ─────────────────
+    const batches = getLazyBatchesMemo();
 
-    if ('requestIdleCallback' in window) {
-      const handle = (window as Window & { requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => number }).requestIdleCallback(
-        () => preloadRemaining(),
-        { timeout: 800 }
-      );
-      return () => {
-        if ('cancelIdleCallback' in window) {
-          (window as Window & { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(handle);
+    // When sentinel[i] enters viewport → preload batch[i]
+    const observers: IntersectionObserver[] = [];
+
+    sentinelRefs.current.forEach((el, i) => {
+      if (!el) return;
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting && !batchLoaded.current[i]) {
+            batchLoaded.current[i] = true;
+            const urls = batches[i] ?? [];
+            // Sections 0-1 → immediate; sections 2+ → idle
+            if (i <= 1) {
+              Promise.all(urls.map(preloadAndDecodeImage)).then(() => ScrollTrigger.refresh());
+            } else {
+              scheduleIdlePreload(urls, 800);
+            }
+            observer.disconnect();
+          }
+        },
+        {
+          // Start preloading when sentinel is 600px below the fold — enough lead time
+          rootMargin: '0px 0px 600px 0px',
+          threshold: 0.1,
         }
-      };
-    } else {
-      const timer = setTimeout(preloadRemaining, 200);
-      return () => clearTimeout(timer);
-    }
+      );
+
+      observer.observe(el);
+      observers.push(observer);
+    });
+
+    // ── Phase 3: Deep scroll batch (sections 9-13) — schedule on idle ─────
+    scheduleIdlePreload(batches[3] ?? [], 2000);
+
+    return () => {
+      observers.forEach((obs) => obs.disconnect());
+    };
   }, []);
 
-  return null;
+  // Render invisible sentinel divs between section transitions
+  // Positions: after SixMoods (s0→s1), after WovenToBeRemembered (s1→s2),
+  //            after NewArrivals+BestSellers (s2-3→s4), after Bridal (s4→s5+)
+  return (
+    <>
+      {[0, 1, 2, 3].map((i) => (
+        <div
+          key={i}
+          ref={(el) => { sentinelRefs.current[i] = el; }}
+          aria-hidden="true"
+          style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
+        />
+      ))}
+    </>
+  );
 };

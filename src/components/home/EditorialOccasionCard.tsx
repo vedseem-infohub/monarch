@@ -26,7 +26,7 @@ export const EditorialOccasionCard: React.FC<EditorialOccasionCardProps> = ({
         src={edit.image}
         alt={edit.occasionTitle}
         className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-106"
-        loading="eager"
+        loading="lazy"
         decoding="async"
       />
 

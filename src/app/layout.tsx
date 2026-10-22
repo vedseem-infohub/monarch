@@ -7,8 +7,9 @@ import { WishlistProvider } from '@/context/WishlistContext';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { QuickViewProvider } from '@/context/QuickViewContext';
+import { LoadingProvider } from '@/context/LoadingContext';
 import { SmoothScrollProvider } from '@/components/common/SmoothScrollProvider';
-import { SareeLoader } from '@/components/common/SareeLoader';
+import { MonarchLoader } from '@/components/common/MonarchLoader';
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -66,8 +67,10 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
-        <link rel="preload" href="/images/saree-pattern.jpg" as="image" fetchPriority="high" />
         <link rel="preload" href="/hero-frames/frame_001.webp" as="image" type="image/webp" fetchPriority="high" />
+        {/* Preload first two above-fold mood images — rest handled by SectionImagePreloader */}
+        <link rel="preload" href="/images/moods/kanjivaram_silk.jpg" as="image" fetchPriority="low" />
+        <link rel="preload" href="/images/moods/banarasi_brocade.jpg" as="image" fetchPriority="low" />
       </head>
       <body
         suppressHydrationWarning
@@ -76,13 +79,15 @@ export default function RootLayout({
         <CartProvider>
           <WishlistProvider>
             <QuickViewProvider>
-              {/* <AnnouncementBar /> */}
-              <Header />
-              <SmoothScrollProvider>
-                <SareeLoader />
-                <main className="flex-1">{children}</main>
-              </SmoothScrollProvider>
-              <Footer />
+              <LoadingProvider>
+                {/* <AnnouncementBar /> */}
+                <Header />
+                <SmoothScrollProvider>
+                  <MonarchLoader />
+                  <main className="flex-1">{children}</main>
+                </SmoothScrollProvider>
+                <Footer />
+              </LoadingProvider>
             </QuickViewProvider>
           </WishlistProvider>
         </CartProvider>

@@ -1,10 +1,13 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef } from 'react';
 import Link from 'next/link';
+import { useCart } from '@/context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
 import { BEST_SELLERS_DATA } from '@/data/bestSellers';
-import { ProductCard } from '@/components/product/ProductCard';
-import { ChevronLeft, ChevronRight, Award } from 'lucide-react';
+import { Product } from '@/types';
+import { formatINR } from '@/utils/formatters';
+import { Heart, ShoppingBag, Star, Award } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
@@ -13,139 +16,217 @@ if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
 }
 
+/* ─────────────────────────────────────────────
+   Inline Bestseller Marquee Card
+   Same portrait style as NewArrivals card,
+   with rank badge (#1, #2…) instead of NEW
+───────────────────────────────────────────── */
+const BestSellerCard: React.FC<{ product: Product; rank: number; priority?: boolean }> = ({
+  product,
+  rank,
+  priority = false,
+}) => {
+  const { addToCart } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
+  const inWishlist = isInWishlist(product.id);
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addToCart(product, product.colors[0]?.name || 'Standard', product.sizes[0] || 'M', 1);
+  };
+
+  const handleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleWishlist(product.id);
+  };
+
+  return (
+    <div className="group flex-shrink-0 w-[220px] sm:w-[240px] lg:w-[260px] select-none">
+      {/* Image Container */}
+      <div className="relative aspect-[3/4.2] rounded-xl overflow-hidden bg-[#EDE5D8] shadow-sm group-hover:shadow-lg transition-shadow duration-400">
+        <Link href={`/product/${product.id}`} className="block w-full h-full">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={product.images[0]}
+            alt={product.name}
+            className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
+            loading={priority ? 'eager' : 'lazy'}
+            decoding="async"
+            sizes="(max-width: 640px) 220px, (max-width: 1024px) 240px, 260px"
+          />
+
+          {/* Hover: minimal dark scrim at bottom */}
+          <div className="absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-350 pointer-events-none" />
+
+          {/* Add to Cart — slides up on hover */}
+          <div className="absolute inset-x-0 bottom-0 px-3 pb-4 flex items-end translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-350 ease-out">
+            <button
+              onClick={handleAddToCart}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-white/95 hover:bg-white text-[#1A1A1A] text-[11px] font-nav uppercase tracking-[0.18em] font-semibold transition-all shadow-lg hover:shadow-xl active:scale-95"
+            >
+              <ShoppingBag className="w-3.5 h-3.5" />
+              Add to Cart
+            </button>
+          </div>
+        </Link>
+
+        {/* Rank badge — top left */}
+        <div className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#C7A15B] text-[9px] font-nav uppercase tracking-[0.15em] text-[#1A0A00] font-bold shadow-sm">
+          <Award className="w-2.5 h-2.5" />
+          #{rank}
+        </div>
+
+        {/* Wishlist — top right */}
+        <button
+          onClick={handleWishlist}
+          className="absolute top-2.5 right-2.5 z-10 w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-all shadow-sm active:scale-90"
+          aria-label="Toggle wishlist"
+        >
+          <Heart
+            className={`w-3.5 h-3.5 transition-colors ${inWishlist ? 'fill-red-500 text-red-500' : 'text-[#1A1A1A]'}`}
+          />
+        </button>
+
+        {/* Rating pill — bottom left, disappears on hover */}
+        <div className="absolute bottom-2.5 left-2.5 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/95 text-[10px] font-bold text-[#1A1A1A] shadow-sm group-hover:opacity-0 transition-opacity duration-200">
+          <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+          {product.rating.toFixed(1)}
+        </div>
+      </div>
+
+      {/* Below image: name, tagline, price */}
+      <div className="mt-3 px-0.5 space-y-0.5">
+        <Link href={`/product/${product.id}`}>
+          <p className="font-serif text-[15px] sm:text-[16px] text-monarch-charcoal font-semibold line-clamp-1 hover:text-monarch-maroon transition-colors leading-snug">
+            {product.name}
+          </p>
+        </Link>
+        {(product.tagline || product.categoryName) && (
+          <p className="font-sans text-[11px] text-gray-400 line-clamp-1 leading-snug">
+            {product.tagline || product.categoryName}
+          </p>
+        )}
+        <div className="flex items-center gap-2 pt-1">
+          <span className="font-sans text-[15px] sm:text-base font-bold text-monarch-gold-dark tracking-tight">
+            {formatINR(product.price)}
+          </span>
+          {product.originalPrice && product.originalPrice > product.price && (
+            <span className="text-[11px] text-gray-400 line-through font-sans">
+              {formatINR(product.originalPrice)}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ─────────────────────────────────────────────
+   Main Section — Right-to-Left marquee (←)
+   Opposite direction to NewArrivals
+───────────────────────────────────────────── */
 export const BestSellers: React.FC = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
+  const animRef = useRef<gsap.core.Tween | null>(null);
 
-  // Authentically provisioned from dedicated data file per Rule 4
-  const bestSellerProducts = BEST_SELLERS_DATA.products;
+  const products = BEST_SELLERS_DATA.products;
+  // Duplicate for seamless infinite marquee
+  const doubled = [...products, ...products];
 
-  const updateScrollState = () => {
-    if (!trackRef.current) return;
-    const { scrollLeft, scrollWidth, clientWidth } = trackRef.current;
-    setCanScrollLeft(scrollLeft > 10);
-    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
-  };
-
-  const handleScroll = (direction: 'left' | 'right') => {
-    if (!trackRef.current) return;
-    const cardWidth = 330;
-    const scrollAmount = direction === 'left' ? -cardWidth * 2 : cardWidth * 2;
-    trackRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-  };
-
-  // GSAP animation scoped cleanly using useGSAP hook per Rule 2
   useGSAP(
     () => {
-      if (trackRef.current) {
-        gsap.fromTo(
-          trackRef.current.querySelectorAll('.bestseller-card'),
-          { opacity: 0.85, y: 16, scale: 0.99 },
-          {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            duration: 0.5,
-            stagger: 0.05,
-            ease: 'power2.out',
-            scrollTrigger: {
-              trigger: trackRef.current,
-              start: 'top 95%',
-              refreshPriority: 1,
-              toggleActions: 'play none none none',
-            },
-          }
-        );
-      }
-    },
-    { scope: containerRef, dependencies: [] }
-  );
+      const track = trackRef.current;
+      if (!track) return;
 
-  useEffect(() => {
-    const track = trackRef.current;
-    if (track) {
-      track.addEventListener('scroll', updateScrollState, { passive: true });
-      updateScrollState();
-    }
-    return () => {
-      if (track) track.removeEventListener('scroll', updateScrollState);
-    };
-  }, []);
+      const totalWidth = track.scrollWidth / 2;
+
+      // Best Sellers scrolls RIGHT (← reverse / opposite to NewArrivals)
+      // Start at -totalWidth, animate to 0, then repeat → moves right
+      animRef.current = gsap.fromTo(
+        track,
+        { x: -totalWidth },
+        {
+          x: 0,
+          duration: totalWidth / 55, // same speed as New Arrivals
+          ease: 'none',
+          repeat: -1,
+        }
+      );
+
+      // Pause on hover
+      const container = sectionRef.current;
+      const pause = () => animRef.current?.pause();
+      const resume = () => animRef.current?.resume();
+
+      if (container) {
+        container.addEventListener('mouseenter', pause);
+        container.addEventListener('mouseleave', resume);
+      }
+
+      return () => {
+        if (animRef.current) {
+          animRef.current.kill();
+          animRef.current = null;
+        }
+        if (container) {
+          container.removeEventListener('mouseenter', pause);
+          container.removeEventListener('mouseleave', resume);
+        }
+      };
+    },
+    { scope: sectionRef, dependencies: [] }
+  );
 
   return (
     <section
-      ref={containerRef}
-      className="py-16 sm:py-24 bg-[#FAF5EE] text-monarch-charcoal relative overflow-hidden border-t border-monarch-gold/25"
+      ref={sectionRef}
+      className="py-14 sm:py-20 bg-[#FAF5EE] text-monarch-charcoal relative border-t border-monarch-gold/20 overflow-hidden"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-monarch-gold/15 border border-monarch-gold/30 text-[11px] font-nav uppercase tracking-[0.25em] text-monarch-gold-dark font-medium">
-              <Award className="w-3.5 h-3.5 text-monarch-gold" />
-              <span>{BEST_SELLERS_DATA.eyebrow}</span>
-            </div>
-            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-medium tracking-tight text-monarch-charcoal">
-              {BEST_SELLERS_DATA.title}{' '}
-              <span className="font-serif italic font-light text-monarch-gold-dark">
-                {BEST_SELLERS_DATA.italicWord}
-              </span>
-            </h2>
-            <p className="text-xs sm:text-sm text-monarch-charcoal/75 font-sans leading-relaxed max-w-xl">
-              {BEST_SELLERS_DATA.description}
+      {/* Section header */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 sm:mb-10">
+        <div className="flex items-end justify-between">
+          <div>
+            <p className="text-[10px] font-nav uppercase tracking-[0.3em] text-monarch-gold-dark mb-2">
+              {BEST_SELLERS_DATA.eyebrow}
             </p>
+            <h2 className="font-serif text-3xl sm:text-4xl font-medium text-monarch-charcoal leading-tight">
+              {BEST_SELLERS_DATA.title}{' '}
+              <em className="font-light text-monarch-gold-dark" style={{ fontStyle: 'italic' }}>
+                {BEST_SELLERS_DATA.italicWord}
+              </em>
+            </h2>
           </div>
-
-          <div className="flex items-center gap-3 shrink-0">
-            <Link
-              href={BEST_SELLERS_DATA.viewAllHref}
-              className="text-xs font-nav uppercase tracking-[0.2em] font-semibold text-monarch-maroon hover:text-monarch-maroon-dark pb-0.5 border-b border-monarch-maroon/30 transition-colors mr-2"
-            >
-              Explore Collection
-            </Link>
-
-            <button
-              onClick={() => handleScroll('left')}
-              disabled={!canScrollLeft}
-              aria-label="Scroll left"
-              className="p-2.5 rounded-full border border-monarch-gold/40 bg-white/90 hover:bg-white text-monarch-charcoal hover:text-monarch-maroon disabled:opacity-30 transition-all shadow-sm hover:border-monarch-gold"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => handleScroll('right')}
-              disabled={!canScrollRight}
-              aria-label="Scroll right"
-              className="p-2.5 rounded-full border border-monarch-gold/40 bg-white/90 hover:bg-white text-monarch-charcoal hover:text-monarch-maroon disabled:opacity-30 transition-all shadow-sm hover:border-monarch-gold"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
+          <Link
+            href={BEST_SELLERS_DATA.viewAllHref}
+            className="text-[10px] font-nav uppercase tracking-[0.25em] text-monarch-maroon hover:text-monarch-charcoal border-b border-monarch-maroon/40 pb-0.5 transition-colors shrink-0 mb-1"
+          >
+            Explore Collection
+          </Link>
         </div>
+      </div>
 
-        {/* Carousel Track with Bestseller Ranking Indicator & Generous Padding */}
+      {/* Marquee track */}
+      <div className="w-full overflow-hidden">
+        {/* Edge fades */}
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-16 sm:w-24 bg-gradient-to-r from-[#FAF5EE] to-transparent z-10" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-16 sm:w-24 bg-gradient-to-l from-[#FAF5EE] to-transparent z-10" />
+
         <div
           ref={trackRef}
-          className="flex gap-5 sm:gap-6 overflow-x-auto no-scrollbar scroll-smooth py-5 px-3 sm:px-4"
+          className="flex gap-4 sm:gap-5 will-change-transform py-4 px-2"
+          style={{ width: 'max-content' }}
         >
-          {bestSellerProducts.map((product, index) => {
-            // Unify ranking badge directly into the Product model to prevent duplicate badges
-            const productWithRank = {
-              ...product,
-              badge: `#${index + 1} Best Seller`,
-            };
-
-            return (
-              <div
-                key={product.id}
-                className="bestseller-card shrink-0 w-[270px] sm:w-[300px] lg:w-[325px] relative"
-              >
-                <ProductCard product={productWithRank} priority={index < 5} />
-              </div>
-            );
-          })}
+          {doubled.map((product, idx) => (
+            <BestSellerCard
+              key={`bs-${product.id}-${idx}`}
+              product={product}
+              rank={(idx % products.length) + 1}
+              priority={idx < 4}
+            />
+          ))}
         </div>
       </div>
     </section>

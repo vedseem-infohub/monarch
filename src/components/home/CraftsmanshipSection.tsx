@@ -3,18 +3,19 @@
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
+import { MonarchLoader } from '@/components/common/MonarchLoader';
 
 const Craftsmanship3DViewer = dynamic(
   () => import('@/components/three/Craftsmanship3DViewer').then((mod) => mod.Craftsmanship3DViewer),
   {
     ssr: false,
     loading: () => (
-      <div className="w-full h-[520px] rounded-2xl bg-monarch-burgundy/80 flex flex-col items-center justify-center border border-monarch-gold/20 text-monarch-gold">
-        <div className="w-10 h-10 border-2 border-monarch-gold border-t-transparent rounded-full animate-spin mb-3" />
-        <span className="font-serif text-sm tracking-widest uppercase text-monarch-ivory">
-          Loading 3D Specimen
-        </span>
-      </div>
+      <MonarchLoader
+        variant="embedded"
+        message="Loading Craftsmanship Specimen"
+        subtitle="Three.js Master Weave"
+        className="min-h-[520px]"
+      />
     ),
   }
 );

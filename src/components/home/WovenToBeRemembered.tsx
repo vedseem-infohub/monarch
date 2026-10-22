@@ -6,13 +6,13 @@ import { ArrowRight, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
+import { useSmoothScroll } from '@/components/common/SmoothScrollProvider';
+import { SIGNATURE_ENSEMBLES } from '@/data/bridal';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
   ScrollTrigger.config({ ignoreMobileResize: true });
 }
-
-import { SIGNATURE_ENSEMBLES } from '@/data/bridal';
 
 export const WovenToBeRemembered: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
@@ -20,17 +20,22 @@ export const WovenToBeRemembered: React.FC = () => {
   const trackRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  const { lenis } = useSmoothScroll();
   const [activeIndex, setActiveIndex] = useState(0);
   const activeIndexRef = useRef(0);
 
   /**
-   * Responsive circular arc geometry: ACTIVE ACROSS ALL SCREENS (Mobile, Tablet & Desktop).
+   * Deterministic circular arc geometry: ACTIVE ACROSS ALL SCREENS (Mobile, Tablet & Desktop).
    * Cards follow the circumference of a giant concentric circle:
-   * - Center card sits at the zenith (top of the arch, y = 0, rotZ = 0deg)
+   * - Cards near center sit at the zenith (top of the arch, y = 0, rotZ = 0deg)
    * - Side cards curve downward along the circular rim (y = R * (1 - cos(theta)))
    * - Tangent angles (rotZ) dynamically rotate cards to follow the crest
+   *
+   * Crucial Fix: Uses pure mathematical coordinates derived from the GSAP track X position.
+   * Completely avoids reading track.getBoundingClientRect().left inside the loop,
+   * eliminating transform feedback loops, jitter, and the "forgotten position" bug.
    */
-  const applyCurvature = useCallback(() => {
+  const applyCurvature = useCallback((overrideTrackX?: number) => {
     if (typeof window === 'undefined') return;
     const track = trackRef.current;
     const cards = cardRefs.current.filter((c): c is HTMLDivElement => Boolean(c));
@@ -49,15 +54,21 @@ export const WovenToBeRemembered: React.FC = () => {
 
     const tiltFactor = isMobile ? 0.65 : isTablet ? 0.75 : 0.85;
     const maxRot = isMobile ? 12.0 : isTablet ? 13.5 : 14.5;
-
     const viewportCenter = width / 2;
-    const trackLeft = track.getBoundingClientRect().left;
+
+    // Direct mathematical track X: read directly from GSAP transform or override parameter
+    const currentTrackX =
+      typeof overrideTrackX === 'number'
+        ? overrideTrackX
+        : (gsap.getProperty(track, 'x') as number) || 0;
 
     for (let i = 0; i < cards.length; i++) {
       const card = cards[i];
-      // Deterministic linear center of each card on screen
-      const cardBaseX = trackLeft + card.offsetLeft + card.offsetWidth / 2;
-      const dist = cardBaseX - viewportCenter;
+      // Untransformed linear center of card relative to track
+      const cardCenterInTrack = card.offsetLeft + card.offsetWidth / 2;
+      // Absolute screen center of this card
+      const cardScreenX = currentTrackX + cardCenterInTrack;
+      const dist = cardScreenX - viewportCenter;
 
       // Central angle theta along the circular circumference
       const theta = dist / radius;
@@ -71,24 +82,49 @@ export const WovenToBeRemembered: React.FC = () => {
       const rawRot = theta * (180 / Math.PI) * tiltFactor;
       const rotZ = Math.max(-maxRot, Math.min(maxRot, rawRot));
 
-      card.style.transform = `translate3d(${deltaX.toFixed(1)}px, ${y.toFixed(1)}px, 0) rotate(${rotZ.toFixed(2)}deg)`;
+      const transformValue = `translate(${deltaX.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${rotZ.toFixed(2)}deg)`;
+      card.style.transform = transformValue;
+      card.style.webkitTransform = transformValue;
     }
   }, []);
 
-  // Smooth programmatic step to card index via ScrollTrigger scroll position
-  const scrollToCard = useCallback((targetIndex: number) => {
-    const idx = Math.max(0, Math.min(targetIndex, SIGNATURE_ENSEMBLES.length - 1));
-    const st = ScrollTrigger.getById('woven-scroll');
-    if (st) {
-      const progress = idx / (SIGNATURE_ENSEMBLES.length - 1);
-      const targetY = st.start + progress * (st.end - st.start);
-      window.scrollTo({ top: targetY, behavior: 'smooth' });
-    }
-    activeIndexRef.current = idx;
-    setActiveIndex(idx);
-  }, []);
+  // Smooth programmatic step to card index via Lenis / ScrollTrigger
+  const scrollToCard = useCallback(
+    (targetIndex: number) => {
+      const idx = Math.max(0, Math.min(targetIndex, SIGNATURE_ENSEMBLES.length - 1));
+      const st = ScrollTrigger.getById('woven-scroll');
+      const pinWrapper = pinWrapperRef.current;
+      const cards = cardRefs.current.filter((c): c is HTMLDivElement => Boolean(c));
+      if (st && pinWrapper && cards.length > 0) {
+        const width = window.innerWidth;
+        const viewportCenter = width / 2;
+        const isMobile = width < 640;
+        const rightPadding = isMobile ? 24 : 48;
+        const containerWidth = pinWrapper.clientWidth;
+        const lastCard = cards[cards.length - 1];
+        const lastCardRight = lastCard.offsetLeft + lastCard.offsetWidth;
+        const travel = Math.max(0, lastCardRight - (containerWidth - rightPadding));
 
-  // Ultra-smooth debounced resize listener with RAF to eliminate lag when switching device/resizing
+        const targetCard = cards[idx];
+        const cardCenter = targetCard.offsetLeft + targetCard.offsetWidth / 2;
+        // Compute track X that centers the target card, clamped between -travel and 0
+        const targetX = Math.max(-travel, Math.min(0, viewportCenter - cardCenter));
+        const progress = travel > 0 ? Math.abs(targetX) / travel : 0;
+        const targetY = st.start + progress * (st.end - st.start);
+
+        if (lenis) {
+          lenis.scrollTo(targetY, { duration: 0.8 });
+        } else {
+          window.scrollTo({ top: targetY, behavior: 'smooth' });
+        }
+      }
+      activeIndexRef.current = idx;
+      setActiveIndex(idx);
+    },
+    [lenis]
+  );
+
+  // Debounced resize listener with RAF to recalibrate curvature on window resize
   useEffect(() => {
     let rafId = 0;
     const handleResize = () => {
@@ -104,7 +140,7 @@ export const WovenToBeRemembered: React.FC = () => {
     };
   }, [applyCurvature]);
 
-  // Responsive GSAP matchMedia integration: perfectly recalibrates when switching devices
+  // Responsive GSAP matchMedia integration: perfectly aligns cards and handles pinning
   useGSAP(
     () => {
       const section = sectionRef.current;
@@ -123,34 +159,43 @@ export const WovenToBeRemembered: React.FC = () => {
         },
         (context) => {
           const { isMobile, isTablet } = context.conditions!;
+          const width = window.innerWidth;
+          const viewportCenter = width / 2;
 
-          // Exact travel calculation: the last card stops cleanly at the right edge of the viewport
+          const containerWidth = pinWrapper.clientWidth;
+          const lastCard = cards[cards.length - 1];
+          const rightPadding = isMobile ? 24 : 48;
+
+          // Full Edge-to-Edge Alignment:
+          // startX = 0 ensures Card 0 starts on the left edge with zero empty space.
+          // endX = -getTravel() ensures the last card stops cleanly on the right edge with zero empty space.
+          const startX = 0;
           const getTravel = () => {
             const containerWidth = pinWrapper.clientWidth;
             const lastCard = cards[cards.length - 1];
-            if (!lastCard) return track.scrollWidth - containerWidth;
-            const minimalGap = isMobile ? 24 : 32;
-            return Math.max(0, lastCard.offsetLeft + lastCard.offsetWidth - (containerWidth - minimalGap));
+            const rightPadding = isMobile ? 24 : 48;
+            const lastCardRight = lastCard.offsetLeft + lastCard.offsetWidth;
+            return Math.max(0, lastCardRight - (containerWidth - rightPadding));
           };
 
-          // Functional scroll distance evaluated dynamically per breakpoint
+          // Dynamic scroll distance per device breakpoint
           const getScrollDistance = () => {
-            const travel = getTravel();
+            const currentTravel = getTravel();
             return isMobile
-              ? Math.max(900, Math.round(travel * 1.15))
+              ? Math.max(900, Math.round(currentTravel * 1.15))
               : isTablet
-                ? Math.max(1200, Math.round(travel * 1.25))
-                : Math.max(1600, Math.round(travel * 1.35));
+                ? Math.max(1200, Math.round(currentTravel * 1.25))
+                : Math.max(1600, Math.round(currentTravel * 1.35));
           };
 
-          // Initial state: starts at 0 without unexpected jumps
-          gsap.set(track, { x: 0 });
-          applyCurvature();
+          // Set starting position deterministically
+          gsap.set(track, { x: startX });
+          applyCurvature(startX);
 
           // ScrollTrigger pins section while page scroll drives horizontal circular walkthrough
           const scrollTween = gsap.fromTo(
             track,
-            { x: 0 },
+            { x: startX },
             {
               x: () => -getTravel(),
               ease: 'none',
@@ -165,17 +210,37 @@ export const WovenToBeRemembered: React.FC = () => {
                 scrub: 0.5,
                 invalidateOnRefresh: true,
                 pinSpacing: true,
-                onUpdate: (self) => {
+                onEnter: () => {
                   applyCurvature();
-                  // Synchronize active index ONLY when index changes (avoids 60fps React re-render thrashing)
-                  const cardCount = SIGNATURE_ENSEMBLES.length;
-                  const currentIdx = Math.min(
-                    cardCount - 1,
-                    Math.max(0, Math.round(self.progress * (cardCount - 1)))
-                  );
-                  if (currentIdx !== activeIndexRef.current) {
-                    activeIndexRef.current = currentIdx;
-                    setActiveIndex(currentIdx);
+                },
+                onEnterBack: () => {
+                  applyCurvature();
+                },
+                onLeaveBack: () => {
+                  // Guarantee clean reset to Card 0 when scrolling back above section
+                  gsap.set(track, { x: startX });
+                  applyCurvature(startX);
+                  setActiveIndex(0);
+                  activeIndexRef.current = 0;
+                },
+                onUpdate: () => {
+                  applyCurvature();
+                  // Dynamically illuminate the card closest to the zenith crest
+                  let closestIdx = 0;
+                  let minAbsDist = Infinity;
+                  const currentX = (gsap.getProperty(track, 'x') as number) || 0;
+                  for (let i = 0; i < cards.length; i++) {
+                    const cardCenterInTrack = cards[i].offsetLeft + cards[i].offsetWidth / 2;
+                    const cardScreenX = currentX + cardCenterInTrack;
+                    const absDist = Math.abs(cardScreenX - viewportCenter);
+                    if (absDist < minAbsDist) {
+                      minAbsDist = absDist;
+                      closestIdx = i;
+                    }
+                  }
+                  if (closestIdx !== activeIndexRef.current) {
+                    activeIndexRef.current = closestIdx;
+                    setActiveIndex(closestIdx);
                   }
                 },
                 onRefresh: () => {
@@ -185,7 +250,22 @@ export const WovenToBeRemembered: React.FC = () => {
             }
           );
 
+          // Pre-trigger: calibrate curvature as section approaches viewport from below
+          const approachTrigger = ScrollTrigger.create({
+            trigger: section,
+            start: 'top bottom',
+            end: 'top top',
+            onEnter: () => {
+              gsap.set(track, { x: startX });
+              applyCurvature(startX);
+            },
+            onEnterBack: () => {
+              applyCurvature();
+            },
+          });
+
           return () => {
+            approachTrigger.kill();
             scrollTween.kill();
             track.style.transform = '';
           };
@@ -239,10 +319,10 @@ export const WovenToBeRemembered: React.FC = () => {
 
         {/* Circular Panoramic Strip: overflow-visible with ample bottom clearance prevents cropping on big screens */}
         <div className="relative w-full select-none my-auto pt-4 pb-28 sm:pb-32 lg:pb-36 overflow-visible">
-          {/* Horizontal Track Container */}
+          {/* Horizontal Track Container - relative ensures card.offsetLeft is strictly relative to track */}
           <div
             ref={trackRef}
-            className="flex gap-3.5 sm:gap-4 lg:gap-3.5 items-start pl-6 sm:pl-8 lg:pl-12 pr-6 sm:pr-8 w-max will-change-transform"
+            className="relative flex gap-3.5 sm:gap-4 lg:gap-3.5 items-start pl-6 sm:pl-8 lg:pl-12 pr-6 sm:pr-8 w-max will-change-transform"
           >
             {SIGNATURE_ENSEMBLES.map((item, index) => (
               <div
@@ -250,7 +330,7 @@ export const WovenToBeRemembered: React.FC = () => {
                 ref={(el) => {
                   cardRefs.current[index] = el;
                 }}
-                className="relative z-10 shrink-0 w-[260px] xs:w-[275px] sm:w-[285px] lg:w-[290px] h-[405px] xs:h-[425px] sm:h-[445px] lg:h-[455px] will-change-transform transform-gpu select-none hover:z-50"
+                className="relative z-10 shrink-0 w-[260px] xs:w-[275px] sm:w-[285px] lg:w-[290px] h-[405px] xs:h-[425px] sm:h-[445px] lg:h-[455px] will-change-transform select-none hover:z-50"
                 style={{
                   transformOrigin: '50% 50%',
                 }}
