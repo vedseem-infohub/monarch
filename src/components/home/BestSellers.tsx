@@ -31,10 +31,15 @@ const BestSellerCard: React.FC<{ product: Product; rank: number; priority?: bool
   const { isInWishlist, toggleWishlist } = useWishlist();
   const inWishlist = isInWishlist(product.id);
 
+  const displayImage = product.images?.[0] || '/images/moods/banarasi_brocade.jpg';
+  const defaultColor = product.colors?.[0]?.name || 'Standard';
+  const defaultSize = product.sizes?.[0] || 'M';
+  const ratingValue = (product.rating !== undefined ? product.rating : 4.9).toFixed(1);
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart(product, product.colors[0]?.name || 'Standard', product.sizes[0] || 'M', 1);
+    addToCart(product, defaultColor, defaultSize, 1);
   };
 
   const handleWishlist = (e: React.MouseEvent) => {
@@ -50,7 +55,7 @@ const BestSellerCard: React.FC<{ product: Product; rank: number; priority?: bool
         <Link href={`/product/${product.id}`} className="block w-full h-full">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={product.images[0]}
+            src={displayImage}
             alt={product.name}
             className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
             loading={priority ? 'eager' : 'lazy'}
@@ -93,7 +98,7 @@ const BestSellerCard: React.FC<{ product: Product; rank: number; priority?: bool
         {/* Rating pill — bottom left */}
         <div className="absolute bottom-2 left-2 sm:bottom-2.5 sm:left-2.5 z-10 flex items-center gap-0.5 sm:gap-1 px-1.5 py-0.5 sm:px-2 rounded-full bg-white/95 text-[9px] sm:text-[10px] font-bold text-[#1A1A1A] shadow-sm sm:group-hover:opacity-0 transition-opacity duration-200">
           <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-amber-400 text-amber-400" />
-          <span>{product.rating.toFixed(1)}</span>
+          <span>{ratingValue}</span>
         </div>
       </div>
 

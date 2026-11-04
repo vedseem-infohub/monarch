@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { AUTUMN_WINTER_DATA } from '@/data/autumnWinter';
 import { ArchedCard } from './ArchedCard';
+import { useSectionFrames } from '@/hooks/useSectionFrames';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
@@ -16,6 +17,8 @@ if (typeof window !== 'undefined') {
 export const AutumnWinter2026: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const cardsContainerRef = useRef<HTMLDivElement>(null);
+
+  const campaigns = useSectionFrames('autumn-winter', AUTUMN_WINTER_DATA.campaigns);
 
   // Safe GSAP entrance animation with guaranteed visibility fallback
   useGSAP(
@@ -97,7 +100,7 @@ export const AutumnWinter2026: React.FC = () => {
           ref={cardsContainerRef}
           className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-7 lg:gap-8 w-full min-h-[480px]"
         >
-          {AUTUMN_WINTER_DATA.campaigns.map((item, index) => (
+          {campaigns.map((item, index) => (
             <ArchedCard key={item.id} item={item} priority={index === 0} />
           ))}
         </div>

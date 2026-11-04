@@ -47,10 +47,10 @@ export interface FooterData {
 
 export const FOOTER_DATA: FooterData = {
   brand: {
-    name: 'DRIFT',
-    tagline: 'Handwoven Silks · DRIFT by MONARCH',
+    name: 'MONARCH',
+    tagline: 'Handwoven Silks',
     scriptTag: 'Draped for every royal celebration.',
-    monogram: 'D',
+    monogram: 'M ',
     description: 'Preserving sacred handloom corridors and imperial Indian weaves across Varanasi, Kanchipuram, and Chanderi.',
   },
   columns: {
@@ -79,6 +79,8 @@ export const FOOTER_DATA: FooterData = {
       title: 'Support',
       links: [
         { label: 'Contact us', href: '/contact' },
+        { label: 'Privy Sign In', href: '/login' },
+        { label: 'Patron Registry', href: '/signup' },
         { label: 'Shipping & delivery', href: '/shipping' },
         { label: 'Returns & exchanges', href: '/returns' },
         { label: 'FAQs', href: '/faqs' },
@@ -108,5 +110,5 @@ export const FOOTER_DATA: FooterData = {
     { name: 'X', href: 'https://x.com', icon: 'twitter' },
     { name: 'YouTube', href: 'https://youtube.com', icon: 'youtube' },
   ],
-  copyright: '© 2026 DRIFT by MONARCH. All rights reserved.',
+  copyright: '© 2026 MONARCH. All rights reserved.',
 };

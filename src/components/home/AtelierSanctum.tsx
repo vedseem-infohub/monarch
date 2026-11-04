@@ -10,7 +10,6 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
   Sparkles,
   CheckCircle2,
-  Clock,
   MapPin,
   ChevronLeft,
   ChevronRight,
@@ -20,18 +19,15 @@ import {
   Mail,
   Heart,
   ShoppingBag,
-  X,
   Compass,
   Star,
   Award,
   Layers,
-  AlertCircle,
 } from 'lucide-react';
 import {
   ROYAL_CLIENT_DIARIES,
   CRAFT_SANCTUM_PILLARS,
   SALON_LOCATIONS,
-  ATELIER_EXPERIENCES,
   SalonLocation,
   ClientDiaryEntry,
 } from '@/data/atelier';
@@ -44,30 +40,14 @@ if (typeof window !== 'undefined') {
 
 export const AtelierSanctum: React.FC = () => {
   const containerRef = useRef<HTMLElement>(null);
-  const modalRef = useRef<HTMLDivElement>(null);
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
-  // Active state for Salon Location Concierge
+  // Active state for Boutique Location Concierge
   const [activeSalonSlug, setActiveSalonSlug] = useState('new-delhi');
 
   // Active state for Royal Diary Carousel
   const [activeDiaryIdx, setActiveDiaryIdx] = useState(0);
-
-  // VIP Modal State
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState('');
-  const [selectedExp, setSelectedExp] = useState(ATELIER_EXPERIENCES[0].id);
-
-  // Form State inside Modal
-  const [formName, setFormName] = useState('');
-  const [formPhone, setFormPhone] = useState('');
-  const [formEmail, setFormEmail] = useState('');
-  const [formDate, setFormDate] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [bookingConfirmed, setBookingConfirmed] = useState(false);
-  const [bookingRef, setBookingRef] = useState('');
-  const [formError, setFormError] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const currentSalon =
@@ -81,65 +61,6 @@ export const AtelierSanctum: React.FC = () => {
   const handleNextDiary = useCallback(() => {
     setActiveDiaryIdx((prev) => (prev === ROYAL_CLIENT_DIARIES.length - 1 ? 0 : prev + 1));
   }, []);
-
-  // Keyboard navigation & modal escape
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (isModalOpen) {
-        if (e.key === 'Escape') setIsModalOpen(false);
-        return;
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isModalOpen]);
-
-  // Real backend API submission (POST /api/v1/atelier/book-appointment)
-  const handleSubmitBooking = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formName || !formPhone || !formEmail) return;
-
-    setIsSubmitting(true);
-    setFormError(null);
-
-    try {
-      const res = await fetch('/api/v1/atelier/book-appointment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          salonSlug: activeSalonSlug,
-          experienceId: selectedExp,
-          clientName: formName,
-          clientPhone: formPhone,
-          clientEmail: formEmail,
-          preferredDate: formDate,
-          preferredSlot: selectedSlot,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Unable to reserve private suite. Please check your details.');
-      }
-
-      setBookingRef(data.bookingRef || `MNR-2026-${Math.floor(1000 + Math.random() * 9000)}`);
-      setBookingConfirmed(true);
-    } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'An unexpected reservation error occurred.';
-      // Fallback graceful reservation if network is offline in local dev
-      if (errorMessage.includes('fetch') || errorMessage.includes('network')) {
-        const fallbackCode = Math.floor(1000 + Math.random() * 9000);
-        setBookingRef(`MNR-2026-${fallbackCode}`);
-        setBookingConfirmed(true);
-      } else {
-        setFormError(errorMessage);
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const handleCommissionDrape = (diary: ClientDiaryEntry) => {
     addToCart(
@@ -316,7 +237,7 @@ export const AtelierSanctum: React.FC = () => {
         </div>
 
         {/* ============================================================ */}
-        {/* 3. THE ARCHITECTURAL FLAGSHIP SALONS & PRIVATE SUITES        */}
+        {/* 3. THE ARCHITECTURAL FLAGSHIP BOUTIQUES & HERITAGE GALLERIES */}
         {/* ============================================================ */}
         <div className="bg-white/95 backdrop-blur-xl rounded-3xl lg:rounded-[44px] p-8 sm:p-12 lg:p-16 border border-[#C7A15B]/25 shadow-2xl relative overflow-hidden">
           {/* Subtle warm corner ambiance glow */}
@@ -330,7 +251,7 @@ export const AtelierSanctum: React.FC = () => {
                   Select Architectural Destination
                 </span>
                 <h3 className="font-serif text-2xl sm:text-3xl lg:text-4xl text-[#1C1715] font-normal">
-                  Flagship Salons &amp; Fitting Chambers
+                  Flagship Boutiques &amp; Heritage Galleries
                 </h3>
               </div>
 
@@ -437,22 +358,21 @@ export const AtelierSanctum: React.FC = () => {
 
                     {/* Primary Luxury CTA Button */}
                     <div className="pt-2 flex flex-wrap items-center gap-4">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsModalOpen(true);
-                          setFormError(null);
-                        }}
+                      <Link
+                        href="/collections/all"
                         className="inline-flex items-center gap-3 px-8 py-4 rounded-full bg-[#5A1725] hover:bg-[#3F101A] text-white text-xs font-nav uppercase tracking-[0.22em] font-medium shadow-xl hover:shadow-2xl transition-all duration-300 active:scale-95 cursor-pointer"
                       >
-                        <span>Request Private Suite Viewing</span>
+                        <span>Shop Ethnic Wear Collections</span>
                         <ArrowRight className="w-4 h-4 text-[#E8D5B5]" />
-                      </button>
+                      </Link>
 
-                      <span className="text-[11px] font-sans text-[#6B5E55] flex items-center gap-1.5">
+                      <Link
+                        href="/contact"
+                        className="inline-flex items-center gap-2 px-6 py-4 rounded-full border border-[#5A1725]/30 hover:border-[#5A1725] text-[#5A1725] text-xs font-nav uppercase tracking-[0.22em] font-medium transition-all"
+                      >
                         <ShieldCheck className="w-4 h-4 text-[#C7A15B]" />
-                        By Appointment Only · {currentSalon.suitesCount || 'Private Suites'}
-                      </span>
+                        <span>Walk-in Flagship Boutiques</span>
+                      </Link>
                     </div>
                   </motion.div>
                 </AnimatePresence>
@@ -485,7 +405,7 @@ export const AtelierSanctum: React.FC = () => {
                       >
                         <Sparkles className="w-3.5 h-3.5 text-[#C7A15B] animate-pulse shrink-0" />
                         <span>
-                          {currentSalon.city} Sanctuary · {currentSalon.suitesCount || 'Private Suites'}
+                          {currentSalon.city} Flagship · {currentSalon.suitesCount || 'Heritage Boutique'}
                         </span>
                       </motion.div>
                     </AnimatePresence>
@@ -514,7 +434,7 @@ export const AtelierSanctum: React.FC = () => {
                         {/* Bottom Arch Caption (Inside safe rectangular bottom zone) */}
                         <div className="absolute bottom-6 sm:bottom-7 left-6 sm:left-7 right-6 sm:right-7 text-white space-y-1.5 z-20">
                           <span className="text-[10px] font-nav uppercase tracking-[0.22em] text-[#C7A15B] block font-medium">
-                            Haute Couture Fitting Chamber
+                            Haute Couture Ethnic Wear Gallery
                           </span>
                           <h5 className="font-serif text-2xl sm:text-3xl font-normal drop-shadow-md">
                             {currentSalon.name}
@@ -757,267 +677,6 @@ export const AtelierSanctum: React.FC = () => {
           </AnimatePresence>
         </div>
       </div>
-
-      {/* ============================================================ */}
-      {/* 5. VIP PRIVATE SUITE RESERVATION MODAL (FROSTED GLASS)       */}
-      {/* ============================================================ */}
-      <AnimatePresence>
-        {isModalOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/75 backdrop-blur-md"
-            onClick={() => setIsModalOpen(false)}
-          >
-            <motion.div
-              ref={modalRef}
-              initial={{ scale: 0.95, opacity: 0, y: 24 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 24 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-2xl bg-white rounded-3xl lg:rounded-[36px] p-8 sm:p-12 shadow-2xl border border-[#C7A15B]/30 overflow-hidden max-h-[92vh] overflow-y-auto"
-            >
-              {/* Close Button */}
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="absolute top-6 right-6 w-10 h-10 rounded-full bg-black/5 hover:bg-black/10 text-black/60 hover:text-black flex items-center justify-center transition-colors cursor-pointer"
-                aria-label="Close modal"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              {bookingConfirmed ? (
-                /* Confirmation Screen */
-                <div className="py-8 text-center space-y-6">
-                  <div className="w-16 h-16 rounded-full bg-[#5A1725]/10 text-[#5A1725] border border-[#5A1725]/20 flex items-center justify-center mx-auto">
-                    <CheckCircle2 className="w-8 h-8 text-[#C7A15B]" />
-                  </div>
-
-                  <div className="space-y-2">
-                    <span className="text-[11px] font-nav uppercase tracking-[0.25em] text-[#C7A15B] font-semibold block">
-                      Imperial Reservation Confirmed
-                    </span>
-                    <h3 className="font-serif text-3xl sm:text-4xl text-[#1C1715] font-normal">
-                      We Await You in {currentSalon.city}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-[#6B5E55] max-w-md mx-auto leading-relaxed">
-                      Your booking reference is{' '}
-                      <strong className="text-[#1C1715] font-mono font-semibold">{bookingRef}</strong>.
-                      A Senior Couture Draper has dispatched your salon itinerary to{' '}
-                      <span className="text-[#5A1725] font-medium">{formEmail}</span>.
-                    </p>
-                  </div>
-
-                  <div className="p-5 rounded-2xl bg-[#FAF8F5] border border-black/5 text-left space-y-2 text-xs text-[#6B5E55]">
-                    <p className="font-serif text-base text-[#1C1715] font-medium">
-                      {currentSalon.name}
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <MapPin className="w-3.5 h-3.5 text-[#C7A15B] shrink-0" />
-                      {currentSalon.address}
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <Phone className="w-3.5 h-3.5 text-[#C7A15B] shrink-0" />
-                      {currentSalon.phone}
-                    </p>
-                    {selectedSlot && (
-                      <p className="flex items-center gap-2 text-[#5A1725] font-medium pt-1">
-                        <Clock className="w-3.5 h-3.5 text-[#C7A15B] shrink-0" />
-                        Reserved Slot: {selectedSlot}
-                      </p>
-                    )}
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsModalOpen(false);
-                      setBookingConfirmed(false);
-                      setFormName('');
-                      setFormPhone('');
-                      setFormEmail('');
-                    }}
-                    className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-[#5A1725] text-white text-xs font-nav uppercase tracking-wider font-medium hover:bg-[#3F101A] transition-colors shadow-lg"
-                  >
-                    <span>Return to Atelier</span>
-                  </button>
-                </div>
-              ) : (
-                /* The Booking Form */
-                <form onSubmit={handleSubmitBooking} className="space-y-6">
-                  <div className="space-y-2 pr-8">
-                    <span className="text-[10px] font-nav uppercase tracking-[0.25em] text-[#5A1725] font-semibold">
-                      Private Salon Concierge
-                    </span>
-                    <h3 className="font-serif text-2xl sm:text-3xl text-[#1C1715] font-medium leading-tight">
-                      Reserve Your Fitting Chamber
-                    </h3>
-                    <p className="text-xs text-[#6B5E55] font-sans">
-                      1-on-1 drape consultation with senior stylists at {currentSalon.name}.
-                    </p>
-                  </div>
-
-                  {/* Error Alert */}
-                  {formError && (
-                    <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
-                      <span>{formError}</span>
-                    </div>
-                  )}
-
-                  {/* Salon Selector */}
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-nav uppercase tracking-wider text-black/70 font-medium block">
-                      Salon Location
-                    </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      {SALON_LOCATIONS.map((salon) => (
-                        <button
-                          key={salon.slug}
-                          type="button"
-                          onClick={() => {
-                            setActiveSalonSlug(salon.slug);
-                            setSelectedSlot('');
-                          }}
-                          className={`px-3 py-2.5 rounded-xl text-xs font-nav uppercase tracking-wider text-center transition-all ${
-                            activeSalonSlug === salon.slug
-                              ? 'bg-[#5A1725] text-white font-semibold shadow-md'
-                              : 'bg-[#FAF8F5] text-black/70 border border-black/10 hover:border-black/30'
-                          }`}
-                        >
-                          {salon.city}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Consultation Type */}
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-nav uppercase tracking-wider text-black/70 font-medium block">
-                      Experience Type
-                    </label>
-                    <select
-                      value={selectedExp}
-                      onChange={(e) => setSelectedExp(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl bg-[#FAF8F5] border border-black/10 text-xs font-sans text-[#1C1715] focus:outline-none focus:border-[#5A1725]"
-                    >
-                      {ATELIER_EXPERIENCES.map((exp) => (
-                        <option key={exp.id} value={exp.id}>
-                          {exp.title} ({exp.recommendedDuration})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Client Inputs */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    <div>
-                      <label className="text-[10px] font-nav uppercase tracking-wider text-black/60 block mb-1">
-                        Full Name *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="e.g. Radhika Singhania"
-                        value={formName}
-                        onChange={(e) => setFormName(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-black/10 text-xs font-sans text-[#1C1715] focus:outline-none focus:border-[#5A1725]"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] font-nav uppercase tracking-wider text-black/60 block mb-1">
-                        Phone Number *
-                      </label>
-                      <input
-                        type="tel"
-                        required
-                        placeholder="+91 98200 12345"
-                        value={formPhone}
-                        onChange={(e) => setFormPhone(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-black/10 text-xs font-sans text-[#1C1715] focus:outline-none focus:border-[#5A1725]"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Email & Date */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    <div>
-                      <label className="text-[10px] font-nav uppercase tracking-wider text-black/60 block mb-1">
-                        Email Address *
-                      </label>
-                      <input
-                        type="email"
-                        required
-                        placeholder="client@luxury.in"
-                        value={formEmail}
-                        onChange={(e) => setFormEmail(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-black/10 text-xs font-sans text-[#1C1715] focus:outline-none focus:border-[#5A1725]"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] font-nav uppercase tracking-wider text-black/60 block mb-1">
-                        Preferred Date
-                      </label>
-                      <input
-                        type="date"
-                        value={formDate}
-                        onChange={(e) => setFormDate(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-black/10 text-xs font-sans text-[#1C1715] focus:outline-none focus:border-[#5A1725]"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Time Slots */}
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] font-nav uppercase tracking-wider text-black/60 block">
-                      Select Available Time Slot
-                    </span>
-                    <div className="grid grid-cols-2 gap-2">
-                      {currentSalon.timeSlots.map((slot) => (
-                        <button
-                          key={slot}
-                          type="button"
-                          onClick={() => setSelectedSlot(slot)}
-                          className={`px-3 py-2.5 rounded-xl text-xs font-sans transition-all text-left flex items-center justify-between cursor-pointer ${
-                            selectedSlot === slot
-                              ? 'bg-[#C7A15B] text-white font-medium shadow-sm'
-                              : 'bg-[#FAF8F5] text-black/70 border border-black/10 hover:border-black/30'
-                          }`}
-                        >
-                          <span className="truncate">{slot}</span>
-                          <Clock className="w-3.5 h-3.5 shrink-0 opacity-70 ml-1" />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Submit Button */}
-                  <div className="pt-2">
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="w-full py-4 rounded-full bg-[#5A1725] hover:bg-[#3F101A] disabled:opacity-50 text-white font-nav uppercase tracking-[0.22em] text-xs font-medium flex items-center justify-center gap-2 shadow-xl transition-all active:scale-[0.98] cursor-pointer"
-                    >
-                      <span>
-                        {isSubmitting ? 'Reserving Private Chamber...' : 'Confirm Appointment'}
-                      </span>
-                      <ArrowRight className="w-4 h-4 text-[#E8D5B5]" />
-                    </button>
-                    <p className="text-[10px] text-center text-black/40 mt-2 font-sans">
-                      Client confidentiality accord strictly preserved.
-                    </p>
-                  </div>
-                </form>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </section>
   );
 };

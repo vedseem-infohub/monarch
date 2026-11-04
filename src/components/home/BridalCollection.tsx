@@ -6,6 +6,7 @@ import { BRIDAL_ENSEMBLES, BridalEnsemble } from '@/data/bridal';
 import { BridalCard } from './BridalCard';
 import { CurvedDivider } from '@/components/home/shared/CurvedDivider';
 import { useMarqueeScroll } from '@/hooks/useMarqueeScroll';
+import { useSectionFrames } from '@/hooks/useSectionFrames';
 import { ArrowRight, ArrowUpRight, Sparkles } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -23,7 +24,8 @@ export const BridalCollection: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
 
-  const activeEnsemble: BridalEnsemble = BRIDAL_ENSEMBLES[activeIndex] || BRIDAL_ENSEMBLES[0];
+  const bridalEnsembles = useSectionFrames<BridalEnsemble>('bridal', BRIDAL_ENSEMBLES);
+  const activeEnsemble: BridalEnsemble = bridalEnsembles[activeIndex] || bridalEnsembles[0] || BRIDAL_ENSEMBLES[0];
 
   // Marquee scroll hook providing smooth automated glide + manual touch/drag/wheel scrolling
   const { containerRef, trackRef } = useMarqueeScroll<HTMLDivElement, HTMLDivElement>({
@@ -35,22 +37,22 @@ export const BridalCollection: React.FC = () => {
 
   // Duplicate 4 times for seamless continuous bi-directional loop
   const quadrupledEnsembles = [
-    ...BRIDAL_ENSEMBLES,
-    ...BRIDAL_ENSEMBLES,
-    ...BRIDAL_ENSEMBLES,
-    ...BRIDAL_ENSEMBLES,
+    ...bridalEnsembles,
+    ...bridalEnsembles,
+    ...bridalEnsembles,
+    ...bridalEnsembles,
   ];
 
   // Automatic silent auto-change of the Big Card every 4.5 seconds (no play button)
   useEffect(() => {
-    if (isHovered) return;
+    if (isHovered || bridalEnsembles.length === 0) return;
 
     const timer = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % BRIDAL_ENSEMBLES.length);
+      setActiveIndex((prev) => (prev + 1) % bridalEnsembles.length);
     }, 4500);
 
     return () => clearInterval(timer);
-  }, [isHovered]);
+  }, [isHovered, bridalEnsembles.length]);
 
   // Smooth GSAP crossfade on the Big Card whenever activeIndex changes
   useEffect(() => {
@@ -134,7 +136,7 @@ export const BridalCollection: React.FC = () => {
                 </div>
 
                 <span className="text-[10px] sm:text-[11px] font-mono text-monarch-gold-light bg-black/60 backdrop-blur-md px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-monarch-gold/30">
-                  0{activeIndex + 1} / 0{BRIDAL_ENSEMBLES.length}
+                  0{activeIndex + 1} / 0{bridalEnsembles.length}
                 </span>
               </div>
 
@@ -215,7 +217,7 @@ export const BridalCollection: React.FC = () => {
                   className="flex items-center gap-3 xs:gap-3.5 sm:gap-4.5 w-max py-1 px-1 sm:px-3"
                 >
                   {quadrupledEnsembles.map((ensemble, idx) => {
-                    const realIdx = idx % BRIDAL_ENSEMBLES.length;
+                    const realIdx = idx % (bridalEnsembles.length || 1);
                     const isCardActive = activeIndex === realIdx;
 
                     return (

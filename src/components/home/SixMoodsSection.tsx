@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useSectionFrames, FrameItem } from '@/hooks/useSectionFrames';
 
 // Top Guarantee Marquee Items
 const MARQUEE_ITEMS = [
@@ -15,7 +16,7 @@ const MARQUEE_ITEMS = [
 ];
 
 // Six Moods of Silk - Authentic Handloom Categories (Matching Screenshot 1)
-const SIX_MOODS = [
+const SIX_MOODS: FrameItem[] = [
   {
     title: 'KANJIVARAM SILK',
     subtitle: 'Royal Temple Weave',
@@ -55,6 +56,7 @@ const SIX_MOODS = [
 ];
 
 export const SixMoodsSection: React.FC = () => {
+  const moods = useSectionFrames('six-moods', SIX_MOODS);
   return (
     <section id="six-moods" className="relative w-full bg-[#FAF6F0] text-monarch-charcoal overflow-hidden">
       {/* 1. Top Luxury Marquee Ticker Ribbon */}
@@ -115,10 +117,10 @@ export const SixMoodsSection: React.FC = () => {
               className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory no-scrollbar gap-3.5 sm:gap-4 lg:grid lg:grid-cols-6 lg:gap-5 lg:overflow-visible pb-4 pt-1 lg:pb-0 lg:pt-0"
               style={{ WebkitOverflowScrolling: 'touch' }}
             >
-              {SIX_MOODS.map((mood) => (
+              {moods.map((mood) => (
                 <Link
                   key={mood.title}
-                  href={`/collections/${mood.slug}`}
+                  href={mood.ctaLink || `/collections/${mood.slug || 'designer-sarees'}`}
                   className="group flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1.5 w-[155px] xs:w-[175px] sm:w-[210px] shrink-0 snap-start lg:w-auto lg:shrink"
                 >
                   {/* Arch-topped Card */}

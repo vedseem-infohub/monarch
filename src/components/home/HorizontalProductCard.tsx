@@ -100,11 +100,10 @@ export const HorizontalProductCard: React.FC<HorizontalProductCardProps> = ({
                     e.stopPropagation();
                     setSelectedSize(size);
                   }}
-                  className={`w-5 h-5 text-[9px] xs:w-5.5 xs:h-5.5 xs:text-[10px] sm:w-6.5 sm:h-6.5 sm:text-xs rounded font-semibold flex items-center justify-center transition-all cursor-pointer ${
-                    isSelected
+                  className={`w-5 h-5 text-[9px] xs:w-5.5 xs:h-5.5 xs:text-[10px] sm:w-6.5 sm:h-6.5 sm:text-xs rounded font-semibold flex items-center justify-center transition-all cursor-pointer ${isSelected
                       ? 'bg-black text-white shadow-sm ring-1 ring-black scale-102'
                       : 'bg-[#F8F8F8] text-[#444444] border border-gray-200/90 hover:border-black hover:text-black'
-                  }`}
+                    }`}
                   aria-label={`Select size ${size}`}
                 >
                   {size}
@@ -123,11 +122,10 @@ export const HorizontalProductCard: React.FC<HorizontalProductCardProps> = ({
           <button
             type="button"
             onClick={handleAddToCart}
-            className={`w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 lg:w-8.5 lg:h-8.5 rounded-full flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md active:scale-90 cursor-pointer ${
-              added
+            className={`w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 lg:w-8.5 lg:h-8.5 rounded-full flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md active:scale-90 cursor-pointer ${added
                 ? 'bg-emerald-600 text-white'
                 : 'bg-[#E5A824] hover:bg-[#D49818] text-[#1A1A1A]'
-            }`}
+              }`}
             title="Add to Shopping Bag"
             aria-label="Add to Bag"
           >

@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import confetti from 'canvas-confetti';
 import {
   CheckCircle2,
@@ -12,12 +12,25 @@ import {
   ShieldCheck,
   Calendar,
   Truck,
-  Heart,
+  CreditCard,
+  Banknote,
+  ExternalLink,
+  MapPin,
 } from 'lucide-react';
+import { api } from '@/services/api';
+import { FORMAT_CURRENCY } from '@/data/products';
 
-export default function OrderSuccessPage() {
+function OrderSuccessContent() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const orderId = (params?.orderId as string) || 'MNRCH-2026-9812';
+
+  const queryPaymentId = searchParams.get('paymentId');
+  const queryMethod = searchParams.get('method');
+  const queryWaybill = searchParams.get('waybill');
+
+  const [order, setOrder] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Launch celebratory gold and maroon confetti
@@ -45,20 +58,36 @@ export default function OrderSuccessPage() {
       }
     };
     frame();
-  }, []);
+
+    // Fetch order details from backend
+    if (orderId) {
+      api.orders
+        .getById(orderId)
+        .then((data) => {
+          if (data) setOrder(data);
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    }
+  }, [orderId]);
 
   const handlePrint = () => {
     window.print();
   };
 
   const estimatedDelivery = new Date();
-  estimatedDelivery.setDate(estimatedDelivery.getDate() + 12);
+  estimatedDelivery.setDate(estimatedDelivery.getDate() + 4);
   const formattedDelivery = estimatedDelivery.toLocaleDateString('en-IN', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
     year: 'numeric',
   });
+
+  const paymentMethod = order?.paymentMethod || queryMethod || 'razorpay';
+  const paymentId = order?.razorpayPaymentId || queryPaymentId;
+  const waybill = order?.waybill || order?.trackingNumber || queryWaybill;
+  const isPaid = order?.paymentStatus === 'Paid' || paymentMethod === 'razorpay' || !!paymentId;
 
   return (
     <div className="bg-[#F7F0E5] text-monarch-charcoal min-h-screen pt-32 pb-24">
@@ -75,7 +104,7 @@ export default function OrderSuccessPage() {
             </div>
 
             <span className="text-xs font-nav uppercase tracking-[0.3em] text-monarch-maroon font-semibold block">
-              Official Commission Confirmed
+              Official Order Confirmed
             </span>
 
             <h1 className="font-serif text-3xl sm:text-5xl text-monarch-charcoal font-medium">
@@ -83,7 +112,7 @@ export default function OrderSuccessPage() {
             </h1>
 
             <p className="text-xs sm:text-sm text-monarch-charcoal/70 font-sans max-w-lg mx-auto leading-relaxed">
-              We have officially registered your royal commission. Our master karigars in Varanasi and Lucknow have received your bespoke dossier.
+              We have officially registered your royal commission. Your ensemble is placed in master tailoring, prepared for climate-controlled Delhivery Express dispatch.
             </p>
           </div>
 
@@ -108,6 +137,106 @@ export default function OrderSuccessPage() {
             </div>
           </div>
 
+          {/* Payment & Logistics Verified Status Badges */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Payment Badge */}
+            <div className="p-4 rounded-xl border bg-[#FAF7F2] border-monarch-beige flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                {paymentMethod === 'cod' ? (
+                  <Banknote className="w-5 h-5 text-amber-800" />
+                ) : (
+                  <CheckCircle2 className="w-5 h-5 text-emerald-700" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="text-[10px] font-nav uppercase tracking-wider text-monarch-maroon font-bold block">
+                  Payment Verification
+                </span>
+                <p className="font-serif text-sm font-semibold text-monarch-charcoal mt-0.5 truncate">
+                  {paymentMethod === 'cod'
+                    ? 'Pay on Delivery (Concierge COD)'
+                    : 'Authorized via Razorpay Gateway'}
+                </p>
+                <p className="text-[11px] text-monarch-charcoal/60 font-mono mt-0.5 truncate">
+                  {paymentId ? `Ref: ${paymentId}` : isPaid ? 'Status: Paid' : 'Status: Handover Settlement'}
+                </p>
+              </div>
+            </div>
+
+            {/* Delhivery Courier Badge */}
+            <div className="p-4 rounded-xl border bg-[#FAF7F2] border-monarch-beige flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                <Truck className="w-5 h-5 text-emerald-700" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="text-[10px] font-nav uppercase tracking-wider text-monarch-maroon font-bold block">
+                  Logistics Carrier
+                </span>
+                <p className="font-serif text-sm font-semibold text-monarch-charcoal mt-0.5">
+                  Delhivery Express Logistics
+                </p>
+                {waybill ? (
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[11px] font-mono text-monarch-maroon font-bold">
+                      AWB: {waybill}
+                    </span>
+                    <a
+                      href={`https://www.delhivery.com/track/package/${waybill}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] font-nav text-monarch-maroon underline inline-flex items-center gap-0.5 hover:text-monarch-gold"
+                    >
+                      <span>Track</span>
+                      <ExternalLink className="w-2.5 h-2.5" />
+                    </a>
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-monarch-charcoal/60 font-sans mt-0.5">
+                    Waybill manifesting in progress
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Itemized Order & Delivery Fee Breakdown */}
+          {order && (
+            <div className="bg-[#FAF7F2] p-5 rounded-xl border border-monarch-beige/80 space-y-3 text-xs">
+              <h4 className="font-serif text-sm font-semibold text-monarch-charcoal border-b border-monarch-beige/60 pb-2">
+                Settlement Statement
+              </h4>
+              <div className="space-y-1.5 text-monarch-charcoal/80">
+                <div className="flex justify-between">
+                  <span>Ensemble Subtotal</span>
+                  <span className="font-serif font-medium">{FORMAT_CURRENCY(order.subtotal || order.total)}</span>
+                </div>
+                {order.discount > 0 && (
+                  <div className="flex justify-between text-green-700">
+                    <span>Privilege Courtesy</span>
+                    <span>-{FORMAT_CURRENCY(order.discount)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center text-monarch-charcoal">
+                  <span className="flex items-center gap-1.5">
+                    <Truck className="w-3.5 h-3.5 text-monarch-maroon" />
+                    <strong>Delhivery Express Delivery Fee:</strong>
+                  </span>
+                  <span className="font-serif font-bold">
+                    {order.shippingFee === 0 || !order.shippingFee ? (
+                      <span className="text-emerald-700 font-semibold">Complimentary</span>
+                    ) : (
+                      FORMAT_CURRENCY(order.shippingFee)
+                    )}
+                  </span>
+                </div>
+                <div className="border-t border-monarch-beige/80 pt-2 flex justify-between items-baseline font-serif font-bold text-monarch-maroon text-base">
+                  <span>Total Settled</span>
+                  <span>{FORMAT_CURRENCY(order.total)}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Next Steps for Bespoke Couture */}
           <div className="space-y-4 pt-2">
             <h3 className="font-serif text-lg font-medium text-monarch-charcoal border-b border-monarch-beige pb-2">
@@ -126,8 +255,8 @@ export default function OrderSuccessPage() {
               <div className="flex items-start gap-3">
                 <Truck className="w-4 h-4 text-monarch-maroon shrink-0 mt-0.5" />
                 <div>
-                  <strong className="text-monarch-charcoal">Insured Climate-Cased Dispatch:</strong>{' '}
-                  Your ensemble will be steamed, hand-packed in our cedarwood presentation box, and tracked under sovereign courier insurance.
+                  <strong className="text-monarch-charcoal">Delhivery Insured Dispatch:</strong>{' '}
+                  Your ensemble will be steamed, hand-packed in our cedarwood presentation box, and tracked via Delhivery Express under sovereign transit insurance.
                 </div>
               </div>
 
@@ -162,5 +291,19 @@ export default function OrderSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function OrderSuccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="bg-[#F7F0E5] min-h-screen pt-32 pb-24 text-center font-serif text-monarch-charcoal">
+          Loading Royal Receipt...
+        </div>
+      }
+    >
+      <OrderSuccessContent />
+    </Suspense>
   );
 }

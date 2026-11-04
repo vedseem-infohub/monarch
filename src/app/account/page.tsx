@@ -2,38 +2,28 @@
 
 import React, { useState } from 'react';
 import {
-  User,
-  Calendar,
   Sparkles,
-  MapPin,
-  Clock,
   CheckCircle2,
   Package,
-  ShieldCheck,
   ArrowRight,
+  LogOut,
+  User as UserIcon,
+  ShoppingBag,
+  MapPin,
+  Mail,
+  Phone,
+  ShieldCheck,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 import { FORMAT_CURRENCY } from '@/data/products';
 
 export default function AccountPage() {
-  const [activeTab, setActiveTab] = useState<'appointments' | 'orders' | 'profile'>('appointments');
-  const [isBooked, setIsBooked] = useState(false);
+  const router = useRouter();
+  const { user, isAuthenticated, logout, fillDemoUser } = useAuth();
 
-  const [appointmentForm, setAppointmentForm] = useState({
-    name: 'Maharani Radhika Devi',
-    email: 'radhika@monarch-client.com',
-    phone: '+91 98200 12345',
-    boutique: 'The Darbar Hall · Mehrauli, New Delhi',
-    date: '2026-11-15',
-    time: '14:00',
-    ensembleType: 'Bridal Trousseau & Groom Coordination',
-    partySize: '3 guests',
-  });
-
-  const handleBook = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsBooked(true);
-  };
+  const [activeTab, setActiveTab] = useState<'orders' | 'profile'>('orders');
 
   const pastOrders = [
     {
@@ -58,6 +48,54 @@ export default function AccountPage() {
     },
   ];
 
+  if (!isAuthenticated) {
+    return (
+      <div className="bg-[#F7F0E5] text-monarch-charcoal min-h-screen pt-32 pb-24 flex items-center justify-center px-4">
+        <div className="max-w-xl w-full mx-auto bg-[#240E14] text-monarch-ivory rounded-3xl p-8 sm:p-12 border border-monarch-gold/40 shadow-2xl text-center space-y-6">
+          <div className="w-16 h-16 rounded-full bg-monarch-maroon border-2 border-monarch-gold flex items-center justify-center text-monarch-gold text-2xl font-serif mx-auto">
+            M
+          </div>
+          <div className="space-y-2">
+            <span className="text-[10px] font-nav uppercase tracking-[0.3em] text-monarch-gold-light">
+              Royal Sovereign Sanctuary
+            </span>
+            <h1 className="font-serif text-3xl sm:text-4xl text-monarch-ivory font-medium">
+              Patron Identification Required
+            </h1>
+            <p className="text-xs sm:text-sm text-monarch-beige/80 font-sans max-w-md mx-auto leading-relaxed">
+              To review your ethnic wear orders, delivery dispatches, and dedicated patron dossier, please enter your royal credentials.
+            </p>
+          </div>
+
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link
+              href="/login"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-monarch-maroon hover:bg-monarch-maroon-light text-monarch-ivory font-nav text-xs uppercase tracking-widest font-semibold border border-monarch-gold/50 transition-all shadow-md"
+            >
+              Privy Sign In
+            </Link>
+            <Link
+              href="/signup"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-transparent hover:bg-white/5 text-monarch-gold font-nav text-xs uppercase tracking-widest font-semibold border border-monarch-gold/40 transition-all"
+            >
+              Patron Registration
+            </Link>
+          </div>
+
+          <div className="pt-4 border-t border-monarch-gold/20">
+            <button
+              onClick={fillDemoUser}
+              className="inline-flex items-center gap-2 text-xs font-nav uppercase tracking-wider text-monarch-gold-light hover:text-white transition-colors"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-monarch-gold" />
+              <span>Continue with Demo Patron Profile</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-[#F7F0E5] text-monarch-charcoal min-h-screen pt-32 pb-24">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -65,202 +103,88 @@ export default function AccountPage() {
         <div className="bg-[#240E14] text-monarch-ivory rounded-2xl p-6 sm:p-10 border border-monarch-gold/40 shadow-xl mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-5">
             <div className="w-16 h-16 rounded-full bg-monarch-maroon border-2 border-monarch-gold flex items-center justify-center text-monarch-gold text-2xl font-serif">
-              M
+              {user?.name ? user.name.charAt(0).toUpperCase() : 'M'}
             </div>
             <div>
               <span className="text-[10px] font-nav uppercase tracking-[0.3em] text-monarch-gold-light">
-                Royal Sovereign Patron
+                {user?.status || 'Royal Sovereign Patron'}
               </span>
               <h1 className="font-serif text-2xl sm:text-3xl font-medium text-monarch-ivory mt-0.5">
-                Maharani Radhika Devi
+                {user?.name || 'Maharani Radhika Devi'}
               </h1>
               <p className="text-xs text-monarch-beige/70 font-sans mt-0.5">
-                Member ID: MONARCH-VIP-0042 · Exclusive Bridal Registry
+                Member ID: {user?.memberId || 'MONARCH-VIP-0042'} · Exclusive Ethnic Wear Patron
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 bg-monarch-burgundy/80 px-4 py-2 rounded-xl border border-monarch-gold/30 text-xs">
-            <Sparkles className="w-4 h-4 text-monarch-gold" />
-            <div>
-              <span className="block text-monarch-gold-light font-nav uppercase text-[10px]">
-                Dedicated Stylist
-              </span>
-              <span className="text-monarch-ivory font-serif">Master Ananya Sen</span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 bg-monarch-burgundy/80 px-4 py-2 rounded-xl border border-monarch-gold/30 text-xs">
+              <Sparkles className="w-4 h-4 text-monarch-gold" />
+              <div>
+                <span className="block text-monarch-gold-light font-nav uppercase text-[10px]">
+                  Couture Concierge
+                </span>
+                <span className="text-monarch-ivory font-serif">Master Ananya Sen</span>
+              </div>
             </div>
+
+            <button
+              onClick={() => {
+                logout();
+                router.push('/login');
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-monarch-beige hover:text-white border border-white/10 text-xs font-nav uppercase tracking-wider transition-all"
+              title="Sign Out of Privy Account"
+            >
+              <LogOut className="w-3.5 h-3.5 text-monarch-gold" />
+              <span className="hidden sm:inline">Sign Out</span>
+            </button>
           </div>
         </div>
 
         {/* Tab Switchers */}
         <div className="flex items-center gap-3 border-b border-monarch-beige pb-4 mb-8">
           <button
-            onClick={() => setActiveTab('appointments')}
-            className={`px-5 py-2.5 rounded-full text-xs font-nav uppercase tracking-wider transition-all ${
-              activeTab === 'appointments'
-                ? 'bg-monarch-maroon text-monarch-ivory font-semibold shadow'
-                : 'bg-white text-monarch-charcoal border border-monarch-beige hover:border-monarch-gold'
-            }`}
-          >
-            VIP Salon Appointment
-          </button>
-
-          <button
             onClick={() => setActiveTab('orders')}
-            className={`px-5 py-2.5 rounded-full text-xs font-nav uppercase tracking-wider transition-all ${
+            className={`px-6 py-2.5 rounded-full text-xs font-nav uppercase tracking-wider transition-all flex items-center gap-2 ${
               activeTab === 'orders'
                 ? 'bg-monarch-maroon text-monarch-ivory font-semibold shadow'
                 : 'bg-white text-monarch-charcoal border border-monarch-beige hover:border-monarch-gold'
             }`}
           >
-            Past Commissions ({pastOrders.length})
+            <ShoppingBag className="w-3.5 h-3.5" />
+            <span>My Orders &amp; Dispatches ({pastOrders.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={`px-6 py-2.5 rounded-full text-xs font-nav uppercase tracking-wider transition-all flex items-center gap-2 ${
+              activeTab === 'profile'
+                ? 'bg-monarch-maroon text-monarch-ivory font-semibold shadow'
+                : 'bg-white text-monarch-charcoal border border-monarch-beige hover:border-monarch-gold'
+            }`}
+          >
+            <UserIcon className="w-3.5 h-3.5" />
+            <span>Patron Profile &amp; Address</span>
           </button>
         </div>
 
-        {/* Tab 1: Book VIP Bridal Salon Appointment */}
-        {activeTab === 'appointments' && (
-          <div className="bg-white p-6 sm:p-10 rounded-2xl border border-monarch-beige/80 shadow-md max-w-3xl">
-            <div className="border-b border-monarch-beige pb-4 mb-6">
-              <span className="text-xs font-nav uppercase tracking-[0.25em] text-monarch-maroon font-semibold block mb-1">
-                Private Trunk &amp; Fitting Suite
-              </span>
-              <h3 className="font-serif text-2xl text-monarch-charcoal font-medium">
-                Reserve an Exclusive Atelier Appointment
-              </h3>
-              <p className="text-xs text-monarch-charcoal/70 font-sans mt-1">
-                Enjoy champagne service, high-tea, and 1-on-1 bespoke styling with our master couturiers.
-              </p>
-            </div>
-
-            {isBooked ? (
-              <div className="bg-green-50 border border-green-200 rounded-2xl p-8 text-center space-y-4 animate-fadeIn">
-                <CheckCircle2 className="w-12 h-12 text-green-700 mx-auto" />
-                <h4 className="font-serif text-2xl text-monarch-charcoal font-medium">
-                  Appointment Reserved with Honor
-                </h4>
-                <p className="text-xs text-monarch-charcoal/80 font-sans max-w-md mx-auto">
-                  We look forward to welcoming you to <strong>{appointmentForm.boutique}</strong> on{' '}
-                  <strong>{appointmentForm.date}</strong> at <strong>{appointmentForm.time}</strong>.
-                  A formal invitation has been dispatched to your email.
-                </p>
-                <button
-                  onClick={() => setIsBooked(false)}
-                  className="mt-4 px-6 py-2.5 rounded-full bg-monarch-maroon text-monarch-ivory text-xs font-nav uppercase tracking-wider"
-                >
-                  Book Another Appointment
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleBook} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-nav uppercase tracking-wider text-monarch-maroon font-semibold mb-1">
-                      Full Name
-                    </label>
-                    <input
-                      type="text"
-                      value={appointmentForm.name}
-                      onChange={(e) => setAppointmentForm({ ...appointmentForm, name: e.target.value })}
-                      required
-                      className="w-full px-4 py-2.5 text-xs bg-monarch-ivory border border-monarch-beige rounded-lg"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-nav uppercase tracking-wider text-monarch-maroon font-semibold mb-1">
-                      Phone Number
-                    </label>
-                    <input
-                      type="tel"
-                      value={appointmentForm.phone}
-                      onChange={(e) => setAppointmentForm({ ...appointmentForm, phone: e.target.value })}
-                      required
-                      className="w-full px-4 py-2.5 text-xs bg-monarch-ivory border border-monarch-beige rounded-lg"
-                    />
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-nav uppercase tracking-wider text-monarch-maroon font-semibold mb-1">
-                      Select Boutique Flagship
-                    </label>
-                    <select
-                      value={appointmentForm.boutique}
-                      onChange={(e) => setAppointmentForm({ ...appointmentForm, boutique: e.target.value })}
-                      className="w-full px-4 py-2.5 text-xs bg-monarch-ivory border border-monarch-beige rounded-lg font-sans"
-                    >
-                      <option value="The Darbar Hall · Mehrauli, New Delhi">
-                        The Darbar Hall · Mehrauli Heritage Corridor, New Delhi
-                      </option>
-                      <option value="Sea Face Atelier · Worli, Mumbai">
-                        Sea Face Atelier · Worli, Mumbai
-                      </option>
-                      <option value="Mayfair Private Suite · London, UK">
-                        Mayfair Private Suite · London, UK
-                      </option>
-                      <option value="DIFC Royal Salon · Dubai, UAE">
-                        DIFC Royal Salon · Dubai, UAE
-                      </option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-nav uppercase tracking-wider text-monarch-maroon font-semibold mb-1">
-                      Preferred Date
-                    </label>
-                    <input
-                      type="date"
-                      value={appointmentForm.date}
-                      onChange={(e) => setAppointmentForm({ ...appointmentForm, date: e.target.value })}
-                      required
-                      className="w-full px-4 py-2.5 text-xs bg-monarch-ivory border border-monarch-beige rounded-lg"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-nav uppercase tracking-wider text-monarch-maroon font-semibold mb-1">
-                      Preferred Time Slot
-                    </label>
-                    <select
-                      value={appointmentForm.time}
-                      onChange={(e) => setAppointmentForm({ ...appointmentForm, time: e.target.value })}
-                      className="w-full px-4 py-2.5 text-xs bg-monarch-ivory border border-monarch-beige rounded-lg font-sans"
-                    >
-                      <option value="11:00 AM">11:00 AM (Morning High Tea)</option>
-                      <option value="02:00 PM">02:00 PM (Afternoon Fitting)</option>
-                      <option value="05:00 PM">05:00 PM (Sunset Bridal Salon)</option>
-                      <option value="07:00 PM">07:00 PM (Evening Private Trunk)</option>
-                    </select>
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-nav uppercase tracking-wider text-monarch-maroon font-semibold mb-1">
-                      Ensemble Interest &amp; Wedding Date
-                    </label>
-                    <input
-                      type="text"
-                      value={appointmentForm.ensembleType}
-                      onChange={(e) => setAppointmentForm({ ...appointmentForm, ensembleType: e.target.value })}
-                      className="w-full px-4 py-2.5 text-xs bg-monarch-ivory border border-monarch-beige rounded-lg"
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-4 flex justify-end">
-                  <button
-                    type="submit"
-                    className="px-8 py-3.5 rounded-full bg-monarch-maroon hover:bg-monarch-maroon-dark text-monarch-ivory font-nav text-xs uppercase tracking-widest font-semibold flex items-center gap-2 shadow-md"
-                  >
-                    <span>Confirm Private Salon Reservation</span>
-                    <ArrowRight className="w-4 h-4 text-monarch-gold" />
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        )}
-
-        {/* Tab 2: Past Commissions */}
+        {/* Tab 1: Past Commissions & Orders */}
         {activeTab === 'orders' && (
           <div className="space-y-6">
+            <div className="flex items-center justify-between pb-2">
+              <h2 className="font-serif text-2xl text-monarch-charcoal font-normal">
+                Recent Ethnic Wear Orders
+              </h2>
+              <Link
+                href="/collections/all"
+                className="text-xs font-nav uppercase tracking-wider text-monarch-maroon hover:underline flex items-center gap-1"
+              >
+                <span>Shop New Arrivals</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
             {pastOrders.map((order) => (
               <div
                 key={order.id}
@@ -296,12 +220,92 @@ export default function AccountPage() {
                     <Package className="w-3.5 h-3.5" />
                     <span>{order.status}</span>
                   </span>
-                  <button className="text-xs font-nav uppercase tracking-wider text-monarch-maroon hover:underline">
-                    View Commission Dossier
-                  </button>
+                  <span className="text-xs text-monarch-charcoal/60 font-sans">
+                    Insured White-Glove Courier Delivery
+                  </span>
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Tab 2: Patron Profile & Shipping Information */}
+        {activeTab === 'profile' && (
+          <div className="bg-white p-6 sm:p-10 rounded-2xl border border-monarch-beige/80 shadow-md max-w-3xl space-y-8">
+            <div className="border-b border-monarch-beige pb-4">
+              <span className="text-xs font-nav uppercase tracking-[0.25em] text-monarch-maroon font-semibold block mb-1">
+                Sovereign Dossier
+              </span>
+              <h3 className="font-serif text-2xl text-monarch-charcoal font-medium">
+                Patron Profile &amp; Shipping Preferences
+              </h3>
+              <p className="text-xs text-monarch-charcoal/70 font-sans mt-1">
+                Your registered delivery destination and personal sizing preferences for luxury ethnic wear orders.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="p-4 rounded-xl bg-[#FAF8F5] border border-black/5 space-y-1">
+                <span className="text-[10px] font-nav uppercase tracking-wider text-monarch-maroon font-semibold flex items-center gap-1.5">
+                  <UserIcon className="w-3.5 h-3.5 text-monarch-gold" />
+                  Full Name
+                </span>
+                <p className="font-serif text-base text-[#1C1715] font-medium">
+                  {user?.name || 'Maharani Radhika Devi'}
+                </p>
+              </div>
+
+              <div className="p-4 rounded-xl bg-[#FAF8F5] border border-black/5 space-y-1">
+                <span className="text-[10px] font-nav uppercase tracking-wider text-monarch-maroon font-semibold flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5 text-monarch-gold" />
+                  Email Address
+                </span>
+                <p className="text-xs text-[#1C1715] font-sans">
+                  {user?.email || 'radhika@monarch-client.com'}
+                </p>
+              </div>
+
+              <div className="p-4 rounded-xl bg-[#FAF8F5] border border-black/5 space-y-1">
+                <span className="text-[10px] font-nav uppercase tracking-wider text-monarch-maroon font-semibold flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5 text-monarch-gold" />
+                  Contact Telephone
+                </span>
+                <p className="text-xs text-[#1C1715] font-sans">
+                  {user?.phone || '+91 98200 12345'}
+                </p>
+              </div>
+
+              <div className="p-4 rounded-xl bg-[#FAF8F5] border border-black/5 space-y-1">
+                <span className="text-[10px] font-nav uppercase tracking-wider text-monarch-maroon font-semibold flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-monarch-gold" />
+                  Patron Privilege Tier
+                </span>
+                <p className="text-xs text-[#1C1715] font-sans font-medium">
+                  {user?.status || 'Imperial Sovereign'}{' '}
+                  <span className="text-[#C7A15B]">(Complimentary Insured Delivery)</span>
+                </p>
+              </div>
+            </div>
+
+            <div className="p-5 rounded-xl bg-[#FAF8F5] border border-black/5 space-y-2">
+              <span className="text-[10px] font-nav uppercase tracking-wider text-monarch-maroon font-semibold flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-monarch-gold" />
+                Primary Shipping Destination
+              </span>
+              <p className="text-xs text-[#1C1715] font-sans leading-relaxed">
+                Villa 14, Royal Palm Estates, Mehrauli-Gurgaon Road, New Delhi, 110030, India
+              </p>
+            </div>
+
+            <div className="pt-2 flex justify-between items-center border-t border-monarch-beige pt-4">
+              <Link
+                href="/collections/all"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-monarch-maroon hover:bg-monarch-maroon-dark text-white text-xs font-nav uppercase tracking-wider font-semibold transition-all shadow-md"
+              >
+                <span>Continue Shopping Ethnic Wear</span>
+                <ArrowRight className="w-4 h-4 text-monarch-gold" />
+              </Link>
+            </div>
           </div>
         )}
       </div>

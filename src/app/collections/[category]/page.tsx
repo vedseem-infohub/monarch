@@ -4,6 +4,7 @@ import { PRODUCTS } from '@/data/products';
 import { ALL_CATEGORIES } from '@/data/categories';
 import { CollectionBrowser } from '@/components/collection/CollectionBrowser';
 import { Product } from '@/types';
+import { api } from '@/services/api';
 
 interface PageProps {
   params: Promise<{
@@ -67,6 +68,19 @@ export default async function CategoryCollectionPage({ params, searchParams }: P
   let genderFilter: 'women' | 'men' | undefined = queryGender;
   let initialOccasion = queryOccasion;
   let initialFabric = queryFabric;
+
+  // Live products from Backend API with fallback
+  let allProducts = PRODUCTS;
+  try {
+    const liveProducts = await api.products.getAll();
+    if (Array.isArray(liveProducts) && liveProducts.length > 0) {
+      const liveIds = new Set(liveProducts.map((p) => p.id));
+      const remainingInitial = PRODUCTS.filter((p) => !liveIds.has(p.id));
+      allProducts = [...liveProducts, ...remainingInitial];
+    }
+  } catch {
+    // Backend offline, fallback to built-in archive
+  }
 
   // Check if category is a Silk Mood
   const SILK_KEY_MAP: Record<string, string> = {
@@ -135,7 +149,7 @@ export default async function CategoryCollectionPage({ params, searchParams }: P
   } else {
     const matchedCategory = ALL_CATEGORIES.find((c) => c.slug === category);
     if (!matchedCategory) {
-      const hasProducts = PRODUCTS.some((p) => p.category === category);
+      const hasProducts = allProducts.some((p) => p.category === category);
       if (!hasProducts) {
         notFound();
       }
@@ -148,7 +162,7 @@ export default async function CategoryCollectionPage({ params, searchParams }: P
 
   return (
     <CollectionBrowser
-      initialProducts={PRODUCTS}
+      initialProducts={allProducts}
       collectionTitle={title}
       collectionDescription={description}
       activeCategorySlug={activeSlug}

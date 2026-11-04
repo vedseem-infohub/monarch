@@ -95,7 +95,7 @@ export const AttentionAccordionCard: React.FC<AttentionAccordionCardProps> = ({
       {/* Background Editorial Image: Dark in State 1, Full Color in State 2 */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={product.images[0]}
+        src={product.images?.[0] || '/images/moods/banarasi_brocade.jpg'}
         alt={product.name}
         className={`absolute inset-0 w-full h-full object-cover transition-all duration-[900ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
           isActive

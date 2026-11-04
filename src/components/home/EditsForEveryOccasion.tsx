@@ -3,8 +3,9 @@
 import React, { useRef } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { EDITS_FOR_OCCASION_DATA } from '@/data/editsForOccasion';
+import { EDITS_FOR_OCCASION_DATA, OccasionEditProduct } from '@/data/editsForOccasion';
 import { EditorialOccasionCard } from './EditorialOccasionCard';
+import { useSectionFrames } from '@/hooks/useSectionFrames';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
@@ -16,6 +17,8 @@ if (typeof window !== 'undefined') {
 export const EditsForEveryOccasion: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const cardsContainerRef = useRef<HTMLDivElement>(null);
+
+  const edits = useSectionFrames<OccasionEditProduct>('edits-occasion', EDITS_FOR_OCCASION_DATA.edits);
 
   // Safe GSAP entrance animation with guaranteed visibility fallback
   useGSAP(
@@ -85,7 +88,7 @@ export const EditsForEveryOccasion: React.FC = () => {
           ref={cardsContainerRef}
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 lg:gap-6 w-full min-h-[460px]"
         >
-          {EDITS_FOR_OCCASION_DATA.edits.map((edit, idx) => (
+          {edits.map((edit, idx) => (
             <EditorialOccasionCard key={edit.id} edit={edit} priority={idx === 0} />
           ))}
         </div>

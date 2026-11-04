@@ -289,7 +289,7 @@ export const ROYAL_CLIENT_DIARIES: ClientDiaryEntry[] = [
 ];
 
 // =========================================================================
-// 3. FLAGSHIP SALONS & PRIVATE SUITE LOCATIONS
+// 3. FLAGSHIP BOUTIQUES & HERITAGE GALLERIES
 // =========================================================================
 export const SALON_LOCATIONS: SalonLocation[] = [
   {
@@ -306,36 +306,36 @@ export const SALON_LOCATIONS: SalonLocation[] = [
     curatorName: 'Pt. Raghunath Mishra',
     curatorRole: 'Master Draper & Archival Weaver',
     salonQuote:
-      'Set amidst ancient sandstone arches, our flagship salon houses over 2,000 archival handloom weaves and three private fitting chambers.',
-    suitesCount: '3 Private Suites',
+      'Set amidst ancient sandstone arches, our flagship boutique houses over 2,000 archival handloom ethnic wear weaves and master artisan galleries.',
+    suitesCount: 'Flagship Gallery',
     amenities: [
-      'Private Fitting Chambers',
+      'Ethnic Wear Couture Galleries',
       'Archival Silk Vault (2,000+ Weaves)',
       '1-on-1 Master Draper Consultation',
-      'Complimentary Vintage Champagne Service',
+      'Complimentary Heritage Hospitality',
     ],
     timeSlots: ['11:00 AM - 01:00 PM', '02:00 PM - 04:00 PM', '04:30 PM - 06:30 PM', '07:00 PM - 09:00 PM'],
   },
   {
     slug: 'mumbai',
     city: 'Mumbai',
-    name: 'Kala Ghoda Heritage Salon',
+    name: 'Kala Ghoda Heritage Boutique',
     subheading: 'Colonial Ceilings & Teakwood Looms',
     address: 'Forbes Street, Ropewalk Lane, Fort',
     country: 'India',
     phone: '+91 22 6128 4400',
     email: 'mumbai.atelier@monarch-couture.com',
-    badge: 'Artisan Suite',
+    badge: 'Artisan Boutique',
     salonImage: '/images/footer-heritage-drift.jpg',
     curatorName: 'Gayatri Sen',
     curatorRole: 'Bridal Styling Director',
     salonQuote:
-      'Located in the historic art district of Kala Ghoda, providing an intimate sanctuary for bespoke royal trousseau curation.',
-    suitesCount: '2 Private Suites',
+      'Located in the historic art district of Kala Ghoda, providing an intimate boutique for bespoke royal trousseau and handloom curations.',
+    suitesCount: 'Heritage Gallery',
     amenities: [
       'Heritage Teakwood Looms',
       'Custom Color Dye Studio',
-      'Bridal Trousseau Styling Chamber',
+      'Bridal Trousseau Styling Gallery',
       'Private Valet & Concierge Escort',
     ],
     timeSlots: ['11:00 AM - 01:00 PM', '02:00 PM - 04:00 PM', '04:30 PM - 06:30 PM'],
@@ -343,23 +343,23 @@ export const SALON_LOCATIONS: SalonLocation[] = [
   {
     slug: 'london',
     city: 'London',
-    name: 'Mayfair Private Suite',
+    name: 'Mayfair Heritage Boutique',
     subheading: 'Discreet Mount Street Townhouse',
     address: 'Mount Street, Mayfair, London W1K 2RN',
     country: 'United Kingdom',
     phone: '+44 20 7946 0880',
     email: 'london.atelier@monarch-couture.com',
-    badge: 'International Suite',
+    badge: 'International Boutique',
     salonImage: '/images/panoramic/ensemble_saanjh.jpg',
     curatorName: 'Eleanor Vance',
-    curatorRole: 'Mayfair Salon Director',
+    curatorRole: 'Mayfair Boutique Director',
     salonQuote:
-      'Bringing the majestic craft of Indian royal looms to Mayfair, offering private bespoke trunk viewings and overseas bridal fittings.',
-    suitesCount: '1 VIP Townhouse Suite',
+      'Bringing the majestic craft of Indian royal looms to Mayfair, offering curated trunk viewings of ethnic wear and bridal drapes.',
+    suitesCount: 'Mayfair Gallery',
     amenities: [
-      'Discreet Mayfair Townhouse Suite',
+      'Discreet Mayfair Townhouse Gallery',
       'Archival Trunk Curation',
-      'International Bridal Fitting Escort',
+      'International White-Glove Delivery',
       'Direct Kashi Karigar Video Link',
     ],
     timeSlots: ['10:30 AM - 12:30 PM', '01:30 PM - 03:30 PM', '04:00 PM - 06:00 PM'],
@@ -369,7 +369,7 @@ export const SALON_LOCATIONS: SalonLocation[] = [
     city: 'Virtual VIP',
     name: 'Global Haute Couture Concierge',
     subheading: 'Lake Palace Studio & 4K Digital Lounge',
-    address: 'High-Definition 1-on-1 Digital Salon Studio',
+    address: 'High-Definition 1-on-1 Digital Concierge Studio',
     country: 'Worldwide',
     phone: '+91 800 666 2724',
     email: 'vip.concierge@monarch-couture.com',
@@ -378,13 +378,13 @@ export const SALON_LOCATIONS: SalonLocation[] = [
     curatorName: 'Aarav Singhania',
     curatorRole: 'Global Couture Concierge',
     salonQuote:
-      'Ultra-high-definition 4K video consultation, fabric swatch delivery to your doorstep, and bespoke international commissioning.',
-    suitesCount: 'Worldwide Digital Suites',
+      'Ultra-high-definition 4K video consultation, fabric swatch delivery to your doorstep, and bespoke international shipping for fine ethnic wear.',
+    suitesCount: 'Worldwide Digital Concierge',
     amenities: [
       '4K Ultra-HD Drape Analysis',
       'Physical Swatch Mailer Delivery',
       'Worldwide Insured Air Courier',
-      'Custom Digital Body Avatar Mapping',
+      'Custom Sizing & Measurement Assistance',
     ],
     timeSlots: ['12:00 PM - 01:30 PM IST', '04:00 PM - 05:30 PM IST', '08:00 PM - 09:30 PM IST'],
   },
@@ -396,8 +396,8 @@ export const SALON_LOCATIONS: SalonLocation[] = [
 export const ATELIER_EXPERIENCES: AtelierExperience[] = [
   {
     id: 'bridal-trousseau',
-    title: 'Bridal Trousseau & Lehenga Fitting',
-    tagline: 'Private fitting room, champagne service, and custom drape consultation with a senior stylist.',
+    title: 'Bridal Trousseau & Lehenga Curation',
+    tagline: 'Personalized ethnic wear drape consultation with senior royal stylists.',
     recommendedDuration: '120 Mins',
   },
   {

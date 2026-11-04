@@ -6,6 +6,16 @@ export interface ColorVariant {
   image?: string;
 }
 
+export interface ProductVariant {
+  id: string;
+  sku: string;
+  size: string;
+  color: string;
+  price: number;
+  stock: number;
+  image?: string;
+}
+
 export interface ProductAudioTrack {
   title: string;
   artist: string;
@@ -74,6 +84,7 @@ export interface Product {
   images: string[];
   colors: ColorVariant[];
   sizes: string[];
+  variants?: ProductVariant[];
   fabric: string;
   embroidery: string;
   occasion: string[];
@@ -90,6 +101,9 @@ export interface Product {
 
   // Unified Backend Area Reflection
   sectionMetadata?: SectionMetadata;
+  sectionKey?: string;
+  sectionFrameId?: string;
+  ctaLink?: string;
 }
 
 export interface CustomMeasurements {

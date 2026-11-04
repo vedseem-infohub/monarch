@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
+import { useAuth } from '@/context/AuthContext';
 import { Search, Heart, ShoppingBag, User, Menu, X, ChevronDown, Sparkles } from 'lucide-react';
 import { MegaMenu } from './MegaMenu';
 import { SearchOverlay } from './SearchOverlay';
@@ -25,6 +26,7 @@ export const Header: React.FC = () => {
 
   const { totalCount, setIsCartOpen } = useCart();
   const { wishlistCount } = useWishlist();
+  const { isAuthenticated, user } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -165,13 +167,13 @@ export const Header: React.FC = () => {
                   Collections
                 </Link>
 
-                <Link
+                {/* <Link
                   href="/our-craft"
                   onMouseEnter={() => setActiveMenu(null)}
                   className="font-nav text-xs tracking-widest uppercase text-monarch-ivory/95 hover:text-monarch-gold-light transition-colors [text-shadow:_0_1px_4px_rgba(0,0,0,0.85)]"
                 >
                   Our Craft
-                </Link>
+                </Link> */}
               </nav>
             </div>
 
@@ -200,7 +202,7 @@ export const Header: React.FC = () => {
               </button>
 
               <Link
-                href="/account"
+                href={isAuthenticated ? '/account' : '/login'}
                 className="hidden sm:block text-monarch-ivory/95 hover:text-monarch-gold p-1.5 transition-colors [filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.85))]"
                 aria-label="Royal concierge and account"
               >
@@ -258,11 +260,10 @@ export const Header: React.FC = () => {
           />
 
           <div
-            className={`absolute inset-y-0 left-0 w-4/5 max-w-sm text-monarch-ivory p-6 flex flex-col justify-between overflow-y-auto transition-colors duration-500 ${
-              isGlossy
+            className={`absolute inset-y-0 left-0 w-4/5 max-w-sm text-monarch-ivory p-6 flex flex-col justify-between overflow-y-auto transition-colors duration-500 ${isGlossy
                 ? 'bg-gradient-to-b from-black/85 via-black/75 to-black/60 backdrop-blur-md border-none'
                 : 'bg-[#12070A] border-r border-monarch-gold/30'
-            }`}
+              }`}
           >
             <div>
               <div className="flex items-center justify-between pb-6 border-b border-monarch-gold/25">
@@ -292,9 +293,8 @@ export const Header: React.FC = () => {
                   >
                     <span>Women</span>
                     <ChevronDown
-                      className={`w-4 h-4 text-monarch-gold transition-transform ${
-                        mobileExpanded === 'women' ? 'rotate-180' : ''
-                      }`}
+                      className={`w-4 h-4 text-monarch-gold transition-transform ${mobileExpanded === 'women' ? 'rotate-180' : ''
+                        }`}
                     />
                   </button>
                   {mobileExpanded === 'women' && (
@@ -323,9 +323,8 @@ export const Header: React.FC = () => {
                   >
                     <span>Men</span>
                     <ChevronDown
-                      className={`w-4 h-4 text-monarch-gold transition-transform ${
-                        mobileExpanded === 'men' ? 'rotate-180' : ''
-                      }`}
+                      className={`w-4 h-4 text-monarch-gold transition-transform ${mobileExpanded === 'men' ? 'rotate-180' : ''
+                        }`}
                     />
                   </button>
                   {mobileExpanded === 'men' && (
@@ -380,12 +379,12 @@ export const Header: React.FC = () => {
 
             <div className="pt-6 border-t border-monarch-gold/25 space-y-3">
               <Link
-                href="/account"
+                href={isAuthenticated ? '/account' : '/login'}
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="flex items-center gap-2 text-xs font-nav uppercase tracking-wider text-monarch-gold"
               >
                 <User className="w-4 h-4" />
-                <span>Royal Concierge &amp; Account</span>
+                <span>{isAuthenticated ? (user?.name || 'Royal Patron Suite') : 'Privy Sign In & Registry'}</span>
               </Link>
               <p className="text-[10px] text-monarch-beige/50 font-sans">
                 A Legacy Woven in Elegance · MONARCH 2026

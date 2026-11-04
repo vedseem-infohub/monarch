@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { CartItem, Product, PromoCode, CustomMeasurements } from '@/types';
 import { PROMO_CODES } from '@/data/products';
+import { api } from '@/services/api';
 
 interface CartContextType {
   cart: CartItem[];
@@ -107,13 +108,29 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         },
       ];
     });
+
     if (openCart) {
       setIsCartOpen(true);
     }
+
+    // Persist to backend cart if customer is authenticated
+    api.cart.add({
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      count: quantity,
+      color: selectedColor,
+      size: selectedSize,
+      customMeasurements,
+    }).catch(() => {});
   };
 
   const removeFromCart = (cartItemId: string) => {
-    setCart((prev) => prev.filter((item) => item.id !== cartItemId));
+    const item = cart.find((i) => i.id === cartItemId);
+    setCart((prev) => prev.filter((i) => i.id !== cartItemId));
+    if (item) {
+      api.cart.update(item.product.id, 0, item.selectedColor, item.selectedSize).catch(() => {});
+    }
   };
 
   const updateQuantity = (cartItemId: string, quantity: number) => {
@@ -121,14 +138,19 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       removeFromCart(cartItemId);
       return;
     }
+    const item = cart.find((i) => i.id === cartItemId);
     setCart((prev) =>
-      prev.map((item) => (item.id === cartItemId ? { ...item, quantity } : item))
+      prev.map((i) => (i.id === cartItemId ? { ...i, quantity } : i))
     );
+    if (item) {
+      api.cart.update(item.product.id, quantity, item.selectedColor, item.selectedSize).catch(() => {});
+    }
   };
 
   const clearCart = () => {
     setCart([]);
     setAppliedPromo(null);
+    api.cart.clear().catch(() => {});
   };
 
   const applyPromo = (code: string): { success: boolean; message: string } => {
@@ -140,14 +162,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (found.minOrderValue && subtotal < found.minOrderValue) {
       return {
         success: false,
-        message: `This privilege code requires a minimum order of ₹${found.minOrderValue.toLocaleString('en-IN')}.`,
+        message: `Order must be at least ₹${found.minOrderValue.toLocaleString('en-IN')} to apply ${found.code}`,
       };
     }
     setAppliedPromo(found);
-    return {
-      success: true,
-      message: `${found.code} applied! Enjoy your royal courtesy discount.`,
-    };
+    return { success: true, message: `Courtesies applied! ${found.description}` };
   };
 
   const removePromo = () => {
@@ -155,31 +174,28 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const subtotal = useMemo(() => {
-    return cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+    return cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
   }, [cart]);
 
   const discountAmount = useMemo(() => {
     if (!appliedPromo) return 0;
-    if (appliedPromo.minOrderValue && subtotal < appliedPromo.minOrderValue) {
-      return 0;
-    }
     if (appliedPromo.discountType === 'percentage') {
-      return Math.round((subtotal * appliedPromo.discountValue) / 100);
+      return (subtotal * appliedPromo.discountValue) / 100;
     }
-    return Math.min(subtotal, appliedPromo.discountValue);
+    return Math.min(appliedPromo.discountValue, subtotal);
   }, [subtotal, appliedPromo]);
 
   const shippingCost = useMemo(() => {
     if (cart.length === 0) return 0;
     return subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING_FEE;
-  }, [subtotal, cart.length]);
+  }, [subtotal, cart]);
 
   const totalAmount = useMemo(() => {
     return Math.max(0, subtotal - discountAmount + shippingCost);
   }, [subtotal, discountAmount, shippingCost]);
 
   const totalCount = useMemo(() => {
-    return cart.reduce((sum, item) => sum + item.quantity, 0);
+    return cart.reduce((acc, item) => acc + item.quantity, 0);
   }, [cart]);
 
   return (

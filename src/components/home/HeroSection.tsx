@@ -27,10 +27,7 @@ export const HeroSection: React.FC = () => {
   const lastRenderedIndexRef = useRef<number>(-1);
 
   // HUD DOM refs for direct, zero-react-overhead updates during scroll
-  const percentTextRef = useRef<HTMLSpanElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
-  const frameCounterRef = useRef<HTMLSpanElement>(null);
-  const activeChapterLabelRef = useRef<HTMLSpanElement>(null);
 
   // Mouse micro-parallax state (Desktop only)
   const mouseTargetRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -284,31 +281,10 @@ export const HeroSection: React.FC = () => {
         drawFrame(targetIndex);
       }
 
-      // 3. Direct DOM Updates for Zero-Lag HUD
+      // 3. Direct DOM Updates for Progress Indicator
       const pct = Math.round(clampedProgress * 100);
-      if (percentTextRef.current) {
-        percentTextRef.current.textContent = `${pct}%`;
-      }
       if (progressBarRef.current) {
         progressBarRef.current.style.width = `${pct}%`;
-      }
-
-      // Display 1-based frame counter (1 / 79 FRAMES)
-      if (frameCounterRef.current) {
-        frameCounterRef.current.textContent = `${targetIndex + 1} / ${HERO_CONFIG.totalFrames} FRAMES`;
-      }
-
-      // Active Chapter Label
-      if (activeChapterLabelRef.current) {
-        if (clampedProgress < 0.22) {
-          activeChapterLabelRef.current.textContent = 'PROLOGUE';
-        } else if (clampedProgress < 0.52) {
-          activeChapterLabelRef.current.textContent = 'CHAPTER I';
-        } else if (clampedProgress < 0.78) {
-          activeChapterLabelRef.current.textContent = 'CHAPTER II';
-        } else {
-          activeChapterLabelRef.current.textContent = 'CHAPTER III';
-        }
       }
 
       // 4. Discrete Phase Updates for Chapter Narrative
@@ -492,41 +468,12 @@ export const HeroSection: React.FC = () => {
             Typography uses crisp ambient text-shadow for high-contrast legibility.
             ========================================================================= */}
         <div className="pointer-events-none absolute inset-0 z-20 flex flex-col justify-between pt-24 sm:pt-26 lg:pt-28 px-6 sm:px-12 lg:px-16 pb-6 sm:pb-8 lg:pb-10">
-          {/* Top Row: Pill Badge and Walkthrough HUD */}
+          {/* Top Row: Pill Badge */}
           <div className="flex items-center justify-between pointer-events-auto">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/75 border border-monarch-gold/40 text-xs font-nav uppercase tracking-[0.2em] text-monarch-gold-light shadow-2xl">
               <Sparkles className="w-3.5 h-3.5 text-monarch-gold animate-pulse" />
               <span>{HERO_CONFIG.pillBadgeText}</span>
             </div>
-
-            {!isReducedMotion && (
-              <div className="flex items-center gap-2">
-                {/* Active Chapter Label with interactive Lenis scroll navigation */}
-                <button
-                  type="button"
-                  onClick={handleAdvance}
-                  className="hidden md:inline-flex items-center px-3.5 py-1.5 rounded-full bg-black/75 hover:bg-black border border-monarch-gold/40 hover:border-monarch-gold text-[10px] font-mono text-monarch-gold tracking-widest uppercase transition-all shadow-2xl cursor-pointer"
-                  title="Click to advance to next chapter via Lenis"
-                >
-                  <span ref={activeChapterLabelRef}>PROLOGUE</span>
-                </button>
-
-                {/* Walkthrough Counter with interactive Lenis scroll navigation */}
-                <button
-                  type="button"
-                  onClick={handleAdvance}
-                  className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/75 hover:bg-black border border-monarch-gold/40 hover:border-monarch-gold text-xs font-mono text-monarch-beige transition-all shadow-2xl cursor-pointer"
-                  title="Walkthrough progress - Click to advance"
-                >
-                  <span className="text-[10px] uppercase tracking-wider text-monarch-gold">
-                    Walkthrough
-                  </span>
-                  <span ref={percentTextRef} className="font-medium text-monarch-gold-light">
-                    0%
-                  </span>
-                </button>
-              </div>
-            )}
           </div>
 
           {/* Central Editorial Narrative Area with Desktop Micro-Parallax */}
@@ -660,14 +607,7 @@ export const HeroSection: React.FC = () => {
           </div>
 
           {/* Bottom Footer HUD Cue with Interactive Lenis Advance Button */}
-          <div className="flex items-center justify-between text-xs text-monarch-beige/70 pt-4 pointer-events-auto">
-            <span
-              ref={frameCounterRef}
-              className="px-3 py-1.5 rounded-full bg-black/75 border border-monarch-gold/40 font-nav uppercase tracking-widest text-[10px] text-monarch-gold shadow-2xl font-mono"
-            >
-              1 / {HERO_CONFIG.totalFrames} FRAMES
-            </span>
-
+          <div className="flex items-center justify-end text-xs text-monarch-beige/70 pt-4 pointer-events-auto">
             {!isReducedMotion && (
               <button
                 type="button"

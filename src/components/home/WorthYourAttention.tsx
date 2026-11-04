@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { SectionHeader } from '@/components/home/shared/SectionHeader';
 import { WORTH_YOUR_ATTENTION_DATA } from '@/data/worthYourAttention';
 import { AttentionAccordionCard } from './AttentionAccordionCard';
+import { useSectionFrames } from '@/hooks/useSectionFrames';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
@@ -17,6 +18,7 @@ if (typeof window !== 'undefined') {
 export const WorthYourAttention: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const products = useSectionFrames('worth-attention', WORTH_YOUR_ATTENTION_DATA.products);
 
   // Desktop / Laptop: null indicates quiet dark resting state until mouse hover.
   // Mobile / touch screen: card 0 starts active so it's immediately attractive and informative.
@@ -170,7 +172,7 @@ export const WorthYourAttention: React.FC = () => {
             className="relative overflow-x-auto scroll-smooth pb-4 pt-1 no-scrollbar scrollbar-none flex items-center gap-3 sm:gap-4 w-full"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
-            {WORTH_YOUR_ATTENTION_DATA.products.map((product, idx) => (
+            {products.map((product, idx) => (
               <AttentionAccordionCard
                 key={product.id}
                 product={product}

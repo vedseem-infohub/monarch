@@ -124,7 +124,7 @@ export const Footer: React.FC = () => {
 
   const columnList: FooterColumn[] = [
     FOOTER_DATA.columns.shop,
-    FOOTER_DATA.columns.explore,
+    // FOOTER_DATA.columns.explore,
     FOOTER_DATA.columns.support,
   ];
 
@@ -226,9 +226,8 @@ export const Footer: React.FC = () => {
                         {column.title}
                       </span>
                       <span
-                        className={`w-7 h-7 rounded-full bg-[#C7A15B]/10 flex items-center justify-center text-[#8E703E] transition-transform duration-300 ${
-                          isOpen ? 'rotate-180 bg-[#C7A15B]/25 text-[#5A1725]' : ''
-                        }`}
+                        className={`w-7 h-7 rounded-full bg-[#C7A15B]/10 flex items-center justify-center text-[#8E703E] transition-transform duration-300 ${isOpen ? 'rotate-180 bg-[#C7A15B]/25 text-[#5A1725]' : ''
+                          }`}
                       >
                         <ChevronDown className="w-3.5 h-3.5" />
                       </span>
@@ -236,9 +235,8 @@ export const Footer: React.FC = () => {
                     <div
                       id={`footer-accordion-${column.id}`}
                       role="region"
-                      className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
-                        isOpen ? 'grid-rows-[1fr] opacity-100 pb-2.5' : 'grid-rows-[0fr] opacity-0'
-                      }`}
+                      className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100 pb-2.5' : 'grid-rows-[0fr] opacity-0'
+                        }`}
                     >
                       <div className="overflow-hidden">
                         <ul className="space-y-2 text-xs font-sans pl-2 pt-1">
@@ -341,11 +339,10 @@ export const Footer: React.FC = () => {
                 <form onSubmit={handleSubscribe} noValidate className="space-y-1.5 pt-1 w-full max-w-md">
                   {/* Integrated Responsive Luxury Pill Container */}
                   <div
-                    className={`relative flex items-center rounded-full bg-white/95 backdrop-blur-md p-1 pl-3.5 sm:pl-4 shadow-xs transition-all border ${
-                      status === 'error'
-                        ? 'border-red-500/80 ring-2 ring-red-500/15'
-                        : 'border-[#C7A15B]/35 hover:border-[#C7A15B] focus-within:border-[#5A1725] focus-within:ring-2 focus-within:ring-[#5A1725]/15'
-                    }`}
+                    className={`relative flex items-center rounded-full bg-white/95 backdrop-blur-md p-1 pl-3.5 sm:pl-4 shadow-xs transition-all border ${status === 'error'
+                      ? 'border-red-500/80 ring-2 ring-red-500/15'
+                      : 'border-[#C7A15B]/35 hover:border-[#C7A15B] focus-within:border-[#5A1725] focus-within:ring-2 focus-within:ring-[#5A1725]/15'
+                      }`}
                   >
                     <input
                       type="email"

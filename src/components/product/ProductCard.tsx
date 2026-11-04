@@ -19,6 +19,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, priority = fa
   const { addToCart } = useCart();
   const { openQuickView } = useQuickView();
 
+  const safeImages = (product.images && product.images.length > 0) ? product.images : ['/images/moods/banarasi_brocade.jpg'];
+  const safeColors = (product.colors && product.colors.length > 0) ? product.colors : [{ name: 'Heritage', hex: '#5A1725' }];
+  const safeSizes = (product.sizes && product.sizes.length > 0) ? product.sizes : ['M'];
+  const categoryName = product.categoryName || product.category || 'Imperial Couture';
+
   const [selectedColorIdx, setSelectedColorIdx] = useState(0);
   const [isQuickAdded, setIsQuickAdded] = useState(false);
 
@@ -26,19 +31,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, priority = fa
 
   // Resolve color image with support for imageIndex, color.image, or array index
   const resolveColorImg = (idx: number) => {
-    const color = product.colors[idx];
-    if (color?.imageIndex !== undefined && color.imageIndex >= 0 && color.imageIndex < product.images.length) {
-      return product.images[color.imageIndex];
+    const color = safeColors[idx];
+    if (color?.imageIndex !== undefined && color.imageIndex >= 0 && color.imageIndex < safeImages.length) {
+      return safeImages[color.imageIndex];
     }
     if (color?.image) {
       return color.image;
     }
-    return product.images[idx] || product.images[0];
+    return safeImages[idx] || safeImages[0];
   };
 
   const primaryImg = resolveColorImg(selectedColorIdx);
   // Determine an alternate image that is genuinely different from primaryImg for instant hover
-  const hoverImg = product.images.find((img) => img !== primaryImg) || (product.images.length > 1 ? product.images[1] : null);
+  const hoverImg = safeImages.find((img) => img !== primaryImg) || (safeImages.length > 1 ? safeImages[1] : null);
 
   // Prefetch alternate hover image during idle time
   React.useEffect(() => {
@@ -51,8 +56,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, priority = fa
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const defaultColor = product.colors[selectedColorIdx]?.name || product.colors[0]?.name || 'Standard';
-    const defaultSize = product.sizes[0] || 'M';
+    const defaultColor = safeColors[selectedColorIdx]?.name || safeColors[0]?.name || 'Standard';
+    const defaultSize = safeSizes[0] || 'M';
     addToCart(product, defaultColor, defaultSize, 1);
     setIsQuickAdded(true);
     setTimeout(() => setIsQuickAdded(false), 1600);
@@ -164,7 +169,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, priority = fa
       <div className="pt-3.5 pb-1 px-1 flex flex-col space-y-1">
         {/* Category Eyebrow */}
         <p className="text-[10px] font-nav uppercase tracking-[0.25em] text-[#9E7A3D] font-semibold">
-          {product.categoryName}
+          {categoryName}
         </p>
 
         {/* Product Title */}
@@ -197,7 +202,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, priority = fa
 
           {/* Color Swatches (Click to Select Shade) */}
           <div className="flex items-center gap-1.5 py-1 px-1">
-            {product.colors.slice(0, 3).map((color, idx) => {
+            {safeColors.slice(0, 3).map((color, idx) => {
               const isSelected = selectedColorIdx === idx;
               return (
                 <button
@@ -219,9 +224,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, priority = fa
                 />
               );
             })}
-            {product.colors.length > 3 && (
+            {safeColors.length > 3 && (
               <span className="text-[10px] text-monarch-charcoal/50 font-nav font-medium ml-0.5">
-                +{product.colors.length - 3}
+                +{safeColors.length - 3}
               </span>
             )}
           </div>

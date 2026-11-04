@@ -246,7 +246,7 @@ export const ChangeYourLook: React.FC = () => {
 
             {/* Bottom-Right: "View Product →" */}
             <Link
-              href={`/product/${currentLook.slug || currentLook.id}`}
+              href={currentLook.ctaLink || `/product/${currentLook.slug || currentLook.id}`}
               className="absolute bottom-6 right-6 z-10 select-none inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black/65 hover:bg-black/90 text-white text-[11px] font-nav uppercase tracking-wider backdrop-blur-md border border-white/20 transition-all hover:scale-105"
             >
               <span>View Details</span>
@@ -278,7 +278,7 @@ export const ChangeYourLook: React.FC = () => {
             {/* Display Title & Price (Matches Screenshot) */}
             <div className="look-text-reveal space-y-1.5">
               <Link
-                href={`/product/${currentLook.slug || currentLook.id}`}
+                href={currentLook.ctaLink || `/product/${currentLook.slug || currentLook.id}`}
                 className="group/title block"
               >
                 <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] font-normal tracking-tight text-[#1E1714] group-hover/title:text-monarch-maroon transition-colors leading-[1.1] uppercase">

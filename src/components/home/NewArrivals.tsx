@@ -37,10 +37,14 @@ const MarqueeCard: React.FC<{ product: Product; priority?: boolean }> = ({
   const { isInWishlist, toggleWishlist } = useWishlist();
   const inWishlist = isInWishlist(product.id);
 
+  const displayImage = product.images?.[0] || '/images/moods/banarasi_brocade.jpg';
+  const defaultColor = product.colors?.[0]?.name || 'Standard';
+  const defaultSize = product.sizes?.[0] || 'M';
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart(product, product.colors[0]?.name || 'Standard', product.sizes[0] || 'M', 1);
+    addToCart(product, defaultColor, defaultSize, 1);
   };
 
   const handleWishlist = (e: React.MouseEvent) => {
@@ -56,7 +60,7 @@ const MarqueeCard: React.FC<{ product: Product; priority?: boolean }> = ({
         <Link href={`/product/${product.id}`} className="block w-full h-full">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={product.images[0]}
+            src={displayImage}
             alt={product.name}
             className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
             loading={priority ? 'eager' : 'lazy'}

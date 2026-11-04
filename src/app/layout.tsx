@@ -3,6 +3,7 @@ import { Cormorant_Garamond, Playfair_Display, Inter, Poppins } from 'next/font/
 import './globals.css';
 import { CartProvider } from '@/context/CartContext';
 import { WishlistProvider } from '@/context/WishlistContext';
+import { AuthProvider } from '@/context/AuthContext';
 // import { AnnouncementBar } from '@/components/layout/AnnouncementBar';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -75,7 +76,8 @@ export default function RootLayout({
         suppressHydrationWarning
         className="min-h-screen flex flex-col bg-monarch-ivory text-monarch-charcoal selection:bg-monarch-maroon selection:text-monarch-gold-light"
       >
-        <CartProvider>
+        <AuthProvider>
+          <CartProvider>
           <WishlistProvider>
             <QuickViewProvider>
               <LoadingProvider>
@@ -89,6 +91,7 @@ export default function RootLayout({
             </QuickViewProvider>
           </WishlistProvider>
         </CartProvider>
+      </AuthProvider>
       </body>
     </html>
   );

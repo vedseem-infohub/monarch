@@ -41,11 +41,16 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
   const { addToCart, setIsCartOpen } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
 
+  const safeImages = (product.images && product.images.length > 0) ? product.images : ['/images/moods/banarasi_brocade.jpg'];
+  const safeColors = (product.colors && product.colors.length > 0) ? product.colors : [{ name: 'Heritage', hex: '#5A1725' }];
+  const safeSizes = (product.sizes && product.sizes.length > 0) ? product.sizes : ['M'];
+  const categoryName = product.categoryName || product.category || 'Imperial Couture';
+
   const [selectedColor, setSelectedColor] = useState<string>(
-    product.colors[0]?.name || 'Standard'
+    safeColors[0]?.name || 'Standard'
   );
   const [selectedSize, setSelectedSize] = useState<string>(
-    product.sizes[0] || 'M'
+    safeSizes[0] || 'M'
   );
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
   const [customImageSrc, setCustomImageSrc] = useState<string | null>(null);
@@ -53,7 +58,7 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
   const [showSizeGuide, setShowSizeGuide] = useState(false);
 
   // Active display image (supports custom color image or catalog gallery index)
-  const displayImage = customImageSrc || product.images[activeImageIndex] || product.images[0];
+  const displayImage = customImageSrc || safeImages[activeImageIndex] || safeImages[0];
 
   // Flipkart/Amazon interactive cursor-tracking zoom
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50, active: false });
@@ -75,8 +80,8 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
     e.stopPropagation();
     setCustomImageSrc(null);
     setActiveImageIndex((prev) => {
-      const nextIdx = (prev - 1 + product.images.length) % product.images.length;
-      const matchedColor = product.colors.find((c, cIdx) => c.imageIndex === nextIdx || cIdx === nextIdx);
+      const nextIdx = (prev - 1 + safeImages.length) % safeImages.length;
+      const matchedColor = safeColors.find((c, cIdx) => c.imageIndex === nextIdx || cIdx === nextIdx);
       if (matchedColor) setSelectedColor(matchedColor.name);
       return nextIdx;
     });
@@ -87,8 +92,8 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
     e.stopPropagation();
     setCustomImageSrc(null);
     setActiveImageIndex((prev) => {
-      const nextIdx = (prev + 1) % product.images.length;
-      const matchedColor = product.colors.find((c, cIdx) => c.imageIndex === nextIdx || cIdx === nextIdx);
+      const nextIdx = (prev + 1) % safeImages.length;
+      const matchedColor = safeColors.find((c, cIdx) => c.imageIndex === nextIdx || cIdx === nextIdx);
       if (matchedColor) setSelectedColor(matchedColor.name);
       return nextIdx;
     });
@@ -98,8 +103,8 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
   const handleThumbnailClick = (idx: number) => {
     setCustomImageSrc(null);
     setActiveImageIndex(idx);
-    const matchedColor = product.colors.find(
-      (c, cIdx) => c.imageIndex === idx || c.image === product.images[idx] || (c.imageIndex === undefined && cIdx === idx)
+    const matchedColor = safeColors.find(
+      (c, cIdx) => c.imageIndex === idx || c.image === safeImages[idx] || (c.imageIndex === undefined && cIdx === idx)
     );
     if (matchedColor) {
       setSelectedColor(matchedColor.name);
@@ -109,18 +114,18 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
   // Select color shade and update main photo strictly on click
   const handleColorClick = (colorName: string, imageIndex?: number, fallbackIdx?: number, colorImage?: string) => {
     setSelectedColor(colorName);
-    if (imageIndex !== undefined && imageIndex >= 0 && imageIndex < product.images.length) {
+    if (imageIndex !== undefined && imageIndex >= 0 && imageIndex < safeImages.length) {
       setCustomImageSrc(null);
       setActiveImageIndex(imageIndex);
     } else if (colorImage) {
-      const foundIdx = product.images.indexOf(colorImage);
+      const foundIdx = safeImages.indexOf(colorImage);
       if (foundIdx !== -1) {
         setCustomImageSrc(null);
         setActiveImageIndex(foundIdx);
       } else {
         setCustomImageSrc(colorImage);
       }
-    } else if (fallbackIdx !== undefined && fallbackIdx < product.images.length) {
+    } else if (fallbackIdx !== undefined && fallbackIdx < safeImages.length) {
       setCustomImageSrc(null);
       setActiveImageIndex(fallbackIdx);
     }
@@ -138,8 +143,8 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
     if (isAdding) return;
     setIsAdding(true);
 
-    const colorToUse = selectedColor || product.colors[0]?.name || 'Standard';
-    const sizeToUse = selectedSize || product.sizes[0] || 'M';
+    const colorToUse = selectedColor || safeColors[0]?.name || 'Standard';
+    const sizeToUse = selectedSize || safeSizes[0] || 'M';
 
     // Add item to cart without auto-opening immediately (openCart: false)
     addToCart(product, colorToUse, sizeToUse, 1, undefined, false);
@@ -170,7 +175,7 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
               Couture Quick View
             </span>
             <p className="font-serif text-sm text-monarch-charcoal font-medium line-clamp-1">
-              {product.categoryName} · {product.name}
+              {categoryName} · {product.name}
             </p>
           </div>
         </div>
@@ -236,7 +241,7 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
             </div>
 
             {/* Flipkart/Amazon Style Chevron Arrows to Change Big Photo */}
-            {product.images.length > 1 && (
+            {safeImages.length > 1 && (
               <>
                 <button
                   type="button"
@@ -259,9 +264,9 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
             )}
 
             {/* Amazon/Flipkart Photo Index Counter Pill (e.g. 1 / 4) */}
-            {product.images.length > 1 && (
+            {safeImages.length > 1 && (
               <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full bg-black/65 backdrop-blur-md text-white text-[10px] font-mono font-medium border border-white/20 z-10 pointer-events-none">
-                {activeImageIndex + 1} / {product.images.length}
+                {activeImageIndex + 1} / {safeImages.length}
               </div>
             )}
 
@@ -273,9 +278,9 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
           </div>
 
           {/* Thumbnails Directly Under Big Photo (Click Instantly Changes Photo) */}
-          {product.images.length > 1 && (
+          {safeImages.length > 1 && (
             <div className="mt-4 py-3.5 px-4 flex items-center justify-start sm:justify-center gap-3.5 overflow-x-auto no-scrollbar">
-              {product.images.map((img, idx) => (
+              {safeImages.map((img, idx) => (
                 <button
                   key={idx}
                   type="button"
@@ -302,7 +307,7 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
           <div className="flex items-start justify-between gap-4">
             <div>
               <span className="text-[10px] font-nav uppercase tracking-[0.25em] text-[#8C682A] font-bold">
-                {product.categoryName}
+                {categoryName}
               </span>
               <h2 className="font-serif text-2xl sm:text-3xl text-monarch-charcoal font-medium mt-1 tracking-tight leading-snug">
                 {product.name}
@@ -347,12 +352,12 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
               Heritage Shade: <strong className="text-monarch-charcoal">{selectedColor}</strong>
             </span>
             <span className="text-[11px] text-[#8C682A] font-sans font-medium">
-              {product.colors.length} Curated Silks
+              {safeColors.length} Curated Silks
             </span>
           </div>
 
           <div className="flex items-center gap-3 py-3 px-2.5 overflow-x-auto no-scrollbar">
-            {product.colors.map((color, idx) => (
+            {safeColors.map((color, idx) => (
               <button
                 key={color.name}
                 type="button"
@@ -431,14 +436,14 @@ const QuickViewContent: React.FC<QuickViewContentProps> = ({ product, onClose })
                 </div>
               </div>
               <p className="text-[10px] text-monarch-charcoal/70 italic pt-1 border-t border-monarch-gold/20">
-                Bespoke bridal &amp; imperial custom sizing is also available upon salon appointment.
+                Bespoke bridal &amp; imperial custom sizing is handcrafted to order for every sovereign patron.
               </p>
             </div>
           )}
 
           {/* Size Buttons (Click to Select) */}
           <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-            {product.sizes.map((size) => (
+            {safeSizes.map((size) => (
               <button
                 key={size}
                 type="button"

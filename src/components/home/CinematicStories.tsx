@@ -387,7 +387,7 @@ export const CinematicStories: React.FC = () => {
 
               {/* EXPLORE ENSEMBLE: Direct Link to Full Product Detailing */}
               <Link
-                href={`/product/${activeStory.slug || activeStory.id}`}
+                href={activeStory.ctaLink || `/product/${activeStory.slug || activeStory.id}`}
                 className="group inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-white/10 hover:bg-white text-white hover:text-black text-[10px] font-mono uppercase tracking-[0.18em] font-medium backdrop-blur-md border border-white/20 transition-all hover:scale-105 cursor-pointer"
                 title={`View full detailing for ${activeStory.name}`}
               >

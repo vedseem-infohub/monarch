@@ -90,7 +90,7 @@ export const TrendDeckCard: React.FC<TrendDeckCardProps> = ({
       {/* High-Resolution Editorial Image */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={product.images[0]}
+        src={product.images?.[0] || '/images/moods/banarasi_brocade.jpg'}
         alt={product.name}
         className="w-full h-full object-cover pointer-events-none"
         loading="lazy"

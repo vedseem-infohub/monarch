@@ -6,6 +6,7 @@ import { AnimatePresence } from 'framer-motion';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { LATEST_TRENDS_DATA } from '@/data/latestTrends';
 import { TrendDeckCard } from './TrendDeckCard';
+import { useSectionFrames } from '@/hooks/useSectionFrames';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
@@ -16,7 +17,7 @@ if (typeof window !== 'undefined') {
 
 export const LatestTrends: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
-  const products = LATEST_TRENDS_DATA.products;
+  const products = useSectionFrames('latest-trends', LATEST_TRENDS_DATA.products);
   const total = products.length;
 
   // Track page and direction for Framer Motion AnimatePresence
@@ -27,7 +28,7 @@ export const LatestTrends: React.FC = () => {
   };
 
   const activeIndex = ((page % total) + total) % total;
-  const currentProduct = products[activeIndex];
+  const currentProduct = products[activeIndex] || products[0] || LATEST_TRENDS_DATA.products[0];
 
   const handleSelectCategory = (categorySlug: string) => {
     const foundIdx = products.findIndex((p) => p.rangeCategorySlug === categorySlug);
